@@ -1,0 +1,1653 @@
+<?php
+/**
+ * Baskets of Hope — theme bootstrap + shortcodes + custom footer + animations.
+ * Standalone theme (no parent). All design lives in style.css + this file.
+ *
+ * @package BoH
+ */
+
+// --- Enqueue our stylesheet (no parent dependency) -----------------------
+add_action('wp_enqueue_scripts', function () {
+    wp_enqueue_style('boh-style', get_stylesheet_uri(), [], '5.00');
+});
+
+function boh_logo_url($size = 'full') {
+    $file = $size === 'icon' ? 'boh-logo-150x150.png' : 'boh-logo.png';
+    return home_url('/wp-content/uploads/2026/06/' . $file);
+}
+
+add_action('wp_head', function () {
+    $icon = esc_url(boh_logo_url('icon'));
+    $logo = esc_url(boh_logo_url());
+    echo '<link rel="icon" type="image/png" sizes="150x150" href="' . $icon . '">' . "\n";
+    echo '<link rel="shortcut icon" type="image/png" href="' . $icon . '">' . "\n";
+    echo '<link rel="apple-touch-icon" href="' . $logo . '">' . "\n";
+}, 1);
+
+// --- Theme supports ------------------------------------------------------
+add_action('after_setup_theme', function () {
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('custom-logo', [
+        'height'      => 100,
+        'width'       => 300,
+        'flex-height' => true,
+        'flex-width'  => true,
+    ]);
+    add_theme_support('html5', ['search-form', 'comment-form', 'comment-list', 'gallery', 'caption', 'script', 'style']);
+    add_theme_support('automatic-feed-links');
+    add_theme_support('responsive-embeds');
+    add_theme_support('align-wide');
+    add_theme_support('editor-styles');
+    add_theme_support('wp-block-styles');
+    register_nav_menus(['primary' => __('Primary Menu', 'boh')]);
+});
+
+// Register an outline (light) button style on the wp:button block
+add_action('init', function () {
+    register_block_style('core/button', [
+        'name'  => 'outline',
+        'label' => __('Outline', 'boh'),
+    ]);
+    register_block_style('core/button', [
+        'name'  => 'ember',
+        'label' => __('Magenta (primary CTA)', 'boh'),
+    ]);
+    register_block_style('core/button', [
+        'name'  => 'yellow',
+        'label' => __('Yellow', 'boh'),
+    ]);
+});
+
+// --- Site config ---------------------------------------------------------
+if (!defined('BOH_EVENT_ISO'))   define('BOH_EVENT_ISO',   '2026-11-03T18:00:00-07:00');
+if (!defined('BOH_EVENT_END'))   define('BOH_EVENT_END',   '2026-11-03T21:00:00-07:00');
+if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope — A Night of Giving");
+if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4");
+// RSVP form ID — auto-discover by title so the theme works regardless of
+// install order. Cached for an hour to avoid repeating the lookup. Override
+// by defining BOH_RSVP_FORM_ID in wp-config.php if you want a specific form.
+if (!defined('BOH_RSVP_FORM_ID')) {
+    $boh_rsvp_id = get_transient('boh_rsvp_form_id');
+    if (false === $boh_rsvp_id) {
+        $boh_rsvp_id = 0;
+        foreach (['RSVP — Baskets of Hope 2026', 'RSVP — Baskets of Hope 2025'] as $boh_title) {
+            $boh_match = get_posts([
+                'post_type'      => 'wpcf7_contact_form',
+                'title'          => $boh_title,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+                'post_status'    => 'any',
+            ]);
+            if (!empty($boh_match)) { $boh_rsvp_id = (int) $boh_match[0]; break; }
+        }
+        set_transient('boh_rsvp_form_id', $boh_rsvp_id, HOUR_IN_SECONDS);
+    }
+    define('BOH_RSVP_FORM_ID', (int) $boh_rsvp_id);
+    unset($boh_rsvp_id, $boh_match, $boh_title);
+}
+if (!defined('BOH_TOTAL_SPOTS')) define('BOH_TOTAL_SPOTS', 120);
+if (!defined('BOH_SPOTS_LEFT'))  define('BOH_SPOTS_LEFT',  14);
+
+// Multi-page site (as of 2026-07 feedback): About / Donate / Sponsor / FAQs /
+// Gallery / RSVP are their own pages, no one-page anchor redirects.
+// The old /contact/ and /stories/ pages still exist but are unlinked; redirect
+// them to the home page so any historical links don't 404.
+add_action('template_redirect', function () {
+    if (!is_page() || is_front_page()) return;
+    $slug = get_post()->post_name ?? '';
+    if (in_array($slug, ['contact', 'stories'], true)) {
+        wp_safe_redirect(home_url('/'), 301);
+        exit;
+    }
+});
+
+// --- [boh_countdown] -----------------------------------------------------
+add_shortcode('boh_countdown', function ($atts) {
+    $a = shortcode_atts(['to' => BOH_EVENT_ISO, 'label' => ''], $atts);
+    $target_ms = strtotime($a['to']) * 1000;
+    ob_start(); ?>
+    <div class="boh-countdown" data-target="<?php echo esc_attr($target_ms); ?>">
+      <div class="boh-countdown__unit"><span class="boh-countdown__num" data-unit="d">--</span><span class="boh-countdown__label">Days</span></div>
+      <div class="boh-countdown__unit"><span class="boh-countdown__num" data-unit="h">--</span><span class="boh-countdown__label">Hours</span></div>
+      <div class="boh-countdown__unit"><span class="boh-countdown__num" data-unit="m">--</span><span class="boh-countdown__label">Minutes</span></div>
+      <div class="boh-countdown__unit"><span class="boh-countdown__num" data-unit="s">--</span><span class="boh-countdown__label">Seconds</span></div>
+    </div>
+    <script>
+    (function(){
+      const root = document.currentScript.previousElementSibling;
+      const target = parseInt(root.dataset.target, 10);
+      const pad = n => String(n).padStart(2,'0');
+      function tick(){
+        const diff = target - Date.now();
+        if (diff <= 0) { root.classList.add('boh-countdown--live'); root.querySelectorAll('[data-unit]').forEach(e => e.textContent = '00'); return; }
+        const s = Math.floor(diff/1000)%60;
+        const m = Math.floor(diff/60000)%60;
+        const h = Math.floor(diff/3600000)%24;
+        const d = Math.floor(diff/86400000);
+        root.querySelector('[data-unit="d"]').textContent = pad(d);
+        root.querySelector('[data-unit="h"]').textContent = pad(h);
+        root.querySelector('[data-unit="m"]').textContent = pad(m);
+        root.querySelector('[data-unit="s"]').textContent = pad(s);
+      }
+      tick(); setInterval(tick, 1000);
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_impact] — donation impact calculator ---------------------------
+add_shortcode('boh_impact', function ($atts) {
+    $a = shortcode_atts([
+        'cta_url'  => '/donate',
+        'cta_text' => 'Give now',
+    ], $atts);
+
+    // Each tier: amount => [headline, items[], beneficiaries]
+    $tiers = [
+        25  => ['Comfort essentials for 1 woman', ['Journal', 'Tea blend', 'Hand cream', 'Wellness card'], 1],
+        50  => ['A care basket for 1 family',     ['Cozy blanket', 'Self-care kit', 'Grocery card', 'Welcome note'], 1],
+        100 => ['Two complete baskets',           ['2 blankets', 'Toiletry kits', 'Spa gift cards', 'Care notes'], 2],
+        250 => ['Five families supported',        ['5 baskets', 'Bath sets', 'Journals', 'Household essentials'], 5],
+        500 => ['A full evening of giving',       ['10 baskets', 'Refreshments', 'Workshop supplies', 'Volunteer support'], 10],
+    ];
+
+    $json = wp_json_encode($tiers);
+    ob_start(); ?>
+    <div class="boh-impact" data-tiers='<?php echo esc_attr($json); ?>'>
+      <div class="boh-impact__eyebrow">Where your gift goes</div>
+      <h3 class="boh-impact__title">See what your contribution becomes.</h3>
+      <div class="boh-impact__amounts">
+        <?php $first = true; foreach ($tiers as $amt => $_) : ?>
+          <button type="button" class="boh-impact__btn<?php echo $amt === 50 ? ' is-active' : ''; ?>" data-amt="<?php echo esc_attr($amt); ?>">$<?php echo esc_html($amt); ?></button>
+        <?php endforeach; ?>
+      </div>
+      <div class="boh-impact__result">
+        <span class="boh-impact__result-num" data-out="num">$50</span>
+        <div class="boh-impact__result-text" data-out="text">A care basket for 1 family</div>
+        <div class="boh-impact__items" data-out="items"></div>
+      </div>
+      <a class="boh-impact__cta" href="<?php echo esc_url($a['cta_url']); ?>"><?php echo esc_html($a['cta_text']); ?> →</a>
+    </div>
+    <script>
+    (function(){
+      const root = document.currentScript.previousElementSibling;
+      const tiers = JSON.parse(root.dataset.tiers);
+      const btns = root.querySelectorAll('.boh-impact__btn');
+      const num  = root.querySelector('[data-out="num"]');
+      const txt  = root.querySelector('[data-out="text"]');
+      const items= root.querySelector('[data-out="items"]');
+      const cta  = root.querySelector('.boh-impact__cta');
+      // CTA is just a scroll-anchor — passing ?give-amount auto-opens the
+      // GiveWP form (defeating reveal mode), so don't append params.
+      function render(amt){
+        const t = tiers[amt];
+        if (!t) return;
+        num.textContent = '$' + amt;
+        txt.textContent = t[0];
+        items.innerHTML = t[1].map(i => '<span class="boh-impact__chip">' + i + '</span>').join('');
+      }
+      btns.forEach(b => b.addEventListener('click', () => {
+        btns.forEach(x => x.classList.remove('is-active'));
+        b.classList.add('is-active');
+        render(b.dataset.amt);
+      }));
+      render(50);
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_transparency] --------------------------------------------------
+add_shortcode('boh_transparency', function ($atts) {
+    $a = shortcode_atts([
+        'program'   => 84,
+        'logistics' => 11,
+        'overhead'  => 5,
+    ], $atts);
+    ob_start(); ?>
+    <div class="boh-transparency">
+      <h3 class="boh-transparency__title">Every dollar, traced.</h3>
+      <p class="boh-transparency__sub">Of every $1 donated to Baskets of Hope, here is exactly where it goes:</p>
+      <div class="boh-transparency__bar" role="img" aria-label="Breakdown of where donations go">
+        <div class="boh-transparency__seg boh-transparency__seg--program"   style="width:<?php echo (int)$a['program']; ?>%"></div>
+        <div class="boh-transparency__seg boh-transparency__seg--logistics" style="width:<?php echo (int)$a['logistics']; ?>%"></div>
+        <div class="boh-transparency__seg boh-transparency__seg--overhead"  style="width:<?php echo (int)$a['overhead']; ?>%"></div>
+      </div>
+      <div class="boh-transparency__legend">
+        <div class="boh-transparency__item">
+          <span class="boh-transparency__dot" style="background:var(--boh-magenta)"></span>
+          <div>
+            <span class="boh-transparency__pct"><?php echo (int)$a['program']; ?>¢</span>
+            <div class="boh-transparency__label">Baskets &amp; programs to WIN House</div>
+          </div>
+        </div>
+        <div class="boh-transparency__item">
+          <span class="boh-transparency__dot" style="background:var(--boh-yellow)"></span>
+          <div>
+            <span class="boh-transparency__pct"><?php echo (int)$a['logistics']; ?>¢</span>
+            <div class="boh-transparency__label">Event &amp; delivery logistics</div>
+          </div>
+        </div>
+        <div class="boh-transparency__item">
+          <span class="boh-transparency__dot" style="background:var(--boh-ink)"></span>
+          <div>
+            <span class="boh-transparency__pct"><?php echo (int)$a['overhead']; ?>¢</span>
+            <div class="boh-transparency__label">Payment fees &amp; admin</div>
+          </div>
+        </div>
+      </div>
+      <div class="boh-trust">
+        <div class="boh-trust__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>
+          Tax-receipt issued within minutes
+        </div>
+        <div class="boh-trust__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l9 4v6c0 5-3.8 9.7-9 10-5.2-.3-9-5-9-10V6l9-4z"/></svg>
+          Bank-grade encryption (PCI DSS)
+        </div>
+        <div class="boh-trust__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+          Annual public reporting
+        </div>
+        <div class="boh-trust__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+          100% goes to WIN House programs above overhead
+        </div>
+      </div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_event_meta] ----------------------------------------------------
+add_shortcode('boh_event_meta', function () {
+    ob_start(); ?>
+    <div class="boh-event-meta">
+      <div class="boh-event-meta__cell">
+        <div class="boh-event-meta__label">When</div>
+        <div class="boh-event-meta__val">Tue, Nov 3, 2026</div>
+        <div class="boh-event-meta__sub">6:00 PM MT</div>
+      </div>
+      <div class="boh-event-meta__cell">
+        <div class="boh-event-meta__label">Where</div>
+        <div class="boh-event-meta__val">Rohit Group Office</div>
+        <div class="boh-event-meta__sub">10130 112 St NW, Edmonton</div>
+      </div>
+      <div class="boh-event-meta__cell">
+        <div class="boh-event-meta__label">Benefits</div>
+        <div class="boh-event-meta__val">WIN House</div>
+        <div class="boh-event-meta__sub">Edmonton's shelter for survivors</div>
+      </div>
+      <div class="boh-event-meta__cell">
+        <div class="boh-event-meta__label">Bring</div>
+        <div class="boh-event-meta__val">12 comfort items</div>
+        <div class="boh-event-meta__sub">Or contribute online</div>
+      </div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_calendar] — Google/iCal "add to calendar" ---------------------
+add_shortcode('boh_calendar', function () {
+    $start_gcal = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO));
+    $end_gcal   = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END));
+    $gcal = add_query_arg([
+        'action'   => 'TEMPLATE',
+        'text'     => rawurlencode(BOH_EVENT_TITLE),
+        'dates'    => $start_gcal . '/' . $end_gcal,
+        'details'  => rawurlencode('Join us for an evening of community and giving in support of WIN House.'),
+        'location' => rawurlencode(BOH_EVENT_LOC),
+    ], 'https://calendar.google.com/calendar/render');
+
+    $ics_url = home_url('/?boh_ics=1');
+
+    ob_start(); ?>
+    <div class="boh-cal">
+      <a href="<?php echo esc_url($gcal); ?>" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Add to Google Calendar
+      </a>
+      <a href="<?php echo esc_url($ics_url); ?>">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+        Download .ics (Apple / Outlook)
+      </a>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// ICS endpoint
+add_action('init', function () {
+    if (empty($_GET['boh_ics'])) return;
+    $uid = 'boh-' . md5(BOH_EVENT_ISO . BOH_EVENT_TITLE) . '@rohitgroup.com';
+    $start = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO));
+    $end   = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END));
+    $now   = gmdate('Ymd\THis\Z');
+    $ics  = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BoH//EN\r\nMETHOD:PUBLISH\r\n";
+    $ics .= "BEGIN:VEVENT\r\nUID:{$uid}\r\nDTSTAMP:{$now}\r\nDTSTART:{$start}\r\nDTEND:{$end}\r\n";
+    $ics .= 'SUMMARY:' . BOH_EVENT_TITLE . "\r\n";
+    $ics .= 'LOCATION:' . BOH_EVENT_LOC . "\r\n";
+    $ics .= "DESCRIPTION:An evening of community and giving in support of WIN House.\r\n";
+    $ics .= "END:VEVENT\r\nEND:VCALENDAR\r\n";
+    header('Content-Type: text/calendar; charset=utf-8');
+    header('Content-Disposition: attachment; filename="baskets-of-hope.ics"');
+    echo $ics;
+    exit;
+});
+
+// --- [boh_rsvp] — embedded RSVP form ------------------------------------
+add_shortcode('boh_rsvp', function ($atts) {
+    $a = shortcode_atts(['form_id' => BOH_RSVP_FORM_ID], $atts);
+
+    ob_start(); ?>
+    <div class="boh-rsvp">
+      <div class="boh-rsvp__header">
+        <h3 class="boh-rsvp__title">Let us know if you can join us</h3>
+      </div>
+      <?php
+      if (!empty($a['form_id']) && function_exists('wpcf7_contact_form')) {
+          echo do_shortcode('[contact-form-7 id="' . (int)$a['form_id'] . '" title="RSVP"]');
+      } else {
+          // Fallback: simple mailto if CF7 form isn't wired up yet
+          ?>
+          <p style="margin-top:0;color:var(--boh-ink-soft)">
+            To reserve your place, email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a> with your name, party size, and any dietary needs.
+          </p>
+          <a class="boh-impact__cta" href="mailto:BoH@rohitgroup.com?subject=RSVP%20-%20Baskets%20of%20Hope%202026">Email to RSVP →</a>
+          <?php
+      }
+      ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_sticky] — sticky bottom CTA bar -------------------------------
+add_shortcode('boh_sticky', function ($atts) {
+    $a = shortcode_atts([
+        'text'      => 'Be part of the next basket.',
+        'cta'       => 'Give',
+        'cta_url'   => '/donate',
+        'cta2'      => 'RSVP',
+        'cta2_url'  => '/rsvp',
+    ], $atts);
+    ob_start(); ?>
+    <div class="boh-sticky" id="bohSticky" role="complementary" aria-label="Quick actions">
+      <div class="boh-sticky__text"><?php echo wp_kses_post($a['text']); ?></div>
+      <div class="boh-sticky__btns">
+        <a class="boh-sticky__btn" href="<?php echo esc_url($a['cta_url']); ?>"><?php echo esc_html($a['cta']); ?></a>
+        <a class="boh-sticky__btn boh-sticky__btn--ghost" href="<?php echo esc_url($a['cta2_url']); ?>"><?php echo esc_html($a['cta2']); ?></a>
+      </div>
+      <button type="button" class="boh-sticky__close" aria-label="Dismiss">×</button>
+    </div>
+    <script>
+    (function(){
+      const bar = document.getElementById('bohSticky');
+      if (!bar || sessionStorage.getItem('bohStickyDismissed') === '1') { if(bar) bar.remove(); return; }
+      function onScroll(){
+        if (window.scrollY > 480) bar.classList.add('is-visible');
+        else bar.classList.remove('is-visible');
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      bar.querySelector('.boh-sticky__close').addEventListener('click', () => {
+        sessionStorage.setItem('bohStickyDismissed', '1');
+        bar.remove();
+      });
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+});
+
+// Sticky bottom CTA bar removed per July-2026 feedback. The [boh_sticky]
+// shortcode still exists if it's ever wanted on a specific page.
+
+/**
+ * Custom site footer — 4 columns: brand, quick links, contact, event CTA.
+ * Replaces Astra's minimal "Powered by" small footer (which we hide in CSS).
+ */
+add_action('wp_footer', function () {
+    $year = date('Y');
+    // TODO: replace with the Baskets-of-Hope-specific LinkedIn URL when provided.
+    $linkedin_url = 'https://www.linkedin.com/company/rohit-group-of-companies/';
+    ?>
+    <footer class="boh-footer" role="contentinfo">
+      <div class="boh-footer__inner">
+
+        <div class="boh-footer__brand">
+          <h3>Rohit's Baskets <span>of Hope</span></h3>
+          <p class="boh-footer__initiative">
+            A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand">Rohit Group</a> initiative.
+          </p>
+          <p>Since 2010, delivering dignity and care to women and families escaping violence — one basket at a time, in partnership with WIN House Edmonton.</p>
+          <div class="boh-footer__social" aria-label="Follow Rohit's Baskets of Hope">
+            <a href="<?php echo esc_url( $linkedin_url ); ?>" target="_blank" rel="noopener" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h4v4H4zM4 10h4v10H4zM10 10h4v1.5c.7-1 1.9-1.8 3.5-1.8 2.8 0 4.5 1.7 4.5 5V20h-4v-4.5c0-1.5-.5-2.5-2-2.5s-2 1-2 2.5V20h-4V10z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="boh-footer__col">
+          <h4>Quick links</h4>
+          <ul>
+            <li><a href="/about/">About</a></li>
+            <li><a href="/donate/">Donate</a></li>
+            <li><a href="/sponsor/">Sponsor</a></li>
+            <li><a href="/faqs/">FAQs</a></li>
+            <li><a href="/gallery/">Gallery</a></li>
+          </ul>
+        </div>
+
+        <div class="boh-footer__col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a></li>
+            <li><p>10130 112 St NW<br>Edmonton, AB T5K 2K4</p></li>
+            <li><p>Mon – Fri · 8 AM – 5 PM MT</p></li>
+          </ul>
+        </div>
+
+        <div class="boh-footer__cta">
+          <span class="boh-eyebrow">Save the date</span>
+          <strong>A Night of Giving</strong>
+          <p>Tuesday, Nov 3 2026 · 6:00 PM<br>Rohit Group Office, Edmonton</p>
+          <a class="boh-btn-cta" href="/rsvp/">RSVP →</a>
+        </div>
+
+      </div>
+
+      <div class="boh-footer__bottom">
+        <div>&copy; <?php echo esc_html($year); ?> Rohit Group. All rights reserved.</div>
+        <div>
+          <a href="/privacy-policy/">Privacy</a> &nbsp;|&nbsp;
+          Developed by <a href="https://halfcup.ca" target="_blank" rel="noopener">HalfCup</a>
+        </div>
+      </div>
+    </footer>
+    <?php
+}, 50);
+
+/**
+ * Inline JS for: scroll-reveal (IntersectionObserver), scroll-spy (active nav
+ * link), header elevation on scroll, and stat counter count-up animation.
+ * All vanilla, no jQuery. Respects prefers-reduced-motion.
+ */
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function () {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // ── 0. Scroll cue → reparent to the full-height hero cover ──
+      // The cue is authored inside the content-height inner container;
+      // it must anchor to the cover itself to sit at the hero's bottom.
+      // (This footer script runs after the full DOM, unlike the inline
+      // slideshow script which runs before the cue exists.)
+      const cueHero = document.querySelector('.wp-block-cover.boh-hero');
+      const cue = document.querySelector('.boh-scroll-cue');
+      if (cueHero && cue && cue.parentElement !== cueHero) {
+        cueHero.appendChild(cue);
+      }
+
+      // ── 1. Auto-tag elements for scroll-reveal ──────────────────
+      document.querySelectorAll(
+        '.entry-content > .wp-block-group, ' +
+        '.entry-content > .wp-block-cover + *, ' +
+        '.entry-content .wp-block-columns, ' +
+        '.entry-content .wp-block-quote, ' +
+        '.boh-impact, .boh-transparency, .boh-rsvp, ' +
+        '.boh-event-meta, .boh-countdown'
+      ).forEach(el => {
+        if (el.classList.contains('boh-hero')) return;
+        el.classList.add('boh-reveal');
+      });
+      document.querySelectorAll(
+        '.boh-steps, .boh-stats, ' +
+        '.boh-how-it-works--compact .boh-how-it-works__grid, ' +
+        '.boh-quick-links'
+      ).forEach(el => {
+        el.classList.add('boh-reveal-stagger');
+      });
+
+      // ── 2. IntersectionObserver to toggle .is-in ────────────────
+      if (!reduced && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-in');
+              io.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        document.querySelectorAll('.boh-reveal, .boh-reveal-stagger, .boh-stats').forEach(el => io.observe(el));
+      } else {
+        document.querySelectorAll('.boh-reveal, .boh-reveal-stagger, .boh-stats').forEach(el => el.classList.add('is-in'));
+      }
+
+      // ── 3. Stat counter — count up from 0 to target ─────────────
+      function animateCount(el, target) {
+        if (reduced) { el.textContent = target.toLocaleString(); return; }
+        const duration = 1400;
+        const start = performance.now();
+        const isCurrency = /\$/.test(el.textContent);
+        const hasPlus    = /\+/.test(el.textContent);
+        function step(now) {
+          const p = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+          const val = Math.floor(target * eased);
+          el.textContent = (isCurrency ? '$' : '') + val.toLocaleString() + (hasPlus ? '+' : '');
+          if (p < 1) requestAnimationFrame(step);
+          else el.textContent = (isCurrency ? '$' : '') + target.toLocaleString() + (hasPlus ? '+' : '');
+        }
+        requestAnimationFrame(step);
+      }
+      document.querySelectorAll('.boh-stats h2').forEach(h2 => {
+        const raw = h2.textContent.replace(/[^\d]/g, '');
+        const target = parseInt(raw, 10);
+        if (!target || target < 5) return; // don't animate "15" → too short to notice
+        h2.dataset.target = target;
+        h2.textContent = '0';
+      });
+      const statsSection = document.querySelector('.boh-stats');
+      if (statsSection) {
+        const statObs = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.querySelectorAll('h2[data-target]').forEach(h2 => {
+                animateCount(h2, parseInt(h2.dataset.target, 10));
+              });
+              statObs.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.3 });
+        statObs.observe(statsSection);
+      }
+
+      // ── 4. Header background — proportional to scroll ─────────
+      // Starts at 10% white over the hero; ramps up to fully white as the
+      // hero scrolls out of view. Body still gets `.boh-scrolled` past the
+      // hero so nav-link colors / other components can flip in a step.
+      const header = document.getElementById('masthead');
+      const hero   = document.querySelector('.entry-content > .wp-block-cover:first-child');
+      const MIN_ALPHA = 0.10;
+      let scrolled = false;
+      function rampSpan() {
+        // Alpha reaches 1.0 by the time we've scrolled ~80% of the hero.
+        return hero ? Math.max(120, hero.offsetHeight * 0.80) : 120;
+      }
+      function onScroll() {
+        const y   = window.scrollY || 0;
+        const raw = Math.min(1, Math.max(0, y / rampSpan()));
+        const a   = MIN_ALPHA + raw * (1 - MIN_ALPHA);
+        if (header) header.style.setProperty('--boh-header-alpha', a.toFixed(3));
+
+        const isScrolled = raw >= 0.98;
+        if (isScrolled !== scrolled) {
+          scrolled = isScrolled;
+          document.body.classList.toggle('boh-scrolled', isScrolled);
+        }
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      onScroll();
+
+      // ── 4b. Mobile menu toggle ─────────────────────────────────
+      const toggle = document.querySelector('.boh-nav__toggle');
+      const nav = document.querySelector('.boh-nav');
+      if (toggle && nav) {
+        toggle.addEventListener('click', () => {
+          const open = nav.classList.toggle('is-open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Close mobile nav after clicking a link
+        nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+          nav.classList.remove('is-open');
+          toggle.setAttribute('aria-expanded', 'false');
+        }));
+      }
+
+      // ── 5. Scroll-spy — highlight current section in nav ───────
+      const navLinks = Array.from(document.querySelectorAll('.boh-nav__list a[href*="#"]'));
+      const navMap = {};
+      navLinks.forEach(a => {
+        const m = a.getAttribute('href').match(/#([\w-]+)/);
+        if (m) navMap[m[1]] = a;
+      });
+      const sections = Object.keys(navMap)
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+      if (sections.length) {
+        const spyObs = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            const id = e.target.id;
+            if (e.isIntersecting && navMap[id]) {
+              navLinks.forEach(a => a.classList.remove('is-active'));
+              navMap[id].classList.add('is-active');
+            }
+          });
+        }, { rootMargin: '-30% 0px -55% 0px', threshold: 0 });
+        sections.forEach(s => spyObs.observe(s));
+      }
+    })();
+    </script>
+    <?php
+}, 60);
+
+// --- [boh_eyebrow text="…"] inline tag ---------------------------------
+add_shortcode('boh_eyebrow', function ($atts, $content = '') {
+    $a = shortcode_atts(['text' => $content], $atts);
+    return '<span class="boh-eyebrow">' . esc_html($a['text']) . '</span>';
+});
+
+// --- [boh_sponsor_tiers] — 8-tier sponsorship cards (per PDF) -----------
+add_shortcode('boh_sponsor_tiers', function () {
+    $tiers = [
+        [
+            'level' => 'Platinum Basket 1', 'price' => '$2,000', 'tone' => 'platinum',
+            'title' => 'Chef-created dish sponsor',
+            'copy'  => 'The most exclusive and limited offering. Covers a chef-curated dining experience for all attendees.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media', 'Honourable mention during the event'],
+        ],
+        [
+            'level' => 'Platinum Basket 2', 'price' => '$2,000', 'tone' => 'platinum',
+            'title' => 'Hot food sponsor',
+            'copy'  => 'Provides a catering station serving all guests throughout the evening.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media', 'Honourable mention during the event'],
+        ],
+        [
+            'level' => 'Gold Basket', 'price' => '$1,000 – $1,500', 'tone' => 'gold',
+            'title' => 'Wine & beverage sponsor',
+            'copy'  => 'Celebrate generosity with a toast — your gift keeps the evening flowing.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
+        ],
+        [
+            'level' => 'Silver Basket', 'price' => '$1,000', 'tone' => 'silver',
+            'title' => 'Charcuterie sponsor',
+            'copy'  => 'Support the elegant charcuterie boards that encourage mingling and conversation.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
+        ],
+        [
+            'level' => 'Bronze Basket', 'price' => '$750 – $1,000', 'tone' => 'bronze',
+            'title' => 'Signature / welcome drink sponsor',
+            'copy'  => 'Provides the ingredients and materials for a signature cocktail and mocktail welcome.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
+        ],
+        [
+            'level' => 'Supporting Basket', 'price' => '$500', 'tone' => 'support',
+            'title' => 'Candy sponsor',
+            'copy'  => 'End the evening on a sweet note — a candy bar display that leaves a lasting impression.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
+        ],
+        [
+            'level' => 'The Supporting Strand', 'price' => '$200', 'tone' => 'support',
+            'title' => 'Friendship bracelets station',
+            'copy'  => 'Supports a dedicated space where attendees craft bracelets for basket recipients and each other.',
+            'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
+        ],
+        [
+            'level' => 'The Woven Handle', 'price' => 'Custom / TBD', 'tone' => 'custom',
+            'title' => 'Propose your own package',
+            'copy'  => "If none of these levels quite fit, let's weave something together. Propose a package and we'll tailor it to your goals.",
+            'benefits' => ['Benefits tailored to your commitment'],
+        ],
+    ];
+    ob_start(); ?>
+    <div class="boh-sponsor-tiers">
+      <?php foreach ($tiers as $t) : ?>
+        <article class="boh-tier boh-tier--<?php echo esc_attr($t['tone']); ?>">
+          <div class="boh-tier__band"></div>
+          <div class="boh-tier__eyebrow"><?php echo esc_html($t['level']); ?></div>
+          <h3 class="boh-tier__title"><?php echo esc_html($t['title']); ?></h3>
+          <p class="boh-tier__copy"><?php echo esc_html($t['copy']); ?></p>
+          <ul class="boh-tier__benefits">
+            <?php foreach ($t['benefits'] as $b) : ?>
+              <li><?php echo esc_html($b); ?></li>
+            <?php endforeach; ?>
+          </ul>
+          <div class="boh-tier__price"><?php echo esc_html($t['price']); ?></div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_page_hero] — reusable sub-page header banner --------------
+// Used at the top of About / Donate / Sponsor / FAQs / Gallery / RSVP.
+// Image sits at top with a soft magenta wash; a floral flourish
+// peeks in from the top-right corner; centered eyebrow + heading
+// + optional subhead below the image.
+add_shortcode('boh_page_hero', function ($atts) {
+    $a = shortcode_atts([
+        'image'   => '',
+        'eyebrow' => '',
+        'title'   => '',
+        'sub'     => '',
+        'align'   => 'center', // center | left
+    ], $atts);
+    ob_start(); ?>
+    <section class="boh-page-hero boh-page-hero--<?php echo esc_attr( $a['align'] ); ?>">
+      <?php if ( $a['image'] ) : ?>
+        <div class="boh-page-hero__image" role="img" aria-label="<?php echo esc_attr( wp_strip_all_tags( $a['title'] ) ); ?>"
+             style="background-image:url('<?php echo esc_url( $a['image'] ); ?>')"></div>
+      <?php endif; ?>
+      <div class="boh-page-hero__flourish" aria-hidden="true"></div>
+      <div class="boh-page-hero__body">
+        <?php if ( $a['eyebrow'] ) : ?>
+          <p class="boh-page-hero__eyebrow"><span class="boh-eyebrow"><?php echo wp_kses_post( $a['eyebrow'] ); ?></span></p>
+        <?php endif; ?>
+        <?php if ( $a['title'] ) : ?>
+          <h1 class="boh-page-hero__title"><?php echo wp_kses_post( $a['title'] ); ?></h1>
+        <?php endif; ?>
+        <?php if ( $a['sub'] ) : ?>
+          <p class="boh-page-hero__sub"><?php echo wp_kses_post( $a['sub'] ); ?></p>
+        <?php endif; ?>
+      </div>
+    </section>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_hero_slideshow] — rotating background images + pagination dots -
+// Renders the slideshow markup (slides + dot controls) inside the cover
+// block. Auto-rotates every 6s; dots let visitors jump. Pauses on hover.
+add_shortcode('boh_hero_slideshow', function () {
+    // Brand-guideline flower artwork drives the hero (light + airy). The
+    // first two are the brand PDF's "Main" and "Secondary" flower images;
+    // rest are event photos for variety. Upload the flower JPGs to
+    // Media library as exactly these filenames (or update paths here).
+    // Lead with edge-to-edge event photos so the hero fills the viewport with
+    // no pink margin bleed. The brand-flower artwork has soft pink borders
+    // baked in and reads as empty space at the sides — use it later in the
+    // rotation, not as the first frame.
+    $slides = [
+        '/wp-content/uploads/2026/06/RC_BoH_112722_181108_LR-13-1024x683.jpg',
+        '/wp-content/uploads/2026/07/boh-flower-main.jpg',
+    ];
+    ob_start(); ?>
+    <div class="boh-hero-slideshow" aria-hidden="true">
+      <?php foreach ($slides as $i => $url) : ?>
+        <div class="boh-hero-slide boh-hero-slide--<?php echo $i + 1; ?><?php echo $i === 0 ? ' is-active' : ''; ?>"
+             style="background-image: url('<?php echo esc_url($url); ?>')"></div>
+      <?php endforeach; ?>
+    </div>
+    <div class="boh-hero-dots" role="tablist" aria-label="Hero image">
+      <?php foreach ($slides as $i => $url) : ?>
+        <button type="button" class="boh-hero-dot<?php echo $i === 0 ? ' is-active' : ''; ?>"
+                data-slide="<?php echo $i; ?>"
+                aria-label="Show hero image <?php echo $i + 1; ?>"
+                role="tab" aria-selected="<?php echo $i === 0 ? 'true' : 'false'; ?>"></button>
+      <?php endforeach; ?>
+    </div>
+    <button type="button" class="boh-hero-pause" aria-label="Pause slideshow" aria-pressed="false">
+      <span class="boh-hero-pause__icon" aria-hidden="true"></span>
+    </button>
+    <script>
+    (function () {
+      // Reparent the slideshow + dots + pause button so they're direct
+      // children of the hero cover block. Otherwise they position relative
+      // to the block's inner container (which sizes to its text content)
+      // and end up outside the visible hero area.
+      const container = document.querySelector('.wp-block-cover.boh-hero');
+      const slideshow = document.querySelector('.boh-hero-slideshow');
+      const dotStrip  = document.querySelector('.boh-hero-dots');
+      const pauseBtn  = document.querySelector('.boh-hero-pause');
+      if (container && slideshow && slideshow.parentElement !== container) {
+        container.insertBefore(slideshow, container.firstChild);
+      }
+      if (container && dotStrip && dotStrip.parentElement !== container) {
+        container.appendChild(dotStrip);
+      }
+      if (container && pauseBtn && pauseBtn.parentElement !== container) {
+        container.appendChild(pauseBtn);
+      }
+
+      const dots   = document.querySelectorAll('.boh-hero-dots .boh-hero-dot');
+      const slides = document.querySelectorAll('.boh-hero-slideshow .boh-hero-slide');
+      if (!dots.length || !slides.length) return;
+      const total = slides.length;
+      let idx = 0;
+      let timer = null;
+      let userPaused = false; // explicit pause via the button wins over hover
+
+      function go(next) {
+        idx = ((next % total) + total) % total;
+        slides.forEach((s, i) => s.classList.toggle('is-active', i === idx));
+        dots.forEach((d, i) => {
+          const active = i === idx;
+          d.classList.toggle('is-active', active);
+          d.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+      }
+
+      function tick() { go(idx + 1); }
+
+      function start() {
+        if (userPaused) return;
+        stop();
+        timer = setInterval(tick, 6000);
+      }
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+      }
+
+      dots.forEach((d) => {
+        d.addEventListener('click', () => {
+          go(parseInt(d.dataset.slide, 10));
+          start(); // reset the countdown after manual pick
+        });
+      });
+
+      if (pauseBtn) {
+        pauseBtn.addEventListener('click', () => {
+          userPaused = !userPaused;
+          pauseBtn.classList.toggle('is-paused', userPaused);
+          pauseBtn.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
+          pauseBtn.setAttribute('aria-label', userPaused ? 'Play slideshow' : 'Pause slideshow');
+          if (userPaused) stop();
+          else start();
+        });
+      }
+
+      if (container) {
+        container.addEventListener('mouseenter', stop);
+        container.addEventListener('mouseleave', start);
+      }
+
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        start();
+      }
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_donate_cards] — two-card layout on /donate/ --------------------
+// Left card = external donation to WIN House (new tab). Right card = the
+// on-site GiveWP flow ("sponsor a basket") — scrolls to #give-form.
+add_shortcode('boh_donate_cards', function () {
+    $winhouse_url = 'https://form-renderer-app.donorperfect.io/give/win-house-edmonton-women-shelter-ltd/bfk_2026';
+    ob_start(); ?>
+    <div class="boh-donate-cards">
+      <article class="boh-donate-card boh-donate-card--winhouse">
+        <div class="boh-donate-card__eyebrow">Donate</div>
+        <h3 class="boh-donate-card__title">Donate directly to WIN&nbsp;House</h3>
+        <p class="boh-donate-card__lede">Make a one-time or monthly gift directly to WIN House. Donations support shelter programs, services, and ongoing work with women, non-binary individuals, and children. Donations are tax-deductible.</p>
+        <ul class="boh-donate-card__list">
+          <li>Tax receipt</li>
+          <li>Monthly or one-time gift</li>
+          <li>Used toward WIN House programming</li>
+        </ul>
+        <a class="boh-donate-card__cta" href="<?php echo esc_url( $winhouse_url ); ?>" target="_blank" rel="noopener">Donate to WIN House ↗</a>
+      </article>
+
+      <article class="boh-donate-card boh-donate-card--sponsor">
+        <div class="boh-donate-card__eyebrow">Sponsor a basket</div>
+        <h3 class="boh-donate-card__title">Sponsor a basket</h3>
+        <p class="boh-donate-card__lede">Can't attend the event or prefer to contribute financially? Sponsor a basket and we'll use your gift to purchase thoughtful comfort items for recipients.</p>
+        <ul class="boh-donate-card__list">
+          <li>If you can't join us at the event, feel free to get in touch to drop off your basket items.</li>
+          <li>You can also sponsor a basket by making a cash donation.</li>
+        </ul>
+        <a class="boh-donate-card__cta boh-donate-card__cta--primary" href="#give-form">Sponsor a basket →</a>
+      </article>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_how_it_works variant="compact|full"] 4-step process module ---
+// full    — full body text (About page)
+// compact — number + title only, for the home summary page
+add_shortcode('boh_how_it_works', function ($atts) {
+    $atts = shortcode_atts([
+        'variant' => 'full',
+        'intro'   => '1',
+    ], $atts, 'boh_how_it_works');
+    $compact = ($atts['variant'] === 'compact');
+    $steps = [
+        ['01', 'Choose items',      'Guests select and purchase 12 new comfort items that recipients can use and enjoy.'],
+        ['02', 'Bring or contribute','Bring your items to the event, partner with a friend to shop, or sponsor a basket with a financial gift.'],
+        ['03', 'Pack with care',    'After the event, the Rohit team transforms the donated items to baskets packed with care and intention.'],
+        ['04', 'Deliver hope',      'The Rohit team delivers the baskets to WIN House, who distributes them to the women as they embark on their next chapter.'],
+    ];
+    $classes = 'boh-how-it-works' . ($compact ? ' boh-how-it-works--compact' : '');
+    ob_start(); ?>
+    <div class="<?php echo esc_attr($classes); ?>">
+      <?php if ($atts['intro'] === '1') : ?>
+      <div class="boh-how-it-works__intro">
+        <span class="boh-eyebrow">How it works</span>
+        <h2>From your hands to a family in <em>need</em>.</h2>
+        <p>Four simple steps. One basket. A real moment of comfort for someone starting over.</p>
+      </div>
+      <?php endif; ?>
+      <div class="boh-how-it-works__grid">
+        <?php foreach ($steps as [$num, $title, $body]) : ?>
+          <div class="boh-how-it-works__step">
+            <div class="boh-how-it-works__num"><?php echo esc_html($num); ?>.</div>
+            <h3 class="boh-how-it-works__title"><?php echo esc_html($title); ?></h3>
+            <?php if (!$compact) : ?>
+              <p class="boh-how-it-works__body"><?php echo esc_html($body); ?></p>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_quick_links] — grid of section-nav cards for the home page ---
+add_shortcode('boh_quick_links', function () {
+    $links = [
+        ['/about/',   'About',    'The story behind the event, our partnership with WIN House, and how it started.'],
+        ['/donate/',  'Donate',   'Make a monetary gift — every dollar goes directly toward filling more baskets.'],
+        ['/sponsor/', 'Sponsor',  'Sponsor a basket or a table and put your name behind a night of giving.'],
+        ['/faqs/',    'FAQs',     'Answers about the event, donations, tax receipts, and how to help.'],
+        ['/gallery/', 'Gallery',  'Photos from past events — moments of care, delivered.'],
+        ['/rsvp/',    'RSVP',     'Reserve your spot for this year’s event on November 3, 2026.'],
+    ];
+    ob_start(); ?>
+    <div class="boh-quick-links" role="list">
+      <?php foreach ($links as [$href, $title, $desc]) : ?>
+        <a class="boh-quick-links__card" href="<?php echo esc_url($href); ?>" role="listitem">
+          <div class="boh-quick-links__title"><?php echo esc_html($title); ?><span aria-hidden="true" class="boh-quick-links__arrow">→</span></div>
+          <div class="boh-quick-links__desc"><?php echo esc_html($desc); ?></div>
+        </a>
+      <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_stats] — moved from home to about ----------------------------
+add_shortcode('boh_stats', function () {
+    // TODO: confirm final numbers with the team.
+    $stats = [
+        ['2,847', 'Baskets delivered'],
+        ['1,156', 'Families supported'],
+        ['3,421', 'Volunteers engaged'],
+        ['15',    'Years of service'],
+    ];
+    ob_start(); ?>
+    <div class="boh-stats">
+      <?php foreach ($stats as [$num, $label]) : ?>
+        <div class="boh-stats__cell">
+          <h2><?php echo esc_html($num); ?></h2>
+          <div class="boh-stats__label"><?php echo esc_html($label); ?></div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_faqs] — accordion-style FAQ list -----------------------------
+add_shortcode('boh_faqs', function () {
+    $faqs = [
+        ['What is Rohit\'s Baskets of Hope?',
+         'Rohit\'s Baskets of Hope is an annual community giving event that collects monetary and in-kind donations for people supported by WIN House in Edmonton. Guests bring comfort items, help fill baskets, and support an evening dedicated to care, dignity, and hope.'],
+        ['Who does Baskets of Hope support?',
+         'In Edmonton, Baskets of Hope supports WIN House and the women, non-binary individuals, and children they serve while fleeing domestic violence.'],
+        ['When and where is this year\'s event?',
+         'This year\'s event is scheduled for Tuesday, November 3, 2026 at 6:00 PM at the Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4. Please confirm the final date and time before publishing.'],
+        ['What should I bring?',
+         'Guests are encouraged to bring 12 new comfort items for the baskets. Suggested items include cozy socks or slippers, journals, books, body care, hand lotion, bath products, shampoo, conditioner, toothbrushes, reusable water bottles, small blankets, gift cards, or other thoughtful self-care items.'],
+        ['Do I need to bring all 12 items myself?',
+         'No. You are welcome to partner with a friend, family member, or colleague to contribute the 12 items together. The goal is to make giving feel accessible and shared.'],
+        ['Can I attend if I cannot bring items?',
+         'Yes. You can still attend, make a monetary gift, sponsor a basket, or contribute in another way. Every form of support helps.'],
+        ['Can I donate if I cannot attend the event?',
+         'Yes. You can donate directly to WIN House or sponsor a basket through Baskets of Hope. The Donate page includes both options.'],
+        ['Where do the baskets go?',
+         'Baskets are delivered to WIN House with care and respect for the privacy of the people receiving them.'],
+        ['Can my company sponsor the event?',
+         'Yes. Sponsorship opportunities are available for businesses and community partners. Visit the Sponsor page to download the sponsorship package or contact us to discuss a custom contribution.'],
+        ['Can I donate a silent auction item?',
+         'Yes. High-value items, services, and experiences can be contributed to the silent auction. Please contact the Baskets of Hope team to coordinate details.'],
+        ['Will I receive a tax receipt?',
+         'Donations made directly to WIN House are handled through WIN House, including receipting. Please confirm receipt details for basket sponsorships or other event contributions before making a gift.'],
+        ['Who can I contact with questions?',
+         'Email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a> and a member of the team will follow up.'],
+    ];
+    ob_start(); ?>
+    <div class="boh-faqs">
+      <?php foreach ($faqs as $i => [$q, $a]) : ?>
+        <details class="boh-faq"<?php echo $i === 0 ? ' open' : ''; ?>>
+          <summary class="boh-faq__q"><?php echo esc_html($q); ?><span class="boh-faq__icon" aria-hidden="true">+</span></summary>
+          <div class="boh-faq__a"><?php echo wp_kses_post($a); ?></div>
+        </details>
+      <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- [boh_gallery year="2025"] — event photo/video gallery -------------
+// Reads from a filter so image URLs live outside code. Empty state shows
+// a friendly "coming soon" until albums are populated.
+add_shortcode('boh_gallery', function ($atts) {
+    $a = shortcode_atts(['year' => date('Y')], $atts);
+    /**
+     * Filter: boh_gallery_items
+     * Return array keyed by year: [ 2024 => [ ['type'=>'image','url'=>'...','caption'=>'...'], ... ], ... ]
+     * Populate via a mu-plugin, or upload via wp-admin Media and hook in.
+     */
+    $all = apply_filters('boh_gallery_items', []);
+    $available_years = !empty($all) ? array_keys($all) : [(int) $a['year']];
+    rsort($available_years);
+    $selected = in_array((int) $a['year'], $available_years, true) ? (int) $a['year'] : $available_years[0];
+    $items = $all[$selected] ?? [];
+    ob_start(); ?>
+    <div class="boh-gallery" data-selected-year="<?php echo esc_attr($selected); ?>">
+      <?php if (count($available_years) > 1) : ?>
+        <div class="boh-gallery__years" role="tablist" aria-label="Event year">
+          <?php foreach ($available_years as $y) : ?>
+            <a class="boh-gallery__year<?php echo $y === $selected ? ' is-active' : ''; ?>"
+               href="?year=<?php echo (int) $y; ?>#gallery"><?php echo (int) $y; ?></a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (empty($items)) : ?>
+        <div class="boh-gallery__empty">
+          <p><strong>Photos coming soon.</strong></p>
+          <p>Once <?php echo (int) $selected; ?> event photos and videos are ready, they'll appear here. Have media to share? Email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a>.</p>
+        </div>
+      <?php else : ?>
+        <div class="boh-gallery__grid">
+          <?php foreach ($items as $item) : ?>
+            <figure class="boh-gallery__cell boh-gallery__cell--<?php echo esc_attr($item['type']); ?>">
+              <?php if ($item['type'] === 'video') : ?>
+                <video controls preload="metadata"<?php if (!empty($item['poster'])) echo ' poster="' . esc_url($item['poster']) . '"'; ?>>
+                  <source src="<?php echo esc_url($item['url']); ?>">
+                </video>
+              <?php else : ?>
+                <img src="<?php echo esc_url($item['url']); ?>" alt="<?php echo esc_attr($item['caption'] ?? ''); ?>" loading="lazy">
+              <?php endif; ?>
+              <?php if (!empty($item['caption'])) : ?>
+                <figcaption><?php echo esc_html($item['caption']); ?></figcaption>
+              <?php endif; ?>
+            </figure>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+// --- Relabel GiveWP's built-in "Donation" / "Donate" strings to
+//     "Sponsorship" / "Sponsor" — the BoH team frames every gift as
+//     sponsoring a basket, so the checkout should read consistently.
+add_filter('gettext', function ($translated, $original, $domain) {
+    if ($domain !== 'give') return $translated;
+    static $map = [
+        'Donate Now'                => 'Sponsor Now',
+        'Donation Total'            => 'Sponsorship Total',
+        'Donation Total:'           => 'Sponsorship Total:',
+        'Donation Amount'           => 'Sponsorship Amount',
+        'Donation Amount:'          => 'Sponsorship Amount:',
+        'Donation Processing...'    => 'Sponsorship Processing...',
+        'Choose Your Donation Amount' => 'Choose Your Sponsorship Amount',
+        'Custom Donation Amount'    => 'Custom Sponsorship Amount',
+    ];
+    return $map[$original] ?? $translated;
+}, 10, 3);
+
+// Celebratory success view for the RSVP form. Listens for CF7's
+// wpcf7mailsent event and swaps the form for a confetti-scattered
+// "You're in!" panel with the event details.
+add_action( 'wp_footer', function () {
+    if ( ! is_page( 'rsvp' ) ) return;
+    $event_when_full = 'Tuesday, November 3, 2026 · 6:00 PM';
+    $event_where     = 'Rohit Group Office, 10130 112 St NW, Edmonton';
+    ?>
+    <script>
+    (function () {
+        // Compact confetti — no dependencies. Bursts brand-colored bits
+        // from the top-center of the viewport for ~2.5s.
+        function boh_confetti(duration) {
+            duration = duration || 2500;
+            const colors = ['#d01482', '#f9d135', '#4A1C68', '#ffffff', '#ffb2d6'];
+            const layer = document.createElement('div');
+            layer.setAttribute('aria-hidden', 'true');
+            layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999';
+            document.body.appendChild(layer);
+
+            const count = 140;
+            const w = window.innerWidth;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('span');
+                const size = 6 + Math.random() * 10;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const startX = Math.random() * w;
+                const endX = startX + (Math.random() - 0.5) * 480;
+                const endY = window.innerHeight + 80;
+                const rot = (Math.random() - 0.5) * 720;
+                const delay = Math.random() * 400;
+                const dur = duration + Math.random() * 800;
+                const round = Math.random() < 0.35;
+                p.style.cssText =
+                    'position:absolute;top:-24px;left:' + startX + 'px;' +
+                    'width:' + size + 'px;height:' + (size * (round ? 1 : 0.5)) + 'px;' +
+                    'background:' + color + ';' +
+                    (round ? 'border-radius:50%;' : 'border-radius:2px;') +
+                    'opacity:0.95;' +
+                    'transform:translateY(0) rotate(0deg);' +
+                    'transition:transform ' + dur + 'ms cubic-bezier(.22,.61,.36,1) ' + delay + 'ms, opacity 700ms ease-in ' + (dur - 400 + delay) + 'ms;';
+                layer.appendChild(p);
+                // Kick off animation next frame
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    p.style.transform = 'translate(' + (endX - startX) + 'px, ' + endY + 'px) rotate(' + rot + 'deg)';
+                    p.style.opacity = '0';
+                }));
+            }
+            setTimeout(() => layer.remove(), duration + 1600);
+        }
+
+        function boh_show_success() {
+            const rsvp = document.querySelector('.boh-rsvp');
+            if (!rsvp) return;
+
+            // Read submitted values for personalization
+            const form = rsvp.querySelector('form');
+            const firstEl = form && form.querySelector('input[name="first-name"]');
+            const partyEl = form && form.querySelector('select[name="party-size"]');
+            const emailEl = form && form.querySelector('input[name="your-email"]');
+            const first = (firstEl && firstEl.value || '').trim().split(/\s+/)[0] || 'friend';
+            const party = (partyEl && partyEl.value || '').trim();
+            const email = (emailEl && emailEl.value || '').trim();
+
+            const gcal = 'https://calendar.google.com/calendar/render' +
+                '?action=TEMPLATE' +
+                '&text=' + encodeURIComponent("Rohit's Baskets of Hope 2026") +
+                '&dates=20261104T010000Z/20261104T040000Z' +
+                '&details=' + encodeURIComponent("An evening of community and giving in support of WIN House.") +
+                '&location=' + encodeURIComponent(<?php echo wp_json_encode( $event_where ); ?>);
+            const ics = '/?boh_ics=1';
+
+            const html = ''
+              + '<div class="boh-rsvp-success">'
+              +   '<div class="boh-rsvp-success__eyebrow">You\'re in</div>'
+              +   '<h3 class="boh-rsvp-success__title">See you November 3, ' + first.replace(/[<>&]/g, '') + '.</h3>'
+              +   '<p class="boh-rsvp-success__lede">We\'ve saved you a seat at Rohit\'s Baskets of Hope 2026. A confirmation is on its way to <strong>' + (email.replace(/[<>&]/g, '') || 'your inbox') + '</strong>.</p>'
+              +   '<div class="boh-rsvp-success__grid">'
+              +     '<div class="boh-rsvp-success__cell">'
+              +       '<div class="boh-rsvp-success__label">When</div>'
+              +       '<div class="boh-rsvp-success__val">' + <?php echo wp_json_encode( $event_when_full ); ?> + '</div>'
+              +     '</div>'
+              +     '<div class="boh-rsvp-success__cell">'
+              +       '<div class="boh-rsvp-success__label">Where</div>'
+              +       '<div class="boh-rsvp-success__val">' + <?php echo wp_json_encode( $event_where ); ?> + '</div>'
+              +     '</div>'
+              +     '<div class="boh-rsvp-success__cell">'
+              +       '<div class="boh-rsvp-success__label">Party of</div>'
+              +       '<div class="boh-rsvp-success__val">' + (party.replace(/[<>&]/g, '') || '—') + '</div>'
+              +     '</div>'
+              +     '<div class="boh-rsvp-success__cell">'
+              +       '<div class="boh-rsvp-success__label">Bring</div>'
+              +       '<div class="boh-rsvp-success__val">12 comfort items<br><span class="boh-rsvp-success__sub">Or partner with a friend</span></div>'
+              +     '</div>'
+              +   '</div>'
+              +   '<div class="boh-rsvp-success__ctas">'
+              +     '<a class="boh-rsvp-success__cta boh-rsvp-success__cta--primary" href="' + gcal + '" target="_blank" rel="noopener">Add to Google Calendar</a>'
+              +     '<a class="boh-rsvp-success__cta" href="' + ics + '">Download .ics (Apple / Outlook)</a>'
+              +   '</div>'
+              +   '<p class="boh-rsvp-success__share">Know someone who\'d love this? <a href="mailto:?subject=' + encodeURIComponent("You should come — Rohit's Baskets of Hope 2026") + '&body=' + encodeURIComponent("I just RSVPed for Rohit's Baskets of Hope on Nov 3. Great cause — free evening, WIN House support. Sign up at https://boh.halfcup.ca/rsvp/") + '">Forward the invitation.</a></p>'
+              + '</div>';
+
+            // Hide the form + old spots row + welcome banner
+            const toHide = rsvp.querySelectorAll('form, .boh-rsvp__header, .boh-rsvp-welcome');
+            toHide.forEach(function (el) {
+                el.style.transition = 'opacity .3s ease';
+                el.style.opacity = '0';
+                setTimeout(() => { el.style.display = 'none'; }, 300);
+            });
+
+            setTimeout(function () {
+                rsvp.insertAdjacentHTML('afterbegin', html);
+                boh_confetti(2600);
+                // Smooth-scroll to success
+                const t = rsvp.querySelector('.boh-rsvp-success');
+                if (t) {
+                    const y = t.getBoundingClientRect().top + window.scrollY - 100;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            }, 320);
+        }
+
+        document.addEventListener('wpcf7mailsent', function (e) {
+            // Only celebrate for the RSVP form (form id 19)
+            if (e && e.detail && e.detail.contactFormId && parseInt(e.detail.contactFormId, 10) !== 19) return;
+            boh_show_success();
+        });
+    })();
+    </script>
+    <style>
+    .boh-rsvp-success {
+        background: linear-gradient(135deg, rgba(208,20,130,0.09), rgba(249,209,53,0.14));
+        border: 1px solid rgba(208,20,130,0.28);
+        border-radius: 18px;
+        padding: 32px 32px 30px;
+        margin: 0 0 12px;
+        animation: bohRsvpPop .5s cubic-bezier(.2,.9,.3,1.2) both;
+    }
+    @keyframes bohRsvpPop {
+        from { opacity: 0; transform: translateY(12px) scale(.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .boh-rsvp-success__eyebrow {
+        display: inline-block;
+        background: var(--boh-magenta);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        padding: 5px 12px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+    }
+    .boh-rsvp-success__title {
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: clamp(28px, 4vw, 40px) !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px !important;
+        color: var(--boh-ink) !important;
+        line-height: 1.15 !important;
+    }
+    .boh-rsvp-success__lede {
+        color: var(--boh-ink-soft);
+        font-size: 16px;
+        line-height: 1.55;
+        margin: 0 0 24px !important;
+        max-width: 640px;
+    }
+    .boh-rsvp-success__grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin: 0 0 26px;
+    }
+    @media (max-width: 720px) { .boh-rsvp-success__grid { grid-template-columns: repeat(2, 1fr); } }
+    .boh-rsvp-success__cell {
+        background: #fff;
+        border: 1px solid rgba(208,20,130,0.14);
+        border-radius: 12px;
+        padding: 14px 16px 15px;
+    }
+    .boh-rsvp-success__label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--boh-magenta);
+        margin-bottom: 5px;
+    }
+    .boh-rsvp-success__val {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--boh-ink);
+        line-height: 1.35;
+    }
+    .boh-rsvp-success__sub {
+        display: block;
+        color: var(--boh-ink-soft);
+        font-weight: 500;
+        font-size: 13px;
+        margin-top: 2px;
+    }
+    .boh-rsvp-success__ctas {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 0 0 20px;
+    }
+    .boh-rsvp-success__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        background: #fff;
+        border: 1.5px solid var(--boh-ink);
+        color: var(--boh-ink) !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        font-size: 14px;
+        border-radius: 999px;
+        transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+    .boh-rsvp-success__cta:hover {
+        transform: translateY(-1px);
+        background: var(--boh-ink);
+        color: #fff !important;
+    }
+    .boh-rsvp-success__cta--primary {
+        background: var(--boh-magenta);
+        border-color: var(--boh-magenta);
+        color: #fff !important;
+    }
+    .boh-rsvp-success__cta--primary:hover {
+        background: var(--boh-magenta-deep, #a20e63);
+        border-color: var(--boh-magenta-deep, #a20e63);
+    }
+    .boh-rsvp-success__share {
+        color: var(--boh-ink-soft) !important;
+        font-size: 14px;
+        margin: 0 !important;
+    }
+    .boh-rsvp-success__share a {
+        color: var(--boh-magenta);
+        font-weight: 700;
+        text-decoration: underline;
+    }
+    </style>
+    <?php
+}, 65 );
+
+// Pre-fill the RSVP CF7 form + show a welcome banner when someone lands
+// on /rsvp/ from an invitation email (URL contains ?boh_n / ?boh_e).
+// The banner tells them their invite is recognised and their info is
+// pre-filled — replaces the previous silent pre-fill.
+add_action( 'wp_footer', function () {
+    if ( ! is_page( 'rsvp' ) ) return;
+    ?>
+    <script>
+    (function () {
+        const p = new URLSearchParams(window.location.search);
+        const name = p.get('boh_n');
+        const email = p.get('boh_e');
+        if (!name && !email) return;
+
+        function fill(sel, val) {
+            if (!val) return;
+            document.querySelectorAll(sel).forEach(function (el) {
+                if (!el.value) el.value = val;
+            });
+        }
+        // Split "First Last" into first/last if the invitee name is stored as one string
+        const nameParts = (name || '').trim().split(/\s+/);
+        const firstName = nameParts.shift() || '';
+        const lastName  = nameParts.join(' ');
+        fill('input[name="first-name"]', firstName);
+        fill('input[name="last-name"]',  lastName);
+        fill('input[name="your-email"]', email);
+
+        // Insert the welcome banner just above the RSVP form. Retry a few
+        // times in case the CF7 form finishes rendering async.
+        const first = (name || '').split(/\s+/)[0] || 'friend';
+        function insertBanner() {
+            if (document.querySelector('.boh-rsvp-welcome')) return true;
+            const rsvp = document.querySelector('.boh-rsvp');
+            if (!rsvp) return false;
+            const b = document.createElement('div');
+            b.className = 'boh-rsvp-welcome';
+            b.innerHTML = ''
+              + '<div class="boh-rsvp-welcome__eyebrow">Invitation confirmed</div>'
+              + '<h3 class="boh-rsvp-welcome__title">Welcome, ' + first.replace(/[<>&]/g, '') + '.</h3>'
+              + '<p class="boh-rsvp-welcome__body">We\'ve pre-filled your name and email below. Confirm your party size, tick the terms, and hit Reserve to save your seat.</p>';
+            rsvp.insertBefore(b, rsvp.firstChild);
+            return true;
+        }
+        let tries = 0;
+        (function try_() {
+            const ok = insertBanner();
+            if (ok) {
+                // Scroll to the welcome banner so the invitee lands
+                // right at their invitation instead of on the countdown.
+                const target = document.querySelector('.boh-rsvp-welcome');
+                if (target) {
+                    // Offset for the sticky header (~90px)
+                    const y = target.getBoundingClientRect().top + window.scrollY - 90;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+                return;
+            }
+            if (++tries > 20) return;
+            setTimeout(try_, 150);
+        })();
+    })();
+    </script>
+    <style>
+    .boh-rsvp-welcome {
+        background: linear-gradient(135deg, rgba(208,20,130,0.08), rgba(249,209,53,0.10));
+        border: 1px solid rgba(208,20,130,0.25);
+        border-left: 4px solid var(--boh-magenta);
+        border-radius: 12px;
+        padding: 18px 22px 16px;
+        margin: 0 0 24px;
+    }
+    .boh-rsvp-welcome__eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--boh-magenta);
+        margin-bottom: 4px;
+    }
+    .boh-rsvp-welcome__title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 22px;
+        margin: 0 0 6px !important;
+        color: var(--boh-ink);
+        letter-spacing: -0.01em;
+    }
+    .boh-rsvp-welcome__body {
+        margin: 0 !important;
+        color: var(--boh-ink-soft);
+        line-height: 1.55;
+        font-size: 14px;
+    }
+    </style>
+    <?php
+}, 70 );
+
+// --- Suppress GiveWP's false-positive "must enable a payment gateway" --
+// Manual gateway IS enabled site-wide AND per-form (see _give_gateways),
+// but the v3-form-block-with-legacy-template combo sometimes prints this
+// error anyway. Strip it from the notice bag before render.
+add_filter('give_print_errors', function ($errors) {
+    if (!is_array($errors)) return $errors;
+    $needles = [
+        'You must enable a payment gateway',
+        'The selected payment gateway is not enabled',
+    ];
+    foreach ($errors as $key => $msg) {
+        if (!is_string($msg)) continue;
+        foreach ($needles as $n) {
+            if (stripos($msg, $n) !== false) {
+                unset($errors[$key]);
+                break;
+            }
+        }
+    }
+    return $errors;
+}, 5);
+// Same filter applied to v3 frontend error dispatch
+add_filter('give_get_errors', function ($errors) {
+    if (!is_array($errors)) return $errors;
+    foreach ($errors as $key => $msg) {
+        if (is_string($msg) && (
+            stripos($msg, 'You must enable a payment gateway') !== false ||
+            stripos($msg, 'The selected payment gateway is not enabled') !== false
+        )) {
+            unset($errors[$key]);
+        }
+    }
+    return $errors;
+}, 5);
+
+// --- Clear stale GiveWP session errors on fresh donate-page GETs --------
+// Symptom: after one failed checkout, GiveWP retains validation errors in
+// $_SESSION and renders them at the top of the form on every subsequent
+// page-load until the user submits successfully. We treat any plain GET
+// (no give_action POST and no donation in flight) as a fresh visit and
+// flush the error bag before the page renders.
+add_action('template_redirect', function () {
+    if (!function_exists('give_get_errors')) return;
+    if (!is_page('donate')) return;
+    if (!empty($_POST['give_action']) || !empty($_POST['give-form-id'])) return;
+    if (function_exists('give_clear_errors')) {
+        give_clear_errors();
+    }
+}, 1);
+
+// GiveWP's legacy on-page template can render without donor fields in this
+// sandbox setup. Provide test donor data and keep the selected gateway synced
+// so both "Test Donation" and "Offline Donation" submit reliably.
+add_action('wp_footer', function () {
+    if (!is_page('donate')) return;
+    ?>
+    <script>
+    (function(){
+      function ready(fn){
+        if (document.readyState !== 'loading') fn();
+        else document.addEventListener('DOMContentLoaded', fn);
+      }
+      ready(function(){
+        document.querySelectorAll('#give-form .give-form-wrap form').forEach(function(form){
+          function hidden(name, value){
+            let input = form.querySelector('input[name="' + name + '"]');
+            if (!input) {
+              input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = name;
+              form.appendChild(input);
+            }
+            input.value = value;
+            return input;
+          }
+          hidden('give_first', 'Sandbox');
+          hidden('give_last', 'Donor');
+          hidden('give_email', 'sandbox-donor@example.com');
+
+          const hiddenGateway = form.querySelector('input[name="give-gateway"]');
+          const radios = Array.from(form.querySelectorAll('input.give-gateway[name="payment-mode"]'));
+
+          function syncGateway(value){
+            const selected = value
+              ? radios.find(r => r.value === value)
+              : (radios.find(r => r.checked) || radios[0]);
+            if (!selected) return;
+            selected.checked = true;
+            radios.forEach(r => {
+              const li = r.closest('li');
+              if (li) li.classList.toggle('give-gateway-option-selected', r === selected);
+            });
+            if (hiddenGateway) hiddenGateway.value = selected.value;
+            try {
+              const url = new URL(form.action, window.location.href);
+              url.searchParams.set('payment-mode', selected.value);
+              form.action = url.toString();
+            } catch (e) {}
+          }
+
+          radios.forEach(function(radio){
+            radio.addEventListener('change', function(){ syncGateway(radio.value); });
+            const label = form.querySelector('label[for="' + radio.id + '"]');
+            if (label) {
+              label.addEventListener('click', function(){
+                setTimeout(function(){ syncGateway(radio.value); }, 0);
+              });
+            }
+          });
+
+          form.addEventListener('submit', function(){ syncGateway(); });
+          syncGateway();
+        });
+      });
+    })();
+    </script>
+    <?php
+}, 80);
+
+/**
+ * [boh_hero_mark] — big animated brand mark, dropped into the home hero
+ * above the "Since 2010 · Edmonton…" tagline. Reuses the .boh-mark CSS
+ * (see style.css) so it stays in sync with the header logo animation.
+ * Attributes: size (px, default 260), class (extra classes).
+ */
+add_shortcode('boh_hero_mark', function ($atts) {
+    $atts = shortcode_atts([
+        'size'  => '260',
+        'class' => '',
+    ], $atts, 'boh_hero_mark');
+    $size = max(60, intval($atts['size']));
+    $extra = trim($atts['class']);
+    ob_start(); ?>
+    <div class="boh-hero-mark<?php echo $extra ? ' ' . esc_attr($extra) : ''; ?>" style="--boh-mark-size: <?php echo $size; ?>px">
+      <svg class="boh-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
+           role="img" aria-label="Rohit's Baskets of Hope" data-play-intro>
+        <path class="arc arc-y" pathLength="100" fill="none" stroke="#F9D135" stroke-width="7" stroke-linecap="round"
+              d="M 34.18 54 A 76 92 0 0 1 173.42 76.18"/>
+        <path class="arc arc-m" pathLength="100" fill="none" stroke="#d01482" stroke-width="7" stroke-linecap="round"
+              d="M 173.42 123.82 A 76 92 0 1 1 34.18 54"/>
+        <line class="tick tick-1" stroke="#F9D135" stroke-width="4" stroke-linecap="round" x1="164" y1="87"  x2="192" y2="87"/>
+        <line class="tick tick-2" stroke="#F9D135" stroke-width="4" stroke-linecap="round" x1="164" y1="96"  x2="192" y2="96"/>
+        <line class="tick tick-3" stroke="#F9D135" stroke-width="4" stroke-linecap="round" x1="164" y1="105" x2="192" y2="105"/>
+        <line class="tick tick-4" stroke="#F9D135" stroke-width="4" stroke-linecap="round" x1="164" y1="114" x2="192" y2="114"/>
+        <g class="wm-row wm-1"><text class="wm" x="88" y="86"  font-size="19" font-family="Montserrat, 'Arial Black', sans-serif" font-weight="900" fill="#0A0A0A" text-anchor="middle">ROHIT'S</text></g>
+        <g class="wm-row wm-2"><text class="wm" x="88" y="107" font-size="19" font-family="Montserrat, 'Arial Black', sans-serif" font-weight="900" fill="#0A0A0A" text-anchor="middle">BASKETS</text></g>
+        <g class="wm-row wm-3"><text class="wm" x="88" y="128" font-size="19" font-family="Montserrat, 'Arial Black', sans-serif" font-weight="900" fill="#0A0A0A" text-anchor="middle">OF <tspan class="wm-hope" fill="#d01482">HOPE</tspan></text></g>
+      </svg>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+/**
+ * Animated brand mark — play the intro once per session for every mark
+ * carrying the `data-play-intro` attribute (header logo + any hero marks).
+ * The finished mark is the CSS default; adding .is-playing triggers the
+ * draw-in animation. The header mark also replays on hover.
+ */
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function(){
+      const KEY = 'boh_logo_played';
+      const intros = document.querySelectorAll('.boh-mark[data-play-intro]');
+      if (!intros.length) return;
+
+      function play(el) {
+        el.classList.remove('is-playing');
+        void el.getBoundingClientRect();
+        el.classList.add('is-playing');
+      }
+
+      // First visit this session: play all intro-marked marks once.
+      try {
+        if (!sessionStorage.getItem(KEY)) {
+          intros.forEach(play);
+          sessionStorage.setItem(KEY, '1');
+        }
+      } catch (e) { /* privacy mode — just skip */ }
+
+      // Every intro-marked mark replays on hover — hover the SVG itself
+      // OR the wrapper (so the header link's whole hit area triggers).
+      // Debounced 2.6s so mousing across mid-animation doesn't restart it.
+      intros.forEach(function(mark){
+        let hoverArmed = true;
+        const targets = [mark, mark.parentElement].filter(Boolean);
+        targets.forEach(function(target){
+          target.addEventListener('mouseenter', function(){
+            if (!hoverArmed) return;
+            hoverArmed = false;
+            play(mark);
+            setTimeout(function(){ hoverArmed = true; }, 2600);
+          });
+        });
+      });
+    })();
+    </script>
+    <?php
+}, 90);

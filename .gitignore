@@ -1,0 +1,17 @@
+# Track only the custom BoH code: theme, deploy bundle, helper scripts.
+# WordPress core, plugins, uploads, and secrets stay out of version control.
+/*
+!/.gitignore
+!/wp-content/
+/wp-content/*
+!/wp-content/themes/
+/wp-content/themes/*
+!/wp-content/themes/astra-boh/
+!/deploy-boh-4.32/
+!/restore-evicted.sh
+!/deploy-feedback-to-live.sh
+
+# never commit credentials or archives
+wp-config.php
+wp-config.php.*
+*.zip

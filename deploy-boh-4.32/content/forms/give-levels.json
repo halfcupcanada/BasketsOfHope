@@ -1,0 +1,7 @@
+[
+  {"_give_id":{"level_id":"1"},"_give_amount":"25.00","_give_text":"Comfort for 1 woman","_give_default":""},
+  {"_give_id":{"level_id":"2"},"_give_amount":"50.00","_give_text":"A basket for 1 family","_give_default":"default"},
+  {"_give_id":{"level_id":"3"},"_give_amount":"100.00","_give_text":"Two complete baskets","_give_default":""},
+  {"_give_id":{"level_id":"4"},"_give_amount":"250.00","_give_text":"Five families supported","_give_default":""},
+  {"_give_id":{"level_id":"5"},"_give_amount":"500.00","_give_text":"A full evening of giving","_give_default":""}
+]

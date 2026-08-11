@@ -1,0 +1,22 @@
+<label> Your name <span class="req">*</span>
+    [text* your-name placeholder "Full name"] </label>
+
+<label> Email <span class="req">*</span>
+    [email* your-email placeholder "you@example.com"] </label>
+
+<label> Phone (optional)
+    [tel your-phone placeholder "(587) 555-0123"] </label>
+
+<label> How many seats? <span class="req">*</span>
+    [select* party-size first_as_label "How many seats?" "1 — Just me" "2 — Plus a guest" "3" "4" "5" "6+"] </label>
+
+<label> Comfort items you'll bring (optional)
+    [text items-bring placeholder "12 candles, 6 journals, gift cards…"] </label>
+
+<label> Dietary or accessibility needs
+    [textarea dietary x4 placeholder "Anything we should know to make you comfortable?"] </label>
+
+<label> [checkbox* terms use_label_element "I agree to the event terms & privacy policy."]
+</label>
+
+[submit "Reserve my seat →"]
