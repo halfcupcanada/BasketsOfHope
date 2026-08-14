@@ -4051,7 +4051,9 @@ a.boh-rohit-brand,
   position: relative;
   line-height: 1.5;
 }
-.boh-donate-card__list li::before {
+/* .entry-content ul li::before is more specific, so match it here to keep
+   the bullets in the eyebrow's olive rather than the default ember. */
+.entry-content .boh-donate-card__list li::before {
   content: '';
   position: absolute;
   left: 0;
