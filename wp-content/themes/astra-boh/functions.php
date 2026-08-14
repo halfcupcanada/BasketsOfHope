@@ -7,8 +7,13 @@
  */
 
 // --- Enqueue our stylesheet (no parent dependency) -----------------------
+// Version from the file's mtime so every deploy busts the browser and CDN
+// cache. A fixed string ("5.00") meant edited CSS kept being served stale
+// from Cloudflare long after the file on disk had changed.
 add_action('wp_enqueue_scripts', function () {
-    wp_enqueue_style('boh-style', get_stylesheet_uri(), [], '5.00');
+    $css = get_stylesheet_directory() . '/style.css';
+    $ver = file_exists($css) ? (string) filemtime($css) : '5.00';
+    wp_enqueue_style('boh-style', get_stylesheet_uri(), [], $ver);
 });
 
 function boh_logo_url($size = 'full') {
