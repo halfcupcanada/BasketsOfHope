@@ -630,8 +630,10 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
   padding-top: 0 !important;
   margin-top: 0 !important;
 }
-/* Non-hero pages: leave room for the fixed header */
-.boh-main .entry-content:not(:has(> .wp-block-cover:first-child)) {
+/* Non-hero pages: leave room for the fixed header. Pages opening with a
+   full-bleed banner — a cover block or [boh_page_hero] — are excluded so
+   the photo runs to the top and sits under the menu. */
+.boh-main .entry-content:not(:has(> .wp-block-cover:first-child)):not(:has(> .boh-page-hero:first-child)) {
   margin-top: 0;
   padding-top: 96px;
 }
