@@ -375,20 +375,40 @@ body.admin-bar #masthead.boh-header {
 body.boh-scrolled .boh-header__title { color: var(--boh-ink); }
 
 /* Header logo — icon-only brand mark, no adjacent text label.
-   Oversized relative to the pill so it overhangs top and bottom:
-   the mark breaks the frame and leads the composition. */
-.boh-header__logo {
+   At the top of the page it is double size and hangs below the bar into
+   the hero; once scrolled past the hero it shrinks back inside the bar.
+   The anchor reserves only bar-height space and the image is positioned
+   absolutely inside it, so the oversized mark never grows the bar. */
+.boh-header__title--icon-only {
+  gap: 0;
+  position: relative;
   display: block;
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  flex: 0 0 auto;
-  /* Fully contained in the bar — proportionate to its height */
-  margin: 0;
-  filter: drop-shadow(0 3px 10px rgba(31,26,36,0.12));
-  transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .25s ease;
+  width: var(--boh-logo-size, 104px);
+  height: var(--boh-logo-box, 52px);
+  transition: width .3s cubic-bezier(.2,.8,.2,1);
 }
-.boh-header__title--icon-only { gap: 0; }
+.boh-header__logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: var(--boh-logo-size, 104px);
+  height: var(--boh-logo-size, 104px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgba(31,26,36,0.18));
+  transition: width .3s cubic-bezier(.2,.8,.2,1),
+              height .3s cubic-bezier(.2,.8,.2,1),
+              transform .25s cubic-bezier(.2,.8,.2,1),
+              filter .25s ease;
+}
+/* Scrolled past the hero: shrink to fit entirely within the bar. */
+body.boh-scrolled .boh-header__title--icon-only,
+body.boh-scrolled .boh-header__logo {
+  --boh-logo-size: 52px;
+}
+body.boh-scrolled .boh-header__logo {
+  filter: drop-shadow(0 3px 10px rgba(31,26,36,0.12));
+}
 .boh-header__title:hover .boh-header__logo {
   transform: translateY(-3px) scale(1.04);
   filter: drop-shadow(0 12px 28px rgba(208,20,130,0.25));
@@ -490,10 +510,20 @@ body.boh-scrolled .boh-header__title { color: var(--boh-ink); }
 }
 
 @media (max-width: 900px) {
-  .boh-header__logo { width: 46px; height: 46px; }
+  .boh-header__title--icon-only,
+  .boh-header__logo { --boh-logo-size: 84px; --boh-logo-box: 46px; }
+  body.boh-scrolled .boh-header__title--icon-only,
+  body.boh-scrolled .boh-header__logo { --boh-logo-size: 46px; }
 }
 @media (max-width: 640px) {
-  .boh-header__logo { width: 40px; height: 40px; }
+  .boh-header__title--icon-only,
+  .boh-header__logo { --boh-logo-size: 68px; --boh-logo-box: 40px; }
+  body.boh-scrolled .boh-header__title--icon-only,
+  body.boh-scrolled .boh-header__logo { --boh-logo-size: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-header__title--icon-only,
+  .boh-header__logo { transition: none; }
 }
 
 /* Logo image */
@@ -1962,13 +1992,19 @@ h2.has-text-align-center + p,
 }
 
 /* — RSVP form — */
+/* Same board treatment as the Donate and Sponsor forms (Aug-2026
+   feedback: the RSVP form should be framed like the others). */
 .boh-rsvp {
-  background: #fff;
-  border: 1px solid var(--boh-rule);
-  border-radius: var(--boh-r-lg);
-  padding: 40px;
-  margin: 24px 0;
-  box-shadow: var(--boh-shadow-md);
+  background: #FFFDF4;
+  border: 2px solid rgba(220, 179, 29, 0.45);
+  border-radius: 28px;
+  padding: 48px clamp(20px, 5vw, 56px) 56px;
+  margin: 8px auto 24px;
+  max-width: 960px;
+  box-shadow: 0 14px 36px rgba(31, 26, 36, 0.08);
+}
+@media (max-width: 720px) {
+  .boh-rsvp { border-radius: 20px; }
 }
 .boh-rsvp__header {
   display: flex;
@@ -3882,8 +3918,18 @@ figure.boh-about-image ~ p {
      now that the photo also fills the strip behind the header */
   height: clamp(308px, calc(34vw + 88px), 508px);
   background-size: cover;
-  background-position: center 40%;
+  /* Bias toward the top of the frame: these are group photos and anything
+     past ~30% starts cropping faces (Aug-2026 feedback). */
+  background-position: center 22%;
   background-repeat: no-repeat;
+}
+/* Narrow viewports crop hardest, so give the banner more height and sit
+   even closer to the top of the image. */
+@media (max-width: 900px) {
+  .boh-page-hero__image {
+    height: clamp(300px, 52vw, 420px);
+    background-position: center 18%;
+  }
 }
 /* Bottom vignette so the transition into the body is soft, plus a light
    wash at the very top so the nav stays readable over the photo */
@@ -4643,6 +4689,63 @@ a.boh-rohit-brand,
   color: var(--boh-ink) !important;
   border-color: #fff !important;
 }
+
+/* Light WHEN band — since Aug-2026 this section leads the page directly
+   under the hero, on white rather than ink. Undo the dark-band treatment
+   above so the base (light) countdown styling shows through. Must stay
+   after those rules: same specificity, so source order decides. */
+.boh-when-band--light {
+  background: #fff;
+}
+.boh-when-band--light .boh-home-section__heading { color: var(--boh-ink); }
+.boh-when-band--light .boh-home-section__meta { color: var(--boh-ink-soft); }
+.boh-when-band--light .boh-countdown__unit {
+  background: #fff;
+  border-color: var(--boh-rule);
+  box-shadow: 0 2px 10px rgba(31,26,36,0.05);
+}
+.boh-when-band--light .boh-countdown__num { color: var(--boh-plum); }
+.boh-when-band--light .boh-countdown__label { color: var(--boh-ink-mute); }
+
+/* ── Sponsor logo wall ───────────────────────────────────────────────
+   A stock WordPress Gallery block with .boh-sponsor-logos, so the team
+   can add logos in the editor with no markup. Each logo sits on a white
+   card and is contained rather than cropped, so mixed aspect ratios and
+   transparent PNGs all read evenly. */
+.boh-sponsor-logos.wp-block-gallery {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto 28px;
+}
+.boh-sponsor-logos.wp-block-gallery .wp-block-image {
+  margin: 0 !important;
+  width: auto !important;
+  background: #fff;
+  border: 1px solid rgba(31,26,36,0.08);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  box-shadow: 0 4px 14px rgba(31,26,36,0.05);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.boh-sponsor-logos.wp-block-gallery .wp-block-image:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(31,26,36,0.10);
+}
+.boh-sponsor-logos.wp-block-gallery img {
+  width: auto !important;
+  max-width: 100%;
+  max-height: 76px;
+  height: auto !important;
+  object-fit: contain !important;
+}
+/* An empty gallery (no logos added yet) should take up no space */
+.boh-sponsor-logos.wp-block-gallery:empty { display: none !important; }
 
 /* Explore band sits on paper-2; keep the card whites crisp on it */
 .boh-explore-band .boh-quick-links__card { border-color: rgba(10,10,10,0.06); }

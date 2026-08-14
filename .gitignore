@@ -7,6 +7,8 @@
 !/wp-content/themes/
 /wp-content/themes/*
 !/wp-content/themes/astra-boh/
+# Custom mu-plugins (gallery scanner + uploader, invitations, SMTP, Stripe)
+!/wp-content/mu-plugins/
 !/deploy-boh-4.32/
 !/restore-evicted.sh
 !/deploy-feedback-to-live.sh
