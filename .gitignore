@@ -12,6 +12,7 @@
 !/deploy-boh-4.32/
 !/restore-evicted.sh
 !/CONTENT-EDITING-GUIDE.md
+!/assets/
 !/deploy-feedback-to-live.sh
 
 # never commit credentials or archives

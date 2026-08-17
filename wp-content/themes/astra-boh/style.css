@@ -4874,12 +4874,21 @@ a.boh-rohit-brand,
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(31,26,36,0.10);
 }
+/* Core ships `.wp-block-gallery.has-nested-images figure.wp-block-image > img`
+   with object-fit:cover and width/height 100%, which crops wide marks such as
+   PCL's. Match that selector's specificity so the logo is contained instead. */
+.boh-sponsor-logos.wp-block-gallery figure.wp-block-image > img,
 .boh-sponsor-logos.wp-block-gallery img {
   width: auto !important;
-  max-width: 100%;
-  max-height: 76px;
   height: auto !important;
+  max-width: 100% !important;
+  max-height: 72px !important;
   object-fit: contain !important;
+  flex: 0 0 auto !important;
+}
+.boh-sponsor-logos.wp-block-gallery figure.wp-block-image {
+  flex-grow: 0 !important;
+  overflow: visible !important;
 }
 /* An empty gallery (no logos added yet) should take up no space */
 .boh-sponsor-logos.wp-block-gallery:empty { display: none !important; }
