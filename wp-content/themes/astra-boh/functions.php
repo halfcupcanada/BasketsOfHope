@@ -1072,21 +1072,151 @@ add_shortcode('boh_gallery', function ($atts) {
         </div>
       <?php else : ?>
         <div class="boh-gallery__grid">
-          <?php foreach ($items as $item) : ?>
+          <?php foreach ($items as $i => $item) : ?>
             <figure class="boh-gallery__cell boh-gallery__cell--<?php echo esc_attr($item['type']); ?>">
-              <?php if ($item['type'] === 'video') : ?>
-                <video controls preload="metadata"<?php if (!empty($item['poster'])) echo ' poster="' . esc_url($item['poster']) . '"'; ?>>
-                  <source src="<?php echo esc_url($item['url']); ?>">
-                </video>
-              <?php else : ?>
-                <img src="<?php echo esc_url($item['url']); ?>" alt="<?php echo esc_attr($item['caption'] ?? ''); ?>" loading="lazy">
-              <?php endif; ?>
+              <button type="button" class="boh-gallery__open" data-boh-index="<?php echo (int) $i; ?>"
+                      aria-label="<?php echo esc_attr(
+                          ($item['caption'] ?? '') !== ''
+                              ? sprintf('Open "%s" (%d of %d)', $item['caption'], $i + 1, count($items))
+                              : sprintf('Open %s %d of %d', $item['type'], $i + 1, count($items))
+                      ); ?>">
+                <?php if ($item['type'] === 'video') : ?>
+                  <video preload="metadata" muted playsinline<?php if (!empty($item['poster'])) echo ' poster="' . esc_url($item['poster']) . '"'; ?>>
+                    <source src="<?php echo esc_url($item['url']); ?>">
+                  </video>
+                  <span class="boh-gallery__play" aria-hidden="true"></span>
+                <?php else : ?>
+                  <?php // First row is above the fold — lazy-loading it only delays the LCP. ?>
+                  <img src="<?php echo esc_url($item['url']); ?>" alt="<?php echo esc_attr($item['caption'] ?? ''); ?>"
+                       loading="<?php echo $i < 3 ? 'eager' : 'lazy'; ?>"
+                       decoding="<?php echo $i < 3 ? 'sync' : 'async'; ?>">
+                <?php endif; ?>
+              </button>
               <?php if (!empty($item['caption'])) : ?>
                 <figcaption><?php echo esc_html($item['caption']); ?></figcaption>
               <?php endif; ?>
             </figure>
           <?php endforeach; ?>
         </div>
+
+        <?php
+        // Payload for the viewer: the same items, in grid order.
+        $payload = array_map(function ($it) {
+            return [
+                'type'    => $it['type'],
+                'url'     => $it['url'],
+                'caption' => $it['caption'] ?? '',
+                'poster'  => $it['poster'] ?? '',
+            ];
+        }, array_values($items));
+        ?>
+        <div class="boh-lightbox" hidden data-boh-items="<?php echo esc_attr(wp_json_encode($payload)); ?>"
+             role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($selected); ?> gallery viewer">
+          <button type="button" class="boh-lightbox__close" aria-label="Close viewer">&times;</button>
+          <button type="button" class="boh-lightbox__nav boh-lightbox__nav--prev" aria-label="Previous">&#8249;</button>
+          <button type="button" class="boh-lightbox__nav boh-lightbox__nav--next" aria-label="Next">&#8250;</button>
+          <figure class="boh-lightbox__stage">
+            <div class="boh-lightbox__media" data-boh-media></div>
+            <figcaption class="boh-lightbox__meta">
+              <span class="boh-lightbox__caption" data-boh-caption></span>
+              <span class="boh-lightbox__counter" data-boh-counter></span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <script>
+        (function () {
+          var root = document.currentScript.closest('.boh-gallery');
+          if (!root) return;
+          var box = root.querySelector('.boh-lightbox');
+          if (!box) return;
+
+          var items   = JSON.parse(box.dataset.bohItems || '[]');
+          var media   = box.querySelector('[data-boh-media]');
+          var capEl   = box.querySelector('[data-boh-caption]');
+          var cntEl   = box.querySelector('[data-boh-counter]');
+          var prevBtn = box.querySelector('.boh-lightbox__nav--prev');
+          var nextBtn = box.querySelector('.boh-lightbox__nav--next');
+          var closeBtn= box.querySelector('.boh-lightbox__close');
+          var index   = 0;
+          var opener  = null;
+
+          function render() {
+            var it = items[index];
+            if (!it) return;
+            media.innerHTML = '';
+            var node;
+            if (it.type === 'video') {
+              node = document.createElement('video');
+              node.src = it.url;
+              node.controls = true;
+              node.autoplay = true;
+              node.playsInline = true;
+              if (it.poster) node.poster = it.poster;
+            } else {
+              node = document.createElement('img');
+              node.src = it.url;
+              node.alt = it.caption || '';
+            }
+            media.appendChild(node);
+            capEl.textContent = it.caption || '';
+            cntEl.textContent = (index + 1) + ' / ' + items.length;
+            // A single-item gallery has nothing to page through.
+            var many = items.length > 1;
+            prevBtn.hidden = !many;
+            nextBtn.hidden = !many;
+          }
+
+          function open(i, trigger) {
+            index = i;
+            opener = trigger || null;
+            box.hidden = false;
+            document.body.style.overflow = 'hidden';
+            render();
+            closeBtn.focus();
+          }
+          function close() {
+            box.hidden = true;
+            media.innerHTML = '';           // stops any playing video
+            document.body.style.overflow = '';
+            if (opener) opener.focus();     // return focus where it came from
+          }
+          function step(delta) {
+            index = (index + delta + items.length) % items.length;
+            render();
+          }
+
+          root.querySelectorAll('.boh-gallery__open').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              open(parseInt(btn.dataset.bohIndex, 10) || 0, btn);
+            });
+          });
+
+          closeBtn.addEventListener('click', close);
+          prevBtn.addEventListener('click', function () { step(-1); });
+          nextBtn.addEventListener('click', function () { step(1); });
+          // Click the backdrop (but not the media or controls) to dismiss.
+          box.addEventListener('click', function (e) { if (e.target === box) close(); });
+
+          document.addEventListener('keydown', function (e) {
+            if (box.hidden) return;
+            if (e.key === 'Escape')     { close(); }
+            else if (e.key === 'ArrowLeft')  { step(-1); }
+            else if (e.key === 'ArrowRight') { step(1); }
+            else if (e.key === 'Tab')   { e.preventDefault(); closeBtn.focus(); }
+          });
+
+          // Swipe on touch devices.
+          var x0 = null;
+          box.addEventListener('touchstart', function (e) { x0 = e.changedTouches[0].clientX; }, {passive: true});
+          box.addEventListener('touchend', function (e) {
+            if (x0 === null) return;
+            var dx = e.changedTouches[0].clientX - x0;
+            if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+            x0 = null;
+          }, {passive: true});
+        })();
+        </script>
       <?php endif; ?>
     </div>
     <?php
