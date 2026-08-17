@@ -11,6 +11,7 @@
 !/wp-content/mu-plugins/
 !/deploy-boh-4.32/
 !/restore-evicted.sh
+!/CONTENT-EDITING-GUIDE.md
 !/deploy-feedback-to-live.sh
 
 # never commit credentials or archives

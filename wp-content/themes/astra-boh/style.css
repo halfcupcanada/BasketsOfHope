@@ -4294,10 +4294,14 @@ a.boh-rohit-brand,
   color: var(--boh-ink-soft);
 }
 .boh-gallery__empty p { margin: 8px 0; }
+/* Capped track width plus justify-content so a partial last row (or a
+   gallery with only two photos) sits centered instead of hugging the
+   left edge with dead space beside it. */
 .boh-gallery__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+  gap: 16px;
+  justify-content: center;
 }
 .boh-gallery__cell {
   margin: 0;
@@ -4714,7 +4718,10 @@ a.boh-rohit-brand,
    transparent PNGs all read evenly. */
 .boh-sponsor-logos.wp-block-gallery {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  /* Capped tracks + centering so a handful of logos stays centered
+     rather than stretching across the row. */
+  grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+  justify-content: center;
   gap: 20px;
   max-width: 960px;
   margin: 0 auto 28px;

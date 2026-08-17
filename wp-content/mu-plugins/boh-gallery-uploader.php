@@ -174,17 +174,23 @@ function boh_gallery_uploader_render() {
 				<?php wp_nonce_field( 'boh_gallery_action' ); ?>
 				<p>
 					<label for="gallery_year">Event year</label>
-					<select name="gallery_year" id="gallery_year" onchange="this.form.action=window.location.pathname + '?page=<?php echo BOH_GALLERY_UPLOADER_SLUG; ?>&gallery_year=' + this.value; document.querySelector('#boh-refresh').click();">
+					<select name="gallery_year" id="gallery_year"
+						onchange="window.location = '<?php echo esc_js( admin_url( 'upload.php?page=' . BOH_GALLERY_UPLOADER_SLUG . '&gallery_year=' ) ); ?>' + this.value;">
 						<?php foreach ( BOH_GALLERY_UPLOADER_YEARS as $y ) : ?>
 							<option value="<?php echo $y; ?>" <?php selected( $sel_year, $y ); ?>><?php echo $y; ?></option>
 						<?php endforeach; ?>
 					</select>
-					<a id="boh-refresh" href="<?php echo esc_url( add_query_arg( 'gallery_year', $sel_year ) ); ?>" style="display:none">refresh</a>
+					<span class="drop-hint">Switching year reloads this page; anything not yet uploaded is cleared.</span>
 				</p>
 				<p>
 					<label for="gallery_files">Files</label>
 					<input type="file" name="gallery_files[]" id="gallery_files" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm">
-					<span class="drop-hint">JPG / PNG / WEBP / GIF for images, MP4 / WEBM for videos. Multiple selection supported (hold Cmd/Ctrl).</span>
+					<span class="drop-hint">
+						JPG / PNG / WEBP / GIF for images, MP4 / WEBM for videos. Select several at once (hold Cmd/Ctrl).<br>
+						This server accepts up to <strong><?php echo esc_html( ini_get( 'upload_max_filesize' ) ); ?></strong> per file,
+						<strong><?php echo esc_html( ini_get( 'post_max_size' ) ); ?></strong> per batch,
+						and <strong><?php echo (int) ini_get( 'max_file_uploads' ); ?></strong> files at a time.
+					</span>
 				</p>
 				<p>
 					<button type="submit" class="button button-primary">Upload to <?php echo (int) $sel_year; ?></button>
