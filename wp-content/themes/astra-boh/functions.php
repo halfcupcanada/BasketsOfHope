@@ -1047,7 +1047,12 @@ add_shortcode('boh_gallery', function ($atts) {
     $all = apply_filters('boh_gallery_items', []);
     $available_years = !empty($all) ? array_keys($all) : [(int) $a['year']];
     rsort($available_years);
-    $selected = in_array((int) $a['year'], $available_years, true) ? (int) $a['year'] : $available_years[0];
+
+    // Year chosen by the visitor via the tabs. Must NOT be called `year`:
+    // that is a reserved WordPress query var for date archives, so
+    // /gallery/?year=2025 hijacks the main query and 404s the page.
+    $requested = isset($_GET['boh_year']) ? (int) $_GET['boh_year'] : (int) $a['year'];
+    $selected = in_array($requested, $available_years, true) ? $requested : $available_years[0];
     $items = $all[$selected] ?? [];
     ob_start(); ?>
     <div class="boh-gallery" data-selected-year="<?php echo esc_attr($selected); ?>">
@@ -1055,7 +1060,7 @@ add_shortcode('boh_gallery', function ($atts) {
         <div class="boh-gallery__years" role="tablist" aria-label="Event year">
           <?php foreach ($available_years as $y) : ?>
             <a class="boh-gallery__year<?php echo $y === $selected ? ' is-active' : ''; ?>"
-               href="?year=<?php echo (int) $y; ?>#gallery"><?php echo (int) $y; ?></a>
+               href="?boh_year=<?php echo (int) $y; ?>#gallery"><?php echo (int) $y; ?></a>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
