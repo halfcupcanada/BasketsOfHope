@@ -4876,7 +4876,11 @@ a.boh-rohit-brand,
 }
 /* Core ships `.wp-block-gallery.has-nested-images figure.wp-block-image > img`
    with object-fit:cover and width/height 100%, which crops wide marks such as
-   PCL's. Match that selector's specificity so the logo is contained instead. */
+   PCL's. Match that selector's specificity so the logo is contained instead.
+   The generic photo treatment further up (.entry-content .wp-block-image img)
+   also has to be undone here: its border-radius literally clips the corners
+   off artwork that reaches the edge of its box, and its shadow reads as a
+   second card floating behind each logo. */
 .boh-sponsor-logos.wp-block-gallery figure.wp-block-image > img,
 .boh-sponsor-logos.wp-block-gallery img {
   width: auto !important;
@@ -4885,6 +4889,12 @@ a.boh-rohit-brand,
   max-height: 72px !important;
   object-fit: contain !important;
   flex: 0 0 auto !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+.boh-sponsor-logos.wp-block-gallery figure.wp-block-image:hover img {
+  transform: none !important;
 }
 .boh-sponsor-logos.wp-block-gallery figure.wp-block-image {
   flex-grow: 0 !important;
