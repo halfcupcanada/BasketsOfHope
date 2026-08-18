@@ -5353,3 +5353,56 @@ html, body {
   }
 }
 
+
+/* ───────────────────────────────────────────────────────────────────
+   FRONT-PAGE TILES
+   Each top-level section on the home page becomes a full-viewport panel
+   that the scroll snaps to, so a small scroll advances a whole "view"
+   rather than drifting between sections. Measured first: every section's
+   content is between 0.36 and 0.76 of a viewport at desktop sizes, so
+   nothing is taller than its panel and no content can become unreachable.
+
+   :has() puts the snap on the scroll container (html) while keying off
+   the body class WordPress gives the front page. Browsers without :has()
+   simply scroll normally.
+   ─────────────────────────────────────────────────────────────────── */
+@media (min-width: 901px) and (min-height: 700px) {
+  html:has(body.home) {
+    scroll-snap-type: y mandatory;
+  }
+  body.home .entry-content > .wp-block-cover,
+  body.home .entry-content > .wp-block-group {
+    min-height: 100vh;
+    /* Land the panel top at the viewport top, and require a stop on each
+       one so a fast flick cannot skip past a whole view. */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  /* The hero already fills the viewport and positions its own children. */
+  body.home .entry-content > .wp-block-cover.boh-hero {
+    display: block;
+  }
+  /* The footer sits outside .entry-content, so without its own snap point
+     mandatory snapping pulls the view back to the last panel and the footer
+     becomes unreachable. Make it a target too. */
+  body.home .boh-footer {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  /* Inner wide wrappers would otherwise stretch to the panel height and
+     pull their content back to the top. */
+  body.home .entry-content > .wp-block-group > .wp-block-group.alignwide {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
+/* Snapping is turned off where it would hurt: phones and short windows,
+   where the same content reflows taller than one viewport, and for anyone
+   who has asked for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  html:has(body.home) { scroll-snap-type: none; }
+}
