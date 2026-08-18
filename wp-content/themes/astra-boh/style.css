@@ -4785,26 +4785,42 @@ a.boh-rohit-brand,
   .boh-scroll-cue { display: none; }
 }
 
-/* Labelled variant — the "See how it works" copy now lives inside the
-   scroll button rather than sitting loose above it, so the hero ends on a
-   single call to action. Solid white pill instead of the 46px disc. */
+/* Labelled variant — the "See how it works" copy lives inside the scroll
+   button rather than sitting loose above it, so the hero ends on a single
+   call to action. Frosted pill with the chevron in a brand-magenta disc;
+   the whole button bobs gently to read as "there is more below". */
 .boh-scroll-cue--labelled {
   width: auto !important;
   height: auto !important;
-  gap: 10px;
-  padding: 12px 22px;
+  gap: 14px;
+  padding: 8px 8px 8px 26px;
   border-radius: 999px;
-  background: #fff !important;
-  border-color: rgba(10,10,10,0.10);
-  box-shadow: 0 10px 30px -10px rgba(31,26,36,0.35);
+  background: rgba(255,255,255,0.90) !important;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.85);
+  box-shadow: 0 14px 38px -14px rgba(31,26,36,0.45),
+              0 0 0 1px rgba(10,10,10,0.04);
   text-decoration: none !important;
+  animation: bohCueBob 3.4s ease-in-out infinite;
+  transition: box-shadow .25s ease, background .25s ease;
 }
 .boh-scroll-cue--labelled:hover {
   background: #fff !important;
-  box-shadow: 0 16px 38px -12px rgba(208,20,130,0.40);
+  box-shadow: 0 22px 48px -16px rgba(208,20,130,0.45),
+              0 0 0 1px rgba(208,20,130,0.18);
 }
+/* The bob lives on the element, so the centring translate has to ride
+   along with it rather than being overwritten by the hover rule. */
+@keyframes bohCueBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-6px); }
+}
+.boh-scroll-cue--labelled:hover { animation-play-state: paused; }
+
 .boh-scroll-cue__label {
-  /* Override the generic `.boh-scroll-cue span` arrow styling */
+  /* Explicit resets: `.boh-scroll-cue span` styles any child span as the
+     chevron, which would render this text as a rotated fragment. */
   display: inline-block !important;
   width: auto !important;
   height: auto !important;
@@ -4814,30 +4830,58 @@ a.boh-rohit-brand,
   animation: none !important;
   opacity: 1 !important;
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
   color: var(--boh-ink);
   white-space: nowrap;
 }
 .boh-scroll-cue__arrow {
-  display: block;
-  width: 9px;
-  height: 9px;
-  margin-top: -3px;
-  border-right: 2.5px solid var(--boh-ink);
-  border-bottom: 2.5px solid var(--boh-ink);
-  transform: rotate(45deg);
-  opacity: 0.85;
-  animation: bohCueDrift 2.2s ease-in-out infinite;
+  display: flex !important;
+  position: relative;
+  width: 34px !important;
+  height: 34px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50%;
+  background: var(--boh-magenta);
+  transform: none !important;
+  animation: none !important;
+  opacity: 1 !important;
   flex: 0 0 auto;
+  box-shadow: 0 6px 16px -6px rgba(208,20,130,0.65);
+  transition: transform .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
+}
+.boh-scroll-cue--labelled:hover .boh-scroll-cue__arrow {
+  transform: scale(1.08) !important;
+  background: var(--boh-magenta-deep, #C2005F);
+}
+/* Chevron drawn on the pseudo-element so the disc itself stays still */
+.boh-scroll-cue__arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  transform: translate(-50%, -65%) rotate(45deg);
+  animation: bohCueNudge 2.2s ease-in-out infinite;
+}
+@keyframes bohCueNudge {
+  0%, 100% { transform: translate(-50%, -65%) rotate(45deg); }
+  50%      { transform: translate(-50%, -25%) rotate(45deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .boh-scroll-cue__arrow { animation: none; }
+  .boh-scroll-cue--labelled { animation: none; transform: translateX(-50%); }
+  .boh-scroll-cue__arrow::after { animation: none; }
 }
 @media (max-width: 480px) {
-  .boh-scroll-cue--labelled { padding: 10px 18px; }
-  .boh-scroll-cue__label { font-size: 13px; }
+  .boh-scroll-cue--labelled { padding: 7px 7px 7px 20px; gap: 11px; }
+  .boh-scroll-cue__label { font-size: 11px; letter-spacing: 0.08em; }
+  .boh-scroll-cue__arrow { width: 30px !important; height: 30px !important; }
 }
 
 /* Mini-stats — hairline separators for a sharper, more deliberate row */
