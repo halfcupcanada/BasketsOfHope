@@ -9,6 +9,10 @@
 !/wp-content/themes/astra-boh/
 # Custom mu-plugins (gallery scanner + uploader, invitations, SMTP, Stripe)
 !/wp-content/mu-plugins/
+# Our own plugin only; third-party plugins stay out of the repo
+!/wp-content/plugins/
+/wp-content/plugins/*
+!/wp-content/plugins/boh-5050/
 !/deploy-boh-4.32/
 !/restore-evicted.sh
 !/CONTENT-EDITING-GUIDE.md
