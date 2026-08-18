@@ -469,7 +469,14 @@ add_action('wp_footer', function () {
       <div class="boh-footer__bottom">
         <div>&copy; <?php echo esc_html($year); ?> Rohit Group. All rights reserved.</div>
         <div>
-          <a href="/privacy-policy/">Privacy</a> &nbsp;|&nbsp;
+          <?php
+          // Only link the privacy policy once it is actually published —
+          // the draft is still WordPress's boilerplate, and linking it
+          // 404'd on every page of the site.
+          $boh_privacy_id = (int) get_option('wp_page_for_privacy_policy');
+          if ($boh_privacy_id && get_post_status($boh_privacy_id) === 'publish') : ?>
+            <a href="<?php echo esc_url(get_permalink($boh_privacy_id)); ?>">Privacy</a> &nbsp;|&nbsp;
+          <?php endif; ?>
           Developed by <a href="https://halfcup.ca" target="_blank" rel="noopener">HalfCup</a>
         </div>
       </div>

@@ -5178,6 +5178,48 @@ a.boh-rohit-brand,
     flex-wrap: wrap;
     gap: 14px;
   }
+  /* The inner container is forced to padding:0 higher up, which leaves the
+     hero copy flush to both screen edges on a phone. Restore a gutter, and
+     let the long eyebrow wrap instead of forcing the column wider than the
+     viewport. */
+  .wp-block-cover.boh-hero .wp-block-cover__inner-container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-copy,
+  .wp-block-cover.boh-hero .boh-hero-grid,
+  .wp-block-cover.boh-hero .boh-hero-block {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    white-space: normal !important;
+    max-width: 100%;
+  }
+  /* Keep "Rohit Group" from being split across lines mid-phrase */
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-rohit-brand { white-space: nowrap; }
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__lede {
+    max-width: 100% !important;
+  }
+}
+
+/* Nothing should be able to push the document wider than the screen. The
+   hero slides deliberately scale past 100% for the drift effect, which
+   otherwise adds a few px of horizontal scroll on narrow screens. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* On the narrowest phones the hero eyebrow is a long single phrase; shrink
+   it a step further so it stays on one line instead of breaking into
+   ragged fragments around the "Rohit Group" link. */
+@media (max-width: 480px) {
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    font-size: 8px !important;
+    letter-spacing: 0.05em !important;
+    padding: 6px 10px !important;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .boh-how-it-works--compact .boh-how-it-works__grid.boh-reveal-stagger > *,
