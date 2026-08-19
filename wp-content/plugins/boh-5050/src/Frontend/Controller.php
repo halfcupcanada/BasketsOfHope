@@ -22,6 +22,7 @@ final class Controller
         add_action('admin_post_nopriv_boh5050_checkout', [self::class, 'handleCheckout']);
         add_action('admin_post_boh5050_checkout', [self::class, 'handleCheckout']);
         add_action('wp_body_open', [self::class, 'announcementBar']);
+        add_action('wp_enqueue_scripts', [self::class, 'assets']);
         \BOH\Fifty\Reports\Csv::boot();
     }
 
@@ -29,6 +30,23 @@ final class Controller
     {
         global $wpdb;
         return $wpdb->get_row("SELECT * FROM {$wpdb->prefix}boh5050_raffles ORDER BY id DESC LIMIT 1", ARRAY_A) ?: [];
+    }
+
+    /**
+     * Load the stylesheet only where it is used, and version it by file mtime
+     * so a deploy busts the CDN cache — the theme learned that lesson the hard
+     * way with a hardcoded ver string.
+     */
+    public static function assets(): void
+    {
+        $path = BOH_5050_DIR . '/assets/public.css';
+        wp_register_style(
+            'boh-5050',
+            plugins_url('assets/public.css', BOH_5050_FILE),
+            [],
+            file_exists($path) ? (string) filemtime($path) : \BOH\Fifty\VERSION
+        );
+        wp_enqueue_style('boh-5050');
     }
 
     /** Public totals. Deliberately aggregate-only — no purchaser data. */
@@ -117,6 +135,32 @@ final class Controller
           <p class="boh-5050__lede">Half the gross ticket sales could be yours. The other half supports
             WIN House and its work helping women, children and non-binary people find safety from
             gender-based violence.</p>
+
+          <?php // Echoes the printed ticket: magenta header, soft-pink stub,
+                // perforation between them. Decorative only — every fact in it
+                // is repeated as real text elsewhere on the page. ?>
+          <div class="boh-5050__ticket" aria-hidden="true">
+            <div class="boh-5050__ticket-head">
+              <span class="boh-5050__ticket-brand">Rohit's Baskets<br>of Hope</span>
+              <span class="boh-5050__ticket-year"><?php echo esc_html((string) $r['campaign_year']); ?></span>
+            </div>
+            <div class="boh-5050__ticket-stub">
+              <span class="boh-5050__ticket-title">50/50 TICKETS</span>
+              <span class="boh-5050__ticket-prices">
+                <?php
+                $bits = [];
+                foreach ($packages as $p) {
+                    $bits[] = esc_html(Money::format((int) $p['price_cents'], true) . ' — ' . $p['label']);
+                }
+                echo $bits ? implode(' &nbsp;·&nbsp; ', $bits) : 'Packages to be announced';
+                ?>
+              </span>
+              <?php if (!empty($r['draw_utc'])) : ?>
+                <span class="boh-5050__ticket-draw">DRAWING ON <?php
+                  echo esc_html(strtoupper(date_i18n('F j', strtotime((string) $r['draw_utc'] . ' UTC')))); ?></span>
+              <?php endif; ?>
+            </div>
+          </div>
 
           <div class="boh-5050__totals">
             <div class="boh-5050__stat"><b><?php echo esc_html(Money::format($t['gross_cents'])); ?></b><span>Total collected</span></div>

@@ -25,6 +25,7 @@ final class Menu
         add_action('admin_post_boh5050_save_settings', [self::class, 'handleSaveSettings']);
         add_action('admin_post_boh5050_set_status', [self::class, 'handleSetStatus']);
         add_action('admin_post_boh5050_save_package', [self::class, 'handleSavePackage']);
+        add_action('admin_post_boh5050_draw', [self::class, 'handleDraw']);
     }
 
     public static function register(): void
@@ -92,7 +93,12 @@ final class Menu
         if (empty($r['sales_open_utc']) || empty($r['sales_close_utc'])) { $gaps[] = 'Sales window incomplete'; }
         if (empty($r['draw_utc']))                       { $gaps[] = 'Draw date/time not set'; }
         if ((int) $r['inventory_total'] <= 0)            { $gaps[] = 'Licensed ticket inventory not set'; }
-        if (trim((string) $r['ers_provider']) === '')    { $gaps[] = 'No AGLC-approved ERS provider configured'; }
+        // Issuance is in-house (Option B), so the gate does not ask for a
+        // third-party provider. It asks for the regulator's written approval
+        // of THIS system, recorded before real money can be taken.
+        if (trim((string) $r['ers_provider']) === '') {
+            $gaps[] = 'AGLC approval reference for this raffle system not recorded';
+        }
         if (($r['stripe_mode'] ?? 'test') === 'live' && !defined('BOH_STRIPE_LIVE_SK')) {
             $gaps[] = 'Live Stripe secret key not present in wp-config.php';
         }
@@ -208,7 +214,7 @@ final class Menu
             'draw_utc' => ['Draw date/time (UTC)', 'datetime-local'],
             'draw_location' => ['Draw location', 'text'],
             'draw_method' => ['Draw method', 'text'],
-            'ers_provider' => ['AGLC-approved ERS provider', 'text'],
+            'ers_provider' => ['AGLC approval reference for this system', 'text'],
             'inventory_total' => ['Licensed ticket inventory', 'number'],
             'max_tickets_per_order' => ['Max tickets per order (0 = no limit)', 'number'],
         ];
@@ -326,7 +332,8 @@ final class Menu
             'Stripe secret key present' => defined($live ? 'BOH_STRIPE_LIVE_SK' : 'BOH_STRIPE_TEST_SK') ? 'yes' : 'NO',
             'Webhook secret present' => (defined('BOH_5050_WEBHOOK_SECRET') || defined('BOH_STRIPE_WEBHOOK_SECRET')) ? 'yes' : 'NO',
             'Webhook endpoint' => rest_url('boh-5050/v1/stripe'),
-            'ERS provider' => $r['ers_provider'] !== '' ? $r['ers_provider'] : 'not configured (required for live)',
+            'Issuance model' => 'in-house (Option B)',
+            'AGLC system approval' => $r['ers_provider'] !== '' ? $r['ers_provider'] : 'NOT RECORDED — required before Live',
             'System cron drives WP-Cron' => defined('DISABLE_WP_CRON') && DISABLE_WP_CRON ? 'yes' : 'no — sales cut-off may be late',
             'Minute tick scheduled' => wp_next_scheduled('boh5050_minute_tick') ? 'yes' : 'no',
         ];
@@ -340,9 +347,117 @@ final class Menu
     public static function renderDraw(): void
     {
         self::guard(Caps::MANAGE_DRAW);
+        global $wpdb;
+        $r    = self::raffle();
+        $svc  = new \BOH\Fifty\Domain\DrawService((int) $r['id']);
+        $snap = $svc->eligibleSnapshot();
+        $draw = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}boh5050_draws WHERE raffle_id = %d", (int) $r['id']
+        ), ARRAY_A);
+
         echo '<div class="wrap"><h1>Draw Management</h1>';
-        echo '<p>The draw must run on the AGLC-approved Electronic Raffle System. This screen locks the eligible ticket population, records witnesses and evidence, and publishes the result — it does not itself select a winner.</p>';
-        echo '<p><strong>Blocked:</strong> no ERS provider is configured, and closing the ticket population requires two authorized approvals.</p></div>';
+        echo '<p>Sales must be closed and reconciliation clear before the eligible population can be locked. '
+           . 'Locking fingerprints the exact pool, so the set drawn from is provably the set that existed at lock time. '
+           . 'Both locking and drawing require <strong>two different authorized people</strong>.</p>';
+
+        printf('<table class="widefat" style="max-width:640px"><tbody>
+                <tr><th>Raffle status</th><td>%s</td></tr>
+                <tr><th>Eligible tickets now</th><td>%s</td></tr>
+                <tr><th>Current pool fingerprint</th><td><code>%s</code></td></tr>
+                <tr><th>Draw state</th><td>%s</td></tr>
+                <tr><th>Winning ticket</th><td>%s</td></tr>
+                </tbody></table>',
+            esc_html(RaffleStatus::labels()[$r['status']] ?? $r['status']),
+            esc_html(number_format($snap['count'])),
+            esc_html(substr($snap['hash'], 0, 16) . '…'),
+            esc_html($draw['status'] ?? 'not started'),
+            esc_html($draw['winning_ticket_number'] ?? '—')
+        );
+
+        $state = $draw['status'] ?? '';
+
+        if ($state !== 'locked' && $state !== 'drawn' && $state !== 'published') {
+            echo '<h2>1. Lock the eligible population</h2>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            wp_nonce_field('boh5050_draw');
+            echo '<input type="hidden" name="action" value="boh5050_draw">';
+            echo '<input type="hidden" name="step" value="lock">';
+            printf('<input type="hidden" name="raffle_id" value="%d">', (int) $r['id']);
+            echo '<p><label>Reason / context (audit log)<br><textarea name="reason" rows="2" cols="60" required></textarea></label></p>';
+            submit_button('Record my approval to lock', 'primary', 'submit', false);
+            echo '</form>';
+        }
+
+        if ($state === 'locked') {
+            echo '<h2>2. Draw the winner</h2>';
+            echo '<p>Selection uses the operating system CSPRNG over the frozen pool. If the pool has changed since locking, the draw is refused.</p>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            wp_nonce_field('boh5050_draw');
+            echo '<input type="hidden" name="action" value="boh5050_draw">';
+            echo '<input type="hidden" name="step" value="draw">';
+            printf('<input type="hidden" name="raffle_id" value="%d">', (int) $r['id']);
+            echo '<p><label>Witness 1 (name and role)<br><input name="witness1" class="regular-text" required></label></p>';
+            echo '<p><label>Witness 2 (name and role)<br><input name="witness2" class="regular-text" required></label></p>';
+            echo '<p><label>Reason / context<br><textarea name="reason" rows="2" cols="60" required></textarea></label></p>';
+            submit_button('Record my approval to draw', 'primary', 'submit', false);
+            echo '</form>';
+        }
+
+        if ($state === 'drawn' && current_user_can(Caps::PUBLISH_WINNER)) {
+            echo '<h2>3. Publish the result</h2>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            wp_nonce_field('boh5050_draw');
+            echo '<input type="hidden" name="action" value="boh5050_draw">';
+            echo '<input type="hidden" name="step" value="publish">';
+            printf('<input type="hidden" name="raffle_id" value="%d">', (int) $r['id']);
+            echo '<p><label><input type="checkbox" name="name_consent" value="1"> The winner has given written consent for their name to be published.</label></p>';
+            echo '<p><label>Winner name (only if consented)<br><input name="winner_name" class="regular-text"></label></p>';
+            echo '<p><label>Reason / context<br><textarea name="reason" rows="2" cols="60" required></textarea></label></p>';
+            submit_button('Publish winner', 'primary', 'submit', false);
+            echo '</form>';
+        }
+
+        if ($draw && !empty($draw['evidence'])) {
+            echo '<h2>Evidence</h2><pre style="background:#fff;border:1px solid #dcdcde;padding:12px;overflow:auto">'
+               . esc_html((string) wp_json_encode(json_decode((string) $draw['evidence'], true), JSON_PRETTY_PRINT))
+               . '</pre>';
+        }
+        echo '</div>';
+    }
+
+    public static function handleDraw(): void
+    {
+        check_admin_referer('boh5050_draw');
+        self::guard(Caps::MANAGE_DRAW);
+
+        $id     = (int) ($_POST['raffle_id'] ?? 0);
+        $step   = sanitize_key((string) ($_POST['step'] ?? ''));
+        $reason = sanitize_textarea_field((string) ($_POST['reason'] ?? ''));
+        if ($reason === '') {
+            self::redirect('error', 'A written reason is required.', 'draw');
+        }
+
+        $svc = new \BOH\Fifty\Domain\DrawService($id);
+
+        $res = match ($step) {
+            'lock' => $svc->lockPopulation($reason),
+            'draw' => $svc->drawWinner($reason, [
+                sanitize_text_field((string) ($_POST['witness1'] ?? '')),
+                sanitize_text_field((string) ($_POST['witness2'] ?? '')),
+            ]),
+            'publish' => current_user_can(Caps::PUBLISH_WINNER)
+                ? $svc->publish(!empty($_POST['name_consent']), (string) ($_POST['winner_name'] ?? ''), $reason)
+                : ['ok' => false, 'error' => 'You do not have permission to publish the winner.'],
+            default => ['ok' => false, 'error' => 'Unknown draw step.'],
+        };
+
+        if (!$res['ok']) {
+            self::redirect('error', (string) $res['error'], 'draw');
+        }
+        $msg = isset($res['ticket'])
+            ? 'Winning ticket drawn: ' . $res['ticket']
+            : 'Done.';
+        self::redirect('updated', $msg, 'draw');
     }
 
     public static function renderReconciliation(): void

@@ -165,9 +165,13 @@ final class CheckoutService
         return ['ok' => true, 'url' => (string) $res['data']['url'], 'order_id' => $orderId];
     }
 
+    /**
+     * Option B: issuance is in-house. The recorded AGLC approval reference is
+     * what makes the issuer licensed — so an unapproved system still fails the
+     * live check above rather than quietly selling real tickets.
+     */
     public function issuerFor(array $raffle): TicketIssuer
     {
-        $provider = trim((string) ($raffle['ers_provider'] ?? ''));
-        return $provider !== '' ? new ErsIssuer($provider) : new InternalIssuer();
+        return new InternalIssuer(trim((string) ($raffle['ers_provider'] ?? '')));
     }
 }

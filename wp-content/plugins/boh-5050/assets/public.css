@@ -94,3 +94,83 @@
 @media (prefers-reduced-motion: reduce) {
   .boh-5050 * { transition: none !important; animation: none !important; }
 }
+
+/* ── Ticket motif ────────────────────────────────────────────────────
+   Mirrors the printed 50/50 ticket: magenta header block with the brand
+   and a yellow year, a soft-pink stub below, and a perforation between
+   them. Decorative (aria-hidden) — every fact shown here also appears as
+   real text on the page, so a screen reader loses nothing. */
+.boh-5050__ticket {
+  max-width: 520px;
+  margin: 0 auto 32px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px -18px rgba(31,26,36,0.45);
+  text-align: left;
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+.boh-5050__ticket-head {
+  background: var(--boh-magenta, #D01482);
+  color: #fff;
+  padding: 22px 26px 20px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+.boh-5050__ticket-brand {
+  font-size: clamp(20px, 3.4vw, 27px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.boh-5050__ticket-year {
+  font-size: clamp(20px, 3.4vw, 27px);
+  font-weight: 800;
+  color: var(--boh-yellow, #f9d135);
+}
+/* Perforation: a dashed rule with a notch punched out of each edge. */
+.boh-5050__ticket-stub {
+  position: relative;
+  background: #FCE7F3;
+  padding: 26px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  border-top: 2px dashed rgba(208,20,130,0.35);
+}
+.boh-5050__ticket-stub::before,
+.boh-5050__ticket-stub::after {
+  content: '';
+  position: absolute;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--boh-paper, #fff);
+}
+.boh-5050__ticket-stub::before { left: -13px; }
+.boh-5050__ticket-stub::after  { right: -13px; }
+
+.boh-5050__ticket-title {
+  font-size: clamp(24px, 4.2vw, 34px);
+  font-weight: 800;
+  color: var(--boh-magenta, #D01482);
+  letter-spacing: 0.01em;
+}
+.boh-5050__ticket-prices {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--boh-magenta-deep, #C2005F);
+}
+.boh-5050__ticket-draw {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: var(--boh-ink, #1F1A24);
+}
+
+@media (max-width: 480px) {
+  .boh-5050__ticket-head { flex-direction: column; gap: 4px; }
+}
