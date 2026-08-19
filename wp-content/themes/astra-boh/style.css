@@ -75,11 +75,14 @@ Tags: nonprofit, charity, one-page, block-editor, donation, custom-colors, custo
   --boh-text-6xl:  60px;
 }
 
+/* No overflow-x here. Setting it on body promotes body to a scroll
+   container, which silently disables the front-page scroll snapping
+   declared on html. Anything that overflows is clipped at its own
+   container instead (see .wp-block-cover.boh-hero). */
 html,
 body {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 /* ───────────────────────────────────────────────────────────────────
@@ -5304,12 +5307,13 @@ a.boh-rohit-brand,
   }
 }
 
-/* Nothing should be able to push the document wider than the screen. The
-   hero slides deliberately scale past 100% for the drift effect, which
-   otherwise adds a few px of horizontal scroll on narrow screens. */
-html, body {
-  max-width: 100%;
-  overflow-x: hidden;
+/* The hero slides deliberately scale past 100% for the drift effect, which
+   adds a few px of horizontal scroll. Clip it at the hero rather than on
+   html/body: overflow on body turns body into a scroll container, and the
+   front-page scroll snapping is declared on html — the snap then has no
+   effect at all. Fix the overflow where it originates. */
+.wp-block-cover.boh-hero {
+  overflow: hidden;
 }
 
 /* On the narrowest phones the hero eyebrow is a long single phrase; shrink
