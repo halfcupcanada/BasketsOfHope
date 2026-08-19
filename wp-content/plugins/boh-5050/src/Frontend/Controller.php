@@ -23,6 +23,7 @@ final class Controller
         add_action('admin_post_boh5050_checkout', [self::class, 'handleCheckout']);
         add_action('wp_body_open', [self::class, 'announcementBar']);
         add_action('wp_enqueue_scripts', [self::class, 'assets']);
+        add_filter('body_class', [self::class, 'bodyClass']);
         \BOH\Fifty\Reports\Csv::boot();
     }
 
@@ -80,18 +81,58 @@ final class Controller
         ]);
     }
 
+    /**
+     * Show the bar only where it belongs.
+     *
+     * isSelling() deliberately includes Preview so staff can test a purchase,
+     * but Preview must never be advertised to the public — that is what
+     * isPubliclyVisible() is for. Using the selling check here leaked a
+     * staff-only preview (and a $0.00 jackpot) onto every public page.
+     */
     public static function announcementBar(): void
     {
         $r = self::raffle();
-        if (!$r || !RaffleStatus::isSelling($r['status'])) {
+        if (!$r) {
             return;
         }
+
+        $isLive    = $r['status'] === RaffleStatus::LIVE;
+        $isPreview = $r['status'] === RaffleStatus::PREVIEW
+            && current_user_can(\BOH\Fifty\Install\Capabilities::VIEW_DASHBOARD);
+
+        if (!$isLive && !$isPreview) {
+            return;
+        }
+
         $t = (new Ledger((int) $r['id']))->totals();
         printf(
-            '<div class="boh-5050-bar"><a href="%s">50/50 Jackpot: <strong>%s</strong> — Buy Tickets</a></div>',
+            '<div class="boh-5050-bar%s"><a href="%s">%s50/50 Jackpot: <strong>%s</strong> — Buy Tickets</a></div>',
+            $isPreview ? ' boh-5050-bar--preview' : '',
             esc_url(home_url('/50-50/')),
+            $isPreview ? 'PREVIEW — ' : '',
             esc_html(Money::format($t['winner_cents']))
         );
+    }
+
+    /**
+     * The theme header is position:fixed at top:0, so a bar emitted at
+     * wp_body_open renders underneath it and shows only as a coloured sliver.
+     * Flagging the body lets the stylesheet move the header down by the bar's
+     * height instead of fighting it.
+     */
+    public static function bodyClass(array $classes): array
+    {
+        $r = self::raffle();
+        if (!$r) {
+            return $classes;
+        }
+        $isLive    = $r['status'] === RaffleStatus::LIVE;
+        $isPreview = $r['status'] === RaffleStatus::PREVIEW
+            && current_user_can(\BOH\Fifty\Install\Capabilities::VIEW_DASHBOARD);
+        if ($isLive || $isPreview) {
+            $classes[] = 'boh-has-5050-bar';
+        }
+        return $classes;
     }
 
     public static function renderPage(): string

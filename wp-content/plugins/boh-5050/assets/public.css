@@ -174,3 +174,28 @@
 @media (max-width: 480px) {
   .boh-5050__ticket-head { flex-direction: column; gap: 4px; }
 }
+
+/* The bar is fixed above the theme's fixed header rather than emitted into
+   normal flow beneath it, which previously left only a coloured sliver
+   visible. The header is nudged down by the bar's height so the two stack
+   instead of overlapping. */
+.boh-5050-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 101;              /* theme header is 100 */
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boh-has-5050-bar #masthead.boh-header { top: 38px; }
+.admin-bar.boh-has-5050-bar .boh-5050-bar { top: 32px; }
+.admin-bar.boh-has-5050-bar #masthead.boh-header { top: 70px; }
+/* Preview is staff-only; make that unmistakable rather than relying on the
+   word alone. */
+.boh-5050-bar--preview { background: var(--boh-ink, #1F1A24); }
+.boh-5050-bar--preview a { color: var(--boh-yellow, #f9d135); }
+@media (max-width: 600px) {
+  .boh-5050-bar { height: 34px; font-size: 12px; }
+  .boh-has-5050-bar #masthead.boh-header { top: 34px; }
+}
