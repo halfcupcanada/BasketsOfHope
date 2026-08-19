@@ -809,6 +809,11 @@ add_shortcode('boh_hero_slideshow', function () {
       const slideshow = document.querySelector('.boh-hero-slideshow');
       const dotStrip  = document.querySelector('.boh-hero-dots');
       const pauseBtn  = document.querySelector('.boh-hero-pause');
+            // Keep the tour button in the same containing block as the cue.
+      const tourWrap = document.querySelector(".boh-hero-tour");
+      if (container && tourWrap && tourWrap.parentElement !== container) {
+        container.appendChild(tourWrap);
+      }
       if (container && slideshow && slideshow.parentElement !== container) {
         container.insertBefore(slideshow, container.firstChild);
       }
@@ -923,11 +928,39 @@ add_shortcode('boh_how_it_works', function ($atts) {
         'intro'   => '1',
     ], $atts, 'boh_how_it_works');
     $compact = ($atts['variant'] === 'compact');
+    // Each step carries a photograph from a past event and a one-line
+    // detail, so the compact home-page version says something concrete
+    // rather than showing four bare headings.
+    $up = '/wp-content/uploads/2026/06/';
     $steps = [
-        ['01', 'Choose items',      'Guests select and purchase 12 new comfort items that recipients can use and enjoy.'],
-        ['02', 'Bring or contribute','Bring your items to the event, partner with a friend to shop, or sponsor a basket with a financial gift.'],
-        ['03', 'Pack with care',    'After the event, the Rohit team transforms the donated items to baskets packed with care and intention.'],
-        ['04', 'Deliver hope',      'The Rohit team delivers the baskets to WIN House, who distributes them to the women as they embark on their next chapter.'],
+        [
+            '01', 'Choose items',
+            'Guests select and purchase 12 new comfort items that recipients can use and enjoy.',
+            'Cozy socks, journals, body care, a small blanket — comfort, not necessities.',
+            $up . 'get-involved3-768x539.jpg',
+            'Volunteers selecting toiletries and self-care items from organized donation bins',
+        ],
+        [
+            '02', 'Bring or contribute',
+            'Bring your items to the event, partner with a friend to shop, or sponsor a basket with a financial gift.',
+            'Come with a friend, or sponsor a basket if you cannot attend on the night.',
+            $up . 'Edmonton-768x539.jpg',
+            'Donation station at Rohit headquarters with comfort items ready to pack',
+        ],
+        [
+            '03', 'Pack with care',
+            'After the event, the Rohit team transforms the donated items to baskets packed with care and intention.',
+            'Every basket is assembled by hand and finished with a written note.',
+            $up . 'RC_BasketofHope_111123_Inital_20171108-15-1024x681.jpg',
+            'Volunteers gathered at a past Baskets of Hope event',
+        ],
+        [
+            '04', 'Deliver hope',
+            'The Rohit team delivers the baskets to WIN House, who distributes them to the women as they embark on their next chapter.',
+            'Delivered privately to WIN House, with respect for residents\' safety.',
+            $up . 'IMG_5843-1024x768.jpg',
+            'A basket being delivered to WIN House',
+        ],
     ];
     $classes = 'boh-how-it-works' . ($compact ? ' boh-how-it-works--compact' : '');
     ob_start(); ?>
@@ -940,11 +973,17 @@ add_shortcode('boh_how_it_works', function ($atts) {
       </div>
       <?php endif; ?>
       <div class="boh-how-it-works__grid">
-        <?php foreach ($steps as [$num, $title, $body]) : ?>
+        <?php foreach ($steps as [$num, $title, $body, $detail, $img, $alt]) : ?>
           <div class="boh-how-it-works__step">
-            <div class="boh-how-it-works__num"><?php echo esc_html($num); ?>.</div>
+            <figure class="boh-how-it-works__media">
+              <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($alt); ?>"
+                   loading="lazy" decoding="async" width="768" height="539">
+              <span class="boh-how-it-works__num"><?php echo esc_html($num); ?></span>
+            </figure>
             <h3 class="boh-how-it-works__title"><?php echo esc_html($title); ?></h3>
-            <?php if (!$compact) : ?>
+            <?php if ($compact) : ?>
+              <p class="boh-how-it-works__detail"><?php echo esc_html($detail); ?></p>
+            <?php else : ?>
               <p class="boh-how-it-works__body"><?php echo esc_html($body); ?></p>
             <?php endif; ?>
           </div>
@@ -1910,7 +1949,126 @@ add_action('wp_footer', function () {
       collect();
       window.addEventListener('resize', collect);
       window.addEventListener('load', collect);
+
+      // Exposed so the guided tour can reuse the same easing and panel list
+      // rather than implementing a second, subtly different scroller.
+      window.bohTiles = {
+        glideTo: glideTo,
+        panelCount: function () { return panels.length; },
+        setDuration: function (ms) { DURATION = ms; },
+        isAnimating: function () { return animating; }
+      };
     })();
     </script>
     <?php
 }, 60);
+
+// --- Guided audio tour ---------------------------------------------------
+// Speaks a short introduction to each section while scrolling to it, using
+// the browser's built-in speech synthesis. No API, no audio files, no cost —
+// and because it is the platform voice, it inherits the visitor's own
+// language and accessibility settings.
+//
+// Captions are always rendered, so the tour still works with the sound off,
+// on a browser without speech support, or for a deaf visitor.
+add_action('wp_footer', function () {
+    if (!is_front_page()) {
+        return;
+    }
+    // Copy is kept here rather than in JS so it stays greppable and
+    // translatable, and so it can move into the editor later.
+    $script = [
+        ['Welcome to Rohit\'s Baskets of Hope. This is a community giving event that fills comfort baskets for women and families rebuilding after domestic violence. It has run every year since 2010, here in Edmonton.'],
+        ['Here are the details for this year\'s event. You can see the date, the time, the location, and a countdown to the evening itself. If you would like to come, the R S V P button takes you to the form.'],
+        ['This is what the event is. Once a year, guests, businesses and volunteers come together to collect donations and fill baskets, in partnership with WIN House Edmonton.'],
+        ['Here is why baskets, rather than just money. A basket carries comfort and dignity during a very difficult transition. Cozy socks, a journal, body care, a small blanket. Small things that say: you are seen, and you are not alone.'],
+        ['This is the impact so far, measured across the years the event has run.'],
+        ['This is how it works, in four steps. Choose twelve comfort items. Bring them to the event, or sponsor a basket. The team packs each basket by hand. Then the baskets are delivered to WIN House.'],
+        ['That is the tour. From here you can read more about the event, make a donation, become a sponsor, or R S V P for the evening. Thank you for listening.'],
+    ];
+    ?>
+    <div class="boh-tour" hidden aria-live="polite">
+      <div class="boh-tour__inner">
+        <p class="boh-tour__caption" data-tour-caption></p>
+        <div class="boh-tour__controls">
+          <span class="boh-tour__progress" data-tour-progress></span>
+          <button type="button" class="boh-tour__btn" data-tour-toggle>Pause</button>
+          <button type="button" class="boh-tour__btn boh-tour__btn--end" data-tour-stop>End tour</button>
+        </div>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var LINES = <?php echo wp_json_encode(array_map(static fn($l) => $l[0], $script)); ?>;
+      var box      = document.querySelector('.boh-tour');
+      var caption  = document.querySelector('[data-tour-caption]');
+      var progress = document.querySelector('[data-tour-progress]');
+      var toggle   = document.querySelector('[data-tour-toggle]');
+      var stopBtn  = document.querySelector('[data-tour-stop]');
+      var starters = document.querySelectorAll('[data-boh-tour-start]');
+      if (!box || !starters.length) return;
+
+      var synth = window.speechSynthesis || null;
+      var idx = 0, running = false;
+
+      function speak(text, done) {
+        if (!synth) { setTimeout(done, 4200); return; }   // caption-only pacing
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.98;                                    // a touch under default reads calmer
+        u.pitch = 1;
+        u.lang = document.documentElement.lang || 'en-CA';
+        u.onend = done;
+        u.onerror = done;                                 // never strand the tour on a voice error
+        synth.speak(u);
+      }
+
+      function step() {
+        if (!running || idx >= LINES.length) { return stop(); }
+        progress.textContent = 'Section ' + (idx + 1) + ' of ' + LINES.length;
+        caption.textContent = LINES[idx];
+        if (window.bohTiles) { window.bohTiles.glideTo(idx); }
+        // Let the glide finish before speaking so the voice matches the view.
+        setTimeout(function () {
+          if (!running) return;
+          speak(LINES[idx], function () {
+            if (!running) return;
+            idx++;
+            setTimeout(step, 400);                        // a beat between sections
+          });
+        }, 950);
+      }
+
+      function start() {
+        if (running) return;
+        running = true; idx = 0;
+        box.hidden = false;
+        toggle.textContent = 'Pause';
+        if (synth) { synth.cancel(); }
+        step();
+      }
+
+      function stop() {
+        running = false;
+        box.hidden = true;
+        if (synth) { synth.cancel(); }
+      }
+
+      starters.forEach(function (b) { b.addEventListener('click', function (e) {
+        e.preventDefault(); start();
+      }); });
+
+      toggle.addEventListener('click', function () {
+        if (!synth) return;
+        if (synth.paused) { synth.resume(); toggle.textContent = 'Pause'; }
+        else { synth.pause(); toggle.textContent = 'Resume'; }
+      });
+      stopBtn.addEventListener('click', stop);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && running) { stop(); }
+      });
+      // Speech keeps talking after navigation in some browsers otherwise.
+      window.addEventListener('pagehide', stop);
+    })();
+    </script>
+    <?php
+}, 61);

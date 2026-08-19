@@ -5422,3 +5422,154 @@ a.boh-rohit-brand,
 @media (prefers-reduced-motion: reduce) {
   html:has(body.home) { scroll-snap-type: none; }
 }
+
+/* ── How it works: photo per step ───────────────────────────────────────
+   The compact home-page variant previously showed four bare headings; it
+   now carries a photograph from a past event and a one-line detail. The
+   step number sits on the image as a badge so it stays legible without
+   consuming a whole row of vertical space. */
+.boh-how-it-works__media {
+  position: relative;
+  margin: 0 0 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--boh-paper-2, #F7F5F0);
+}
+.boh-how-it-works__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* The generic content-image treatment adds a radius and shadow that
+     would double up with the figure's own rounding. */
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.boh-how-it-works__step:hover .boh-how-it-works__media img { transform: scale(1.04); }
+.boh-how-it-works__media .boh-how-it-works__num {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--boh-magenta, #D01482);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 6px 16px -6px rgba(31,26,36,0.5);
+}
+.boh-how-it-works__detail {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--boh-ink-soft, #6B5F73);
+  margin: 6px 0 0 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-how-it-works__media img { transition: none; }
+  .boh-how-it-works__step:hover .boh-how-it-works__media img { transform: none; }
+}
+
+/* ── Guided audio tour ──────────────────────────────────────────────────
+   The trigger sits beside the scroll cue in the hero; the caption panel is
+   fixed at the foot of the screen while the tour runs. Captions are always
+   shown, so the tour is usable with the sound off, on a browser without
+   speech synthesis, and by a deaf visitor. */
+/* Same !important treatment as .boh-scroll-cue: `.boh-hero > :not(...)`
+   forces position:relative on direct cover children, which turns left:50%
+   into a relative shift and pushes the button off to the right. */
+.boh-hero-tour {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: 104px !important;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+.boh-tour-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px 11px 18px;
+  border: 1px solid rgba(31,26,36,0.10);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.90);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--boh-ink, #1F1A24);
+  cursor: pointer;
+  box-shadow: 0 10px 26px -12px rgba(31,26,36,0.40);
+  transition: box-shadow .2s ease, background .2s ease;
+}
+.boh-tour-start:hover { background: #fff; box-shadow: 0 16px 34px -14px rgba(208,20,130,0.45); }
+.boh-tour-start:focus-visible { outline: 3px solid var(--boh-magenta, #D01482); outline-offset: 3px; }
+/* Speaker glyph drawn in CSS so the button needs no icon asset. */
+.boh-tour-start__icon {
+  width: 16px; height: 16px; flex: 0 0 auto; position: relative;
+}
+.boh-tour-start__icon::before {
+  content: ''; position: absolute; left: 0; top: 4px;
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 7px solid var(--boh-magenta, #D01482);
+}
+.boh-tour-start__icon::after {
+  content: ''; position: absolute; left: 8px; top: 2px;
+  width: 7px; height: 11px;
+  border-right: 2px solid var(--boh-magenta, #D01482);
+  border-radius: 0 8px 8px 0;
+  opacity: .85;
+}
+
+.boh-tour {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 200;
+  background: rgba(31,26,36,0.94);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.boh-tour[hidden] { display: none; }
+.boh-tour__inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.boh-tour__caption {
+  flex: 1 1 420px; margin: 0;
+  font-size: 15px; line-height: 1.55;
+}
+.boh-tour__controls { display: flex; align-items: center; gap: 10px; }
+.boh-tour__progress {
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--boh-yellow, #f9d135); white-space: nowrap;
+}
+.boh-tour__btn {
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: transparent; color: #fff;
+  font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700;
+}
+.boh-tour__btn:hover { background: rgba(255,255,255,0.14); }
+.boh-tour__btn--end { background: var(--boh-magenta, #D01482); border-color: transparent; }
+.boh-tour__btn:focus-visible { outline: 2px solid var(--boh-yellow, #f9d135); outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .boh-hero-tour { bottom: 84px; }
+  .boh-tour__inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

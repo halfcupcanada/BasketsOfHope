@@ -104,13 +104,34 @@ final class Controller
             return;
         }
 
-        $t = (new Ledger((int) $r['id']))->totals();
+        $t   = (new Ledger((int) $r['id']))->totals();
+        $now = time();
+        $opensAt = !empty($r['sales_open_utc']) ? strtotime($r['sales_open_utc'] . ' UTC') : 0;
+
+        // Announcing a "$0.00 jackpot — Buy Tickets" before a single ticket
+        // has sold reads as broken, and inviting a purchase before sales open
+        // sends people to a form that will refuse them. Say what is true now.
+        if ($opensAt && $now < $opensAt) {
+            $message = sprintf(
+                '50/50 Raffle — tickets on sale %s',
+                date_i18n('F j', $opensAt)
+            );
+            $cta = 'Details';
+        } elseif ($t['gross_cents'] > 0) {
+            $message = sprintf('50/50 Jackpot: <strong>%s</strong>', esc_html(Money::format($t['winner_cents'])));
+            $cta = 'Buy Tickets';
+        } else {
+            $message = '50/50 Raffle — be the first ticket';
+            $cta = 'Buy Tickets';
+        }
+
         printf(
-            '<div class="boh-5050-bar%s"><a href="%s">%s50/50 Jackpot: <strong>%s</strong> — Buy Tickets</a></div>',
+            '<div class="boh-5050-bar%s"><a href="%s">%s%s — %s</a></div>',
             $isPreview ? ' boh-5050-bar--preview' : '',
             esc_url(home_url('/50-50/')),
             $isPreview ? 'PREVIEW — ' : '',
-            esc_html(Money::format($t['winner_cents']))
+            $message,          // built above; the only dynamic part is already escaped
+            esc_html($cta)
         );
     }
 
