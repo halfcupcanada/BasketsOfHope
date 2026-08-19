@@ -5372,7 +5372,19 @@ a.boh-rohit-brand,
    ─────────────────────────────────────────────────────────────────── */
 @media (min-width: 901px) and (min-height: 700px) {
   html:has(body.home) {
-    scroll-snap-type: y mandatory;
+    /* Proximity rather than mandatory: the JS below animates the actual
+       panel-to-panel movement, and mandatory would fight it mid-flight. */
+    scroll-snap-type: y proximity;
+    /* The 100px anchor offset above exists so #links clear the sticky
+       header. Applied to a full-viewport panel it lands the panel 100px
+       down and leaves a slice of the previous one on screen, so it is
+       cancelled here. The header is transparent over the panels and their
+       content is vertically centred, so no offset is needed. */
+    scroll-padding-top: 0;
+  }
+  body.home .entry-content > *[id],
+  body.home .boh-footer {
+    scroll-margin-top: 0;
   }
   body.home .entry-content > .wp-block-cover,
   body.home .entry-content > .wp-block-group {

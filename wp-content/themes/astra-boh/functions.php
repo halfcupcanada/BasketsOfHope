@@ -1798,3 +1798,119 @@ add_action('wp_footer', function () {
     </script>
     <?php
 }, 90);
+
+// --- Front-page tile scrolling ------------------------------------------
+// CSS scroll-snap decides *where* the page settles but gives no control over
+// *how fast*, and the browser's snap is abrupt. This drives the movement
+// itself so the glide can be paced and eased. CSS is left on `proximity` so
+// it acts as a fallback without fighting the animation mid-flight.
+add_action('wp_footer', function () {
+    if (!is_front_page()) {
+        return;
+    }
+    ?>
+    <script>
+    (function () {
+      var mq = window.matchMedia('(min-width: 901px) and (min-height: 700px)');
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (!mq.matches || reduce.matches) return;   // phones and reduced-motion keep native scrolling
+
+      var DURATION = 900;                          // ms for a full panel change
+      var panels = [];
+      var animating = false;
+      var lastRun = 0;
+
+      function collect() {
+        var content = document.querySelector('.entry-content');
+        if (!content) return;
+        panels = Array.prototype.slice.call(content.children);
+        var footer = document.querySelector('.boh-footer');
+        if (footer) panels.push(footer);
+      }
+
+      function tops() {
+        var y = window.scrollY || document.documentElement.scrollTop;
+        return panels.map(function (el) {
+          return Math.round(el.getBoundingClientRect().top + y);
+        });
+      }
+
+      function currentIndex() {
+        var y = window.scrollY || document.documentElement.scrollTop;
+        var t = tops(), best = 0, bestDist = Infinity;
+        for (var i = 0; i < t.length; i++) {
+          var d = Math.abs(t[i] - y);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+        return best;
+      }
+
+      // easeInOutCubic — slow at both ends, quick through the middle, which
+      // reads as deliberate rather than snappy.
+      function ease(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function glideTo(index) {
+        var t = tops();
+        if (index < 0 || index >= t.length) return;
+        var from = window.scrollY || document.documentElement.scrollTop;
+        var to = t[index];
+        if (Math.abs(to - from) < 4) return;
+
+        animating = true;
+        var start = null;
+        function step(ts) {
+          if (start === null) start = ts;
+          var p = Math.min(1, (ts - start) / DURATION);
+          window.scrollTo(0, from + (to - from) * ease(p));
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            // Small tail so a trailing trackpad glide does not immediately
+            // trigger the next panel.
+            setTimeout(function () { animating = false; }, 120);
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      function move(dir) {
+        var now = Date.now();
+        if (animating || now - lastRun < 200) return;
+        lastRun = now;
+        glideTo(currentIndex() + dir);
+      }
+
+      window.addEventListener('wheel', function (e) {
+        // Leave genuinely scrollable inner regions alone.
+        for (var n = e.target; n && n !== document.body; n = n.parentElement) {
+          if (n.scrollHeight > n.clientHeight + 4) {
+            var oy = getComputedStyle(n).overflowY;
+            if (oy === 'auto' || oy === 'scroll') return;
+          }
+        }
+        if (Math.abs(e.deltaY) < 2) return;
+        e.preventDefault();
+        move(e.deltaY > 0 ? 1 : -1);
+      }, { passive: false });
+
+      // Keyboard parity — the wheel handler must not make the page
+      // navigable only by mouse.
+      window.addEventListener('keydown', function (e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+        if (e.key === 'PageDown' || e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+        else if (e.key === 'PageUp' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+        else if (e.key === 'Home') { e.preventDefault(); glideTo(0); }
+        else if (e.key === 'End') { e.preventDefault(); glideTo(panels.length - 1); }
+      });
+
+      collect();
+      window.addEventListener('resize', collect);
+      window.addEventListener('load', collect);
+    })();
+    </script>
+    <?php
+}, 60);
