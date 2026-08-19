@@ -275,14 +275,18 @@ final class Controller
               <?php echo esc_html($r['draw_utc'] ?: 'to be announced'); ?>.</p>
           <?php endif; ?>
 
+          <?php // Impact figures are deliberately absent. The numbers that were
+                // here (312 residents / 4,231 crisis calls / 844 childcare
+                // hours) had no verified source, and publishing unverifiable
+                // outcome claims beside a fundraising ask is exactly the kind
+                // of statement a charity should be able to stand behind. Once
+                // WIN House confirms figures and the period they cover, they
+                // can go back — see CONTENT-EDITING-GUIDE.md. ?>
           <div class="boh-5050__impact">
             <h2>Your ticket helps create a path to safety.</h2>
-            <p>Your participation supports WIN House and the work behind these outcomes.</p>
-            <ul>
-              <li><b>312</b> residents sheltered</li>
-              <li><b>4,231</b> crisis calls answered</li>
-              <li><b>844</b> hours of childcare provided</li>
-            </ul>
+            <p>WIN House is a safe haven for women, children and non-binary people
+               fleeing gender-based violence. Half of every dollar raised here goes
+               directly to supporting that work.</p>
           </div>
         </section>
         <?php
