@@ -65,8 +65,19 @@ add_action('init', function () {
 });
 
 // --- Site config ---------------------------------------------------------
-if (!defined('BOH_EVENT_ISO'))   define('BOH_EVENT_ISO',   '2026-11-03T18:00:00-07:00');
-if (!defined('BOH_EVENT_END'))   define('BOH_EVENT_END',   '2026-11-03T21:00:00-07:00');
+// The event runs 6:00-9:00 PM local time in Edmonton. Resolve the UTC offset
+// from the timezone database instead of hardcoding one: Alberta moves to
+// permanent UTC-6 on 1 Nov 2026, so the -07:00 previously written here put the
+// countdown, the Google Calendar link and the .ics file an hour late for an
+// event held on 3 Nov. Naming the zone keeps this correct through any future
+// rule change too.
+if (!defined('BOH_EVENT_TZ'))    define('BOH_EVENT_TZ',    'America/Edmonton');
+if (!defined('BOH_EVENT_ISO')) {
+    define('BOH_EVENT_ISO', (new DateTimeImmutable('2026-11-03 18:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
+}
+if (!defined('BOH_EVENT_END')) {
+    define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 21:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
+}
 if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope — A Night of Giving");
 if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4");
 // RSVP form ID — auto-discover by title so the theme works regardless of
@@ -777,10 +788,10 @@ add_shortcode('boh_hero_slideshow', function () {
     // no pink margin bleed. The brand-flower artwork has soft pink borders
     // baked in and reads as empty space at the sides — use it later in the
     // rotation, not as the first frame.
-    $slides = [
-        '/wp-content/uploads/2026/06/RC_BoH_112722_181108_LR-13-1024x683.jpg',
-        '/wp-content/uploads/2026/07/boh-flower-main.jpg',
-    ];
+    // Slides are managed in Appearance → Hero Images. The hardcoded list
+    // below is only the fallback for a site that has never set them, so the
+    // hero is never empty on a fresh install.
+    $slides = boh_hero_slide_urls();
     ob_start(); ?>
     <div class="boh-hero-slideshow" aria-hidden="true">
       <?php foreach ($slides as $i => $url) : ?>
@@ -1354,7 +1365,11 @@ add_action( 'wp_footer', function () {
             const gcal = 'https://calendar.google.com/calendar/render' +
                 '?action=TEMPLATE' +
                 '&text=' + encodeURIComponent("Rohit's Baskets of Hope 2026") +
-                '&dates=20261104T010000Z/20261104T040000Z' +
+                <?php // Derived from BOH_EVENT_ISO/END, not written out by hand:
+                      // a second copy of the date drifts the moment the first
+                      // one changes, and this one had already gone an hour
+                      // stale relative to the "Add to calendar" button above. ?>
+                '&dates=<?php echo esc_js( gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO)) . '/' . gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END)) ); ?>' +
                 '&details=' + encodeURIComponent("An evening of community and giving in support of WIN House.") +
                 '&location=' + encodeURIComponent(<?php echo wp_json_encode( $event_where ); ?>);
             const ics = '/?boh_ics=1';
@@ -1977,14 +1992,19 @@ add_action('wp_footer', function () {
     }
     // Copy is kept here rather than in JS so it stays greppable and
     // translatable, and so it can move into the editor later.
+    // Written to be spoken, not read. Short sentences, contractions, and one
+    // idea at a time — a long clause-heavy sentence is what makes synthetic
+    // speech sound like a form letter. Each line is split on sentence
+    // boundaries at playback and given a small pause, which does more for
+    // naturalness than any rate or pitch setting.
     $script = [
-        ['Welcome to Rohit\'s Baskets of Hope. This is a community giving event that fills comfort baskets for women and families rebuilding after domestic violence. It has run every year since 2010, here in Edmonton.'],
-        ['Here are the details for this year\'s event. You can see the date, the time, the location, and a countdown to the evening itself. If you would like to come, the R S V P button takes you to the form.'],
-        ['This is what the event is. Once a year, guests, businesses and volunteers come together to collect donations and fill baskets, in partnership with WIN House Edmonton.'],
-        ['Here is why baskets, rather than just money. A basket carries comfort and dignity during a very difficult transition. Cozy socks, a journal, body care, a small blanket. Small things that say: you are seen, and you are not alone.'],
-        ['This is the impact so far, measured across the years the event has run.'],
-        ['This is how it works, in four steps. Choose twelve comfort items. Bring them to the event, or sponsor a basket. The team packs each basket by hand. Then the baskets are delivered to WIN House.'],
-        ['That is the tour. From here you can read more about the event, make a donation, become a sponsor, or R S V P for the evening. Thank you for listening.'],
+        ['Hi, and welcome. Baskets of Hope is one night a year. Our community fills baskets with comfort for women and families starting over after violence. We\'ve done it every year since 2010.'],
+        ['Here\'s when. The date, the time, and the countdown. If you\'d like to be in the room, the RSVP button is right here.'],
+        ['It\'s a whole city effort. Guests, businesses, volunteers. All of it goes to WIN House, here in Edmonton.'],
+        ['So why a basket, and not just a cheque? Because a basket says something a cheque can\'t. Warm socks. A journal. A small blanket. You are seen. You are not alone.'],
+        ['And this is what it\'s grown into over the years.'],
+        ['It takes four steps. Pick twelve comfort items. Bring them along, or sponsor a basket instead. We pack every one by hand. Then they go to WIN House.'],
+        ['That\'s the tour. You can read more, give, sponsor, or RSVP from here. Thanks for spending a minute with us.'],
     ];
     ?>
     <div class="boh-tour" hidden aria-live="polite">
@@ -2011,15 +2031,51 @@ add_action('wp_footer', function () {
       var synth = window.speechSynthesis || null;
       var idx = 0, running = false;
 
+      // Prefer a natural-sounding local voice where the platform offers one.
+      // Names vary by OS, so this is a preference list, not a requirement —
+      // if none match we simply use the default.
+      var preferred = ['Samantha', 'Serena', 'Karen', 'Moira', 'Google UK English Female', 'Microsoft Aria'];
+      function pickVoice() {
+        if (!synth) return null;
+        var voices = synth.getVoices() || [];
+        for (var i = 0; i < preferred.length; i++) {
+          for (var j = 0; j < voices.length; j++) {
+            if (voices[j].name.indexOf(preferred[i]) !== -1) return voices[j];
+          }
+        }
+        // Otherwise the first English voice, rather than whatever is first.
+        for (var k = 0; k < voices.length; k++) {
+          if (/^en/i.test(voices[k].lang)) return voices[k];
+        }
+        return null;
+      }
+
+      /**
+       * Speak a line one sentence at a time with a short gap between.
+       * A single long utterance is read at a flat, unbroken pace, which is
+       * most of what makes synthesised speech sound robotic; the pauses
+       * restore something closer to how a person actually talks.
+       */
       function speak(text, done) {
         if (!synth) { setTimeout(done, 4200); return; }   // caption-only pacing
-        var u = new SpeechSynthesisUtterance(text);
-        u.rate = 0.98;                                    // a touch under default reads calmer
-        u.pitch = 1;
-        u.lang = document.documentElement.lang || 'en-CA';
-        u.onend = done;
-        u.onerror = done;                                 // never strand the tour on a voice error
-        synth.speak(u);
+        var parts = text.match(/[^.!?]+[.!?]*/g) || [text];
+        var i = 0;
+        var voice = pickVoice();
+
+        (function next() {
+          if (!running || i >= parts.length) { return done(); }
+          var chunk = parts[i++].trim();
+          if (!chunk) { return next(); }
+          var u = new SpeechSynthesisUtterance(chunk);
+          u.rate  = 0.95;                                 // slightly under default reads calmer
+          u.pitch = 1.02;                                 // a touch of lift, not sing-song
+          u.lang  = document.documentElement.lang || 'en-CA';
+          if (voice) { u.voice = voice; }
+          // Longer beat after a full stop than after a comma-led fragment.
+          u.onend = function () { setTimeout(next, /[.!?]$/.test(chunk) ? 260 : 120); };
+          u.onerror = function () { setTimeout(next, 120); };  // never strand the tour
+          synth.speak(u);
+        })();
       }
 
       function step() {
@@ -2072,3 +2128,196 @@ add_action('wp_footer', function () {
     </script>
     <?php
 }, 61);
+
+// --- Hero images: admin-managed slideshow --------------------------------
+// The hero slides used to be a hardcoded array, which meant a code change
+// and a deploy to swap a photograph. They are now attachment IDs in an
+// option, chosen through the standard WordPress media picker, so the team
+// can add, remove and reorder them without a developer.
+
+const BOH_HERO_SLIDES_OPTION = 'boh_hero_slides';
+
+/** Fallback used only when nothing has been chosen yet. */
+function boh_hero_slide_fallback(): array
+{
+    return [
+        '/wp-content/uploads/2026/06/RC_BoH_112722_181108_LR-13-1024x683.jpg',
+        '/wp-content/uploads/2026/07/boh-flower-main.jpg',
+    ];
+}
+
+/** Attachment IDs currently selected for the hero, in display order. */
+function boh_hero_slide_ids(): array
+{
+    $ids = get_option(BOH_HERO_SLIDES_OPTION, []);
+    return is_array($ids) ? array_values(array_filter(array_map('intval', $ids))) : [];
+}
+
+/**
+ * Resolved slide URLs. Attachments that have since been deleted are skipped
+ * rather than emitting a broken image, and an empty result falls back to the
+ * bundled defaults so the hero always has something to show.
+ *
+ * @return string[]
+ */
+function boh_hero_slide_urls(): array
+{
+    $urls = [];
+    foreach (boh_hero_slide_ids() as $id) {
+        // 'full' would ship a multi-megabyte original into a background image.
+        $src = wp_get_attachment_image_url($id, 'large');
+        if ($src) {
+            $urls[] = $src;
+        }
+    }
+    return $urls ?: boh_hero_slide_fallback();
+}
+
+add_action('admin_menu', function () {
+    add_theme_page(
+        'Hero Images', 'Hero Images', 'edit_theme_options',
+        'boh-hero-images', 'boh_hero_images_screen'
+    );
+});
+
+add_action('admin_enqueue_scripts', function ($hook) {
+    if ($hook === 'appearance_page_boh-hero-images') {
+        wp_enqueue_media();   // required for wp.media to exist
+    }
+});
+
+function boh_hero_images_screen(): void
+{
+    if (!current_user_can('edit_theme_options')) {
+        wp_die('You do not have permission to manage hero images.', 403);
+    }
+
+    if (isset($_POST['boh_hero_nonce']) && wp_verify_nonce($_POST['boh_hero_nonce'], 'boh_hero_save')) {
+        $raw = isset($_POST['boh_hero_ids']) ? (string) wp_unslash($_POST['boh_hero_ids']) : '';
+        $ids = array_values(array_filter(array_map('intval', explode(',', $raw))));
+        update_option(BOH_HERO_SLIDES_OPTION, $ids, false);
+        echo '<div class="notice notice-success is-dismissible"><p>Hero images saved.</p></div>';
+    }
+
+    $ids = boh_hero_slide_ids();
+    ?>
+    <div class="wrap">
+      <h1>Hero Images</h1>
+      <p>These images rotate behind the headline on the home page. Add as many
+         as you like, drag to reorder, and remove any you no longer want.
+         Landscape photographs at least 1600px wide work best.</p>
+
+      <?php if (!$ids) : ?>
+        <div class="notice notice-info inline"><p>
+          No images selected yet, so the hero is showing its built-in defaults.
+          Choosing any image here replaces them.
+        </p></div>
+      <?php endif; ?>
+
+      <form method="post">
+        <?php wp_nonce_field('boh_hero_save', 'boh_hero_nonce'); ?>
+        <input type="hidden" name="boh_hero_ids" id="boh-hero-ids"
+               value="<?php echo esc_attr(implode(',', $ids)); ?>">
+
+        <p>
+          <button type="button" class="button button-primary" id="boh-hero-add">Add images</button>
+          <button type="button" class="button" id="boh-hero-clear">Remove all</button>
+        </p>
+
+        <ul id="boh-hero-list" class="boh-hero-admin-list">
+          <?php foreach ($ids as $id) :
+              $thumb = wp_get_attachment_image_url($id, 'medium');
+              if (!$thumb) { continue; }   // attachment deleted since selection
+          ?>
+            <li data-id="<?php echo (int) $id; ?>" draggable="true">
+              <img src="<?php echo esc_url($thumb); ?>" alt="">
+              <button type="button" class="boh-hero-remove" aria-label="Remove image">&times;</button>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+
+        <?php submit_button('Save hero images'); ?>
+      </form>
+
+      <style>
+        .boh-hero-admin-list { display:flex; flex-wrap:wrap; gap:12px; padding:0; margin:18px 0; list-style:none; }
+        .boh-hero-admin-list li { position:relative; width:190px; height:130px; border-radius:10px;
+          overflow:hidden; border:1px solid #dcdcde; background:#f6f7f7; cursor:grab; }
+        .boh-hero-admin-list img { width:100%; height:100%; object-fit:cover; display:block; }
+        .boh-hero-admin-list li.dragging { opacity:.4; }
+        .boh-hero-remove { position:absolute; top:6px; right:6px; width:26px; height:26px;
+          border:0; border-radius:50%; background:rgba(0,0,0,.65); color:#fff; font-size:16px;
+          line-height:1; cursor:pointer; }
+        .boh-hero-remove:hover { background:#d63638; }
+      </style>
+
+      <script>
+      jQuery(function ($) {
+        var list  = document.getElementById('boh-hero-list');
+        var field = document.getElementById('boh-hero-ids');
+        var frame;
+
+        function sync() {
+          field.value = Array.prototype.map.call(list.children, function (li) {
+            return li.dataset.id;
+          }).join(',');
+        }
+
+        $('#boh-hero-add').on('click', function (e) {
+          e.preventDefault();
+          // Reuse one frame so repeated opens do not stack listeners.
+          if (!frame) {
+            frame = wp.media({
+              title: 'Choose hero images',
+              button: { text: 'Use these images' },
+              library: { type: 'image' },
+              multiple: 'add'
+            });
+            frame.on('select', function () {
+              frame.state().get('selection').each(function (att) {
+                var id = att.id;
+                if (list.querySelector('[data-id="' + id + '"]')) return;  // no duplicates
+                var sizes = att.get('sizes') || {};
+                var src = (sizes.medium && sizes.medium.url) || att.get('url');
+                var li = document.createElement('li');
+                li.dataset.id = id;
+                li.draggable = true;
+                li.innerHTML = '<img src="' + src + '" alt="">'
+                             + '<button type="button" class="boh-hero-remove" aria-label="Remove image">&times;</button>';
+                list.appendChild(li);
+              });
+              sync();
+            });
+          }
+          frame.open();
+        });
+
+        $('#boh-hero-clear').on('click', function (e) {
+          e.preventDefault();
+          if (!confirm('Remove all hero images? The hero will fall back to its built-in defaults.')) return;
+          list.innerHTML = '';
+          sync();
+        });
+
+        $(list).on('click', '.boh-hero-remove', function (e) {
+          e.preventDefault();
+          this.closest('li').remove();
+          sync();
+        });
+
+        // Lightweight drag-to-reorder; avoids pulling in jQuery UI sortable.
+        var dragged = null;
+        $(list).on('dragstart', 'li', function () { dragged = this; this.classList.add('dragging'); });
+        $(list).on('dragend', 'li', function () { this.classList.remove('dragging'); sync(); });
+        $(list).on('dragover', 'li', function (e) {
+          e.preventDefault();
+          if (!dragged || dragged === this) return;
+          var r = this.getBoundingClientRect();
+          var after = (e.originalEvent.clientX - r.left) > r.width / 2;
+          list.insertBefore(dragged, after ? this.nextSibling : this);
+        });
+      });
+      </script>
+    </div>
+    <?php
+}

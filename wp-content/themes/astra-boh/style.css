@@ -5386,9 +5386,22 @@ a.boh-rohit-brand,
   body.home .boh-footer {
     scroll-margin-top: 0;
   }
+  /* Sections size to their own content rather than being stretched to a
+     full viewport. Forcing 100vh on a section whose content is only ~60%
+     of a screen just manufactured dead space; snapping to each section's
+     top gives the same tile feel without the emptiness. The hero keeps its
+     full height because it is a full-bleed image. Padding is trimmed from
+     the 72–88px chosen for continuous scrolling, since each section is now
+     arrived at deliberately. */
+  body.home .entry-content > .wp-block-group {
+    padding-top: 56px !important;
+    padding-bottom: 56px !important;
+  }
+  body.home .entry-content > .wp-block-cover.boh-hero {
+    min-height: 100vh;
+  }
   body.home .entry-content > .wp-block-cover,
   body.home .entry-content > .wp-block-group {
-    min-height: 100vh;
     /* Land the panel top at the viewport top, and require a stop on each
        one so a fast flick cannot skip past a whole view. */
     scroll-snap-align: start;
@@ -5572,4 +5585,166 @@ a.boh-rohit-brand,
 @media (max-width: 720px) {
   .boh-hero-tour { bottom: 84px; }
   .boh-tour__inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE PASS — Aug 2026
+   Faults found by rendering every page at 390 x 844 (iPhone 14/15) and
+   measuring the DOM rather than eyeballing a desktop window scaled down.
+   Each block below fixes one measured problem; the comment says which.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. Hero eyebrow pill — the pill is inline-flex and an earlier rule
+      forces `flex-wrap: nowrap !important`, so on a phone the words ran
+      straight out of the rounded background: "INITIATIVE" rendered on
+      bare photo, outside the white pill. Let it wrap and the box grows
+      to contain it. Wrapping also buys back a readable font size —
+      it had been squeezed to 8px trying to stay on one line. */
+@media (max-width: 880px) {
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    justify-content: center !important;
+    text-align: center !important;
+    max-width: min(100%, 330px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-size: 10px !important;
+    letter-spacing: 0.10em !important;
+    line-height: 1.5 !important;
+    padding: 7px 16px !important;
+    row-gap: 2px !important;
+  }
+}
+@media (max-width: 480px) {
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    font-size: 9.5px !important;
+    letter-spacing: 0.08em !important;
+    padding: 7px 14px !important;
+    max-width: min(100%, 300px) !important;
+  }
+}
+
+/* 2. "Tour the event" broke onto three lines ("TOUR" / "THE" / "EVENT")
+      because the pill's padding left almost no room for the label.
+      Keep it on one line and shrink to fit instead. */
+@media (max-width: 720px) {
+  .boh-tour-start {
+    white-space: nowrap;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 10px 18px 10px 15px;
+    gap: 8px;
+  }
+  .boh-tour-start__icon { width: 14px; height: 14px; }
+}
+
+/* 3. Hero bottom chrome — four overlays (dots, tour, scroll cue, pause)
+      were competing for the same corner on a 390px screen: the dots ran
+      down the right edge through the middle of the photo, and the pause
+      disc sat a hair from the scroll-cue pill. Give each one its own
+      band: tour, then cue, then a horizontal dot row along the bottom
+      with the pause disc tucked to the right of it. */
+@media (max-width: 720px) {
+  .wp-block-cover.boh-hero .boh-hero-dots {
+    flex-direction: row !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 16px !important;
+    transform: translateX(-50%) !important;
+    gap: 10px !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-dot {
+    width: 9px !important;
+    height: 9px !important;
+    border-width: 1.5px !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-pause {
+    width: 34px;
+    height: 34px;
+    right: 14px !important;
+    bottom: 12px !important;
+  }
+  .boh-hero-pause__icon { width: 8px; height: 10px; border-left-width: 2.5px; border-right-width: 2.5px; }
+  .boh-hero-pause.is-paused .boh-hero-pause__icon {
+    border-left-width: 9px; border-top-width: 6px; border-bottom-width: 6px;
+  }
+  .boh-scroll-cue,
+  .boh-scroll-cue--labelled { bottom: 52px !important; }
+  .boh-hero-tour { bottom: 112px !important; }
+}
+
+/* 4. WHY-section mini stats — the row is flex-wrap, so on a phone the
+      three stats stacked, but the `border-left` divider meant for a
+      horizontal row came with them. Each stat then sat further right
+      than the one above it: a staircase with stray vertical rules.
+      Three narrow columns fit fine on a phone, so keep them in a row. */
+@media (max-width: 600px) {
+  .boh-home-mini-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    flex-wrap: nowrap;
+    margin: 22px auto 18px;
+    width: 100%;
+  }
+  .boh-home-mini-stat { padding: 0 6px; }
+  .boh-home-mini-stat + .boh-home-mini-stat { padding-left: 6px; }
+  .boh-home-mini-stat b { font-size: 24px; }
+  .boh-home-mini-stat span {
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+    text-align: center;
+  }
+}
+
+/* 5. Sponsor logo wall — the track floor of 180px meant exactly one
+      logo per row on a phone, stretching the page to 10,300px. Two
+      columns halve the scroll and the marks are still legible. */
+@media (max-width: 600px) {
+  .boh-sponsor-logos.wp-block-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .boh-sponsor-logos.wp-block-gallery .wp-block-image { padding: 14px; }
+  .boh-sponsor-logos.wp-block-gallery figure.wp-block-image > img,
+  .boh-sponsor-logos.wp-block-gallery img { max-height: 52px !important; }
+}
+
+/* 6. Gallery — same problem: a 260px track floor gave one photo per
+      row, 35 photos deep. Two columns on a phone. */
+@media (max-width: 600px) {
+  .boh-gallery__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+/* 7. Menu button was a 38 x 32 hit area — under the 44px minimum, and
+      the hardest control on the site to hit one-handed. */
+.boh-nav__toggle {
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 8. Long two-tone headings ("Choose the right fit.") broke mid-phrase
+      and left an orphan word on its own line. A step down in size on
+      phones keeps them to sensible line breaks. */
+@media (max-width: 600px) {
+  .boh-page-hero__title,
+  .boh-home-section__heading { font-size: clamp(26px, 8vw, 34px) !important; }
+}
+
+/* 9. Impact band — dropping to a single column below 480px turned four
+      short numbers into a ~1,000px column of dead space on a phone.
+      They are short enough to sit two-up all the way down. */
+@media (max-width: 480px) {
+  .boh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 24px 12px !important; }
+  .boh-stats__cell { padding: 8px 4px; }
+  .boh-stats__cell h2 { font-size: 32px !important; }
+  .boh-stats__label { font-size: 10px; letter-spacing: 0.06em; }
 }

@@ -114,7 +114,7 @@ final class Controller
         if ($opensAt && $now < $opensAt) {
             $message = sprintf(
                 '50/50 Raffle — tickets on sale %s',
-                date_i18n('F j', $opensAt)
+                wp_date('F j', $opensAt)
             );
             $cta = 'Details';
         } elseif ($t['gross_cents'] > 0) {
@@ -219,7 +219,7 @@ final class Controller
               </span>
               <?php if (!empty($r['draw_utc'])) : ?>
                 <span class="boh-5050__ticket-draw">DRAWING ON <?php
-                  echo esc_html(strtoupper(date_i18n('F j', strtotime((string) $r['draw_utc'] . ' UTC')))); ?></span>
+                  echo esc_html(strtoupper(wp_date('F j', strtotime((string) $r['draw_utc'] . ' UTC')))); ?></span>
               <?php endif; ?>
             </div>
           </div>
@@ -229,7 +229,7 @@ final class Controller
             <div class="boh-5050__stat boh-5050__stat--prize"><b><?php echo esc_html(Money::format($t['winner_cents'])); ?></b><span>Winner receives</span></div>
             <div class="boh-5050__stat"><b><?php echo esc_html(Money::format($t['charity_gross_cents'])); ?></b><span>For WIN House</span></div>
           </div>
-          <p class="boh-5050__updated">Last updated <?php echo esc_html($t['updated_at']); ?></p>
+          <p class="boh-5050__updated">Last updated <?php echo esc_html(self::localTime($t['updated_at'], 'just now')); ?></p>
 
           <?php if (RaffleStatus::isSelling($r['status']) && !$inv['sold_out']) : ?>
             <form class="boh-5050__buy" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -258,8 +258,8 @@ final class Controller
               <p class="boh-5050__fineprint">
                 Ticket purchases are not donations and are not eligible for a charitable tax receipt.
                 Licence <?php echo esc_html($r['licence_number'] ?: 'pending'); ?>.
-                Sales close <?php echo esc_html($r['sales_close_utc'] ?: 'TBC'); ?>.
-                Draw <?php echo esc_html($r['draw_utc'] ?: 'TBC'); ?> at <?php echo esc_html($r['draw_location'] ?: 'TBC'); ?>.
+                Sales close <?php echo esc_html(self::localTime($r['sales_close_utc'], 'TBC')); ?>.
+                Draw <?php echo esc_html(self::localTime($r['draw_utc'], 'TBC')); ?> at <?php echo esc_html($r['draw_location'] ?: 'TBC'); ?>.
                 18+, Alberta only. Please play responsibly.
                 <?php if ($r['rules_url']) : ?>
                   <a href="<?php echo esc_url($r['rules_url']); ?>">View Raffle Rules</a>
@@ -272,7 +272,7 @@ final class Controller
             <p class="boh-5050__closed">Ticket sales are briefly paused. Please check back shortly.</p>
           <?php else : ?>
             <p class="boh-5050__closed">Ticket sales are closed. Draw:
-              <?php echo esc_html($r['draw_utc'] ?: 'to be announced'); ?>.</p>
+              <?php echo esc_html(self::localTime($r['draw_utc'])); ?>.</p>
           <?php endif; ?>
 
           <?php // Impact figures are deliberately absent. The numbers that were
@@ -291,6 +291,30 @@ final class Controller
         </section>
         <?php
         return (string) ob_get_clean();
+    }
+
+    /**
+     * Render a stored UTC datetime for a visitor.
+     *
+     * Every datetime in this plugin is stored UTC so the ledger is
+     * unambiguous, but a raffle page that prints "2026-11-17 15:22:00" is
+     * asking a ticket buyer in Edmonton to do timezone arithmetic. Convert
+     * to the site's timezone and say so.
+     */
+    private static function localTime(?string $utc, string $fallback = 'to be announced'): string
+    {
+        $utc = trim((string) $utc);
+        if ($utc === '') {
+            return $fallback;
+        }
+        $ts = strtotime($utc . ' UTC');
+        if ($ts === false) {
+            return $fallback;
+        }
+        // wp_date(), not date_i18n(): date_i18n() expects a timestamp with the
+        // GMT offset already baked in, so handing it a true Unix timestamp
+        // prints UTC wearing the local timezone's label.
+        return wp_date('F j, Y \a\t g:i a T', $ts);
     }
 
     public static function handleCheckout(): void
