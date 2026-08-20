@@ -5386,22 +5386,20 @@ a.boh-rohit-brand,
   body.home .boh-footer {
     scroll-margin-top: 0;
   }
-  /* Sections size to their own content rather than being stretched to a
-     full viewport. Forcing 100vh on a section whose content is only ~60%
-     of a screen just manufactured dead space; snapping to each section's
-     top gives the same tile feel without the emptiness. The hero keeps its
-     full height because it is a full-bleed image. Padding is trimmed from
-     the 72–88px chosen for continuous scrolling, since each section is now
-     arrived at deliberately. */
-  body.home .entry-content > .wp-block-group {
-    padding-top: 56px !important;
-    padding-bottom: 56px !important;
-  }
-  body.home .entry-content > .wp-block-cover.boh-hero {
-    min-height: 100vh;
-  }
+  /* Each section is one screen. That is the whole point of the tile feel:
+     you arrive at a view, it fills the window, and the next nudge takes
+     you to the next one.
+
+     The earlier complaint that views "took too much height" was not caused
+     by the 100vh itself — it was that the sections' own 72–88px of padding
+     sat OUTSIDE that height, so a panel measured 100vh + 176px and no view
+     ever fit the window. `box-sizing: border-box` puts the padding inside
+     the 100vh, so a panel is exactly one screen; it only grows past that
+     if its content genuinely needs more room. */
   body.home .entry-content > .wp-block-cover,
   body.home .entry-content > .wp-block-group {
+    box-sizing: border-box;
+    min-height: 100vh;
     /* Land the panel top at the viewport top, and require a stop on each
        one so a fast flick cannot skip past a whole view. */
     scroll-snap-align: start;
@@ -5409,6 +5407,13 @@ a.boh-rohit-brand,
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+  /* Padding on the groups only. The hero's slideshow controls, scroll cue
+     and tour button are absolutely positioned against its padding box, so
+     padding here would lift them off the bottom edge. */
+  body.home .entry-content > .wp-block-group {
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
   }
   /* The hero already fills the viewport and positions its own children. */
   body.home .entry-content > .wp-block-cover.boh-hero {
@@ -5747,4 +5752,76 @@ a.boh-rohit-brand,
   .boh-stats__cell { padding: 8px 4px; }
   .boh-stats__cell h2 { font-size: 32px !important; }
   .boh-stats__label { font-size: 10px; letter-spacing: 0.06em; }
+}
+
+/* Short desktop windows (roughly a 13" laptop once browser chrome is
+   taken off): the four-steps panel carries 56px + 64px of margin around
+   the card grid on top of the panel's own padding, which pushed it past
+   one screen — the only view that still did not fit. Tighten the spacing
+   there alone, so a normal-height display is unchanged. */
+@media (min-width: 901px) and (min-height: 700px) and (max-height: 840px) {
+  body.home .entry-content > .wp-block-group {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+  body.home .boh-how-it-works--compact {
+    margin-top: 24px !important;
+    margin-bottom: 0 !important;
+  }
+  body.home .boh-how-it-works--compact .boh-how-it-works__grid {
+    margin-top: 20px !important;
+  }
+  body.home .boh-how-it-works__media { aspect-ratio: 16 / 10; }
+}
+
+/* ── Add-to-calendar row ─────────────────────────────────────────────
+   The row was inline-flex, so it inherited the page's left alignment and
+   sat off to one side under a full-width band of event tiles. It also had
+   12px of air above it and 120px below (its own 28px margin plus the two
+   surrounding groups' padding), so it read as belonging to nothing.
+   Centre it and even out the spacing on both sides. */
+.boh-cal {
+  display: flex;
+  justify-content: center;
+  margin: 26px auto 0;
+}
+.entry-content > .wp-block-group:has(.boh-cal) {
+  padding-bottom: 24px !important;
+}
+.entry-content > .wp-block-group:has(.boh-rsvp) {
+  padding-top: 16px !important;
+}
+
+/* ── Gallery sections ────────────────────────────────────────────────
+   The gallery used year tabs, which hid three quarters of the photos
+   behind a click. It now stacks a section per recent year and folds
+   everything older into one "Past Events" section. */
+.boh-gallery-section {
+  margin: 0 0 64px;
+}
+.boh-gallery-section:last-child { margin-bottom: 0; }
+.boh-gallery-section__title {
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--boh-plum);
+  text-align: center;
+  margin: 0 0 6px;
+}
+.boh-gallery-section__note {
+  text-align: center;
+  margin: 0 0 22px;
+  font-size: 13px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--boh-ink-soft);
+  font-weight: 600;
+}
+/* The title carries the spacing, so the grid sits directly under it. */
+.boh-gallery-section .boh-gallery { margin-top: 18px; }
+@media (max-width: 600px) {
+  .boh-gallery-section { margin-bottom: 44px; }
+  .boh-gallery-section__title { font-size: 22px; }
+  .boh-gallery-section__note { font-size: 11px; margin-bottom: 16px; }
 }

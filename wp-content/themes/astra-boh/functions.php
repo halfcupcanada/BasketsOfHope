@@ -900,7 +900,9 @@ add_shortcode('boh_hero_slideshow', function () {
 // Left card = external donation to WIN House (new tab). Right card = the
 // on-site GiveWP flow ("sponsor a basket") — scrolls to #give-form.
 add_shortcode('boh_donate_cards', function () {
-    $winhouse_url = 'https://form-renderer-app.donorperfect.io/give/win-house-edmonton-women-shelter-ltd/bfk_2026';
+    // WIN House's DonorPerfect form dedicated to this event, so gifts made
+    // here are attributed to Baskets of Hope rather than the general fund.
+    $winhouse_url = 'https://form-renderer-app.donorperfect.io/give/win-house-edmonton-women-shelter-ltd/3p---rohit-baskets-of-hope-2026';
     ob_start(); ?>
     <div class="boh-donate-cards">
       <article class="boh-donate-card boh-donate-card--winhouse">
@@ -1094,38 +1096,33 @@ add_shortcode('boh_faqs', function () {
 // --- [boh_gallery year="2025"] — event photo/video gallery -------------
 // Reads from a filter so image URLs live outside code. Empty state shows
 // a friendly "coming soon" until albums are populated.
-add_shortcode('boh_gallery', function ($atts) {
-    $a = shortcode_atts(['year' => date('Y')], $atts);
-    /**
-     * Filter: boh_gallery_items
-     * Return array keyed by year: [ 2024 => [ ['type'=>'image','url'=>'...','caption'=>'...'], ... ], ... ]
-     * Populate via a mu-plugin, or upload via wp-admin Media and hook in.
-     */
-    $all = apply_filters('boh_gallery_items', []);
-    $available_years = !empty($all) ? array_keys($all) : [(int) $a['year']];
-    rsort($available_years);
+/**
+ * How many of the most recent years get a section of their own. Everything
+ * older is folded into a single "Past Events" section.
+ */
+if (!defined('BOH_GALLERY_RECENT_YEARS')) {
+    define('BOH_GALLERY_RECENT_YEARS', 3);
+}
 
-    // Year chosen by the visitor via the tabs. Must NOT be called `year`:
-    // that is a reserved WordPress query var for date archives, so
-    // /gallery/?year=2025 hijacks the main query and 404s the page.
-    $requested = isset($_GET['boh_year']) ? (int) $_GET['boh_year'] : (int) $a['year'];
-    $selected = in_array($requested, $available_years, true) ? $requested : $available_years[0];
-    $items = $all[$selected] ?? [];
+/**
+ * Render one gallery block: the photo grid, its lightbox, and the small
+ * script that wires them together.
+ *
+ * Each block is a self-contained `.boh-gallery`, and the viewer script scopes
+ * itself with `closest('.boh-gallery')`, so several can sit on one page and
+ * each carousel pages only through its own photos.
+ *
+ * @param array  $items  Gallery items, in display order.
+ * @param string $label  Used for the viewer's accessible name.
+ */
+function boh_gallery_block(array $items, string $label): string
+{
     ob_start(); ?>
-    <div class="boh-gallery" data-selected-year="<?php echo esc_attr($selected); ?>">
-      <?php if (count($available_years) > 1) : ?>
-        <div class="boh-gallery__years" role="tablist" aria-label="Event year">
-          <?php foreach ($available_years as $y) : ?>
-            <a class="boh-gallery__year<?php echo $y === $selected ? ' is-active' : ''; ?>"
-               href="?boh_year=<?php echo (int) $y; ?>#gallery"><?php echo (int) $y; ?></a>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-
+    <div class="boh-gallery" data-selected-year="<?php echo esc_attr($label); ?>">
       <?php if (empty($items)) : ?>
         <div class="boh-gallery__empty">
           <p><strong>Photos coming soon.</strong></p>
-          <p>Once <?php echo (int) $selected; ?> event photos and videos are ready, they'll appear here. Have media to share? Email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a>.</p>
+          <p>Once <?php echo esc_html($label); ?> event photos and videos are ready, they'll appear here. Have media to share? Email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a>.</p>
         </div>
       <?php else : ?>
         <div class="boh-gallery__grid">
@@ -1168,7 +1165,7 @@ add_shortcode('boh_gallery', function ($atts) {
         }, array_values($items));
         ?>
         <div class="boh-lightbox" hidden data-boh-items="<?php echo esc_attr(wp_json_encode($payload)); ?>"
-             role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($selected); ?> gallery viewer">
+             role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($label); ?> gallery viewer">
           <button type="button" class="boh-lightbox__close" aria-label="Close viewer">&times;</button>
           <button type="button" class="boh-lightbox__nav boh-lightbox__nav--prev" aria-label="Previous">&#8249;</button>
           <button type="button" class="boh-lightbox__nav boh-lightbox__nav--next" aria-label="Next">&#8250;</button>
@@ -1277,7 +1274,60 @@ add_shortcode('boh_gallery', function ($atts) {
       <?php endif; ?>
     </div>
     <?php
-    return ob_get_clean();
+    return (string) ob_get_clean();
+}
+
+add_shortcode('boh_gallery', function ($atts) {
+    $a = shortcode_atts(['year' => date('Y')], $atts);
+    /**
+     * Filter: boh_gallery_items
+     * Return array keyed by year: [ 2024 => [ ['type'=>'image','url'=>'...','caption'=>'...'], ... ], ... ]
+     * Populate via a mu-plugin, or upload via wp-admin Media and hook in.
+     */
+    $all = apply_filters('boh_gallery_items', []);
+
+    if (empty($all)) {
+        return boh_gallery_block([], (string) (int) $a['year']);
+    }
+
+    $years = array_map('intval', array_keys($all));
+    rsort($years);
+
+    $recent = array_slice($years, 0, BOH_GALLERY_RECENT_YEARS);
+    $older  = array_slice($years, BOH_GALLERY_RECENT_YEARS);
+
+    ob_start(); ?>
+    <div class="boh-gallery-sections">
+      <?php foreach ($recent as $y) : ?>
+        <section class="boh-gallery-section" id="gallery-<?php echo (int) $y; ?>">
+          <h3 class="boh-gallery-section__title"><?php echo (int) $y; ?></h3>
+          <?php echo boh_gallery_block((array) ($all[$y] ?? []), (string) $y); ?>
+        </section>
+      <?php endforeach; ?>
+
+      <?php
+      if (!empty($older)) :
+          // Everything before the three most recent years is one section, so
+          // the page stays a short read no matter how many years accumulate.
+          $past = [];
+          foreach ($older as $y) {
+              foreach ((array) ($all[$y] ?? []) as $item) {
+                  $past[] = $item;
+              }
+          }
+          $oldest = (int) end($older);
+          $newest = (int) reset($older);
+          $range  = $oldest === $newest ? (string) $oldest : $oldest . ' – ' . $newest;
+          if (!empty($past)) : ?>
+        <section class="boh-gallery-section" id="gallery-past">
+          <h3 class="boh-gallery-section__title">Past Events</h3>
+          <p class="boh-gallery-section__note"><?php echo esc_html($range); ?></p>
+          <?php echo boh_gallery_block($past, 'Past events'); ?>
+        </section>
+      <?php endif; endif; ?>
+    </div>
+    <?php
+    return (string) ob_get_clean();
 });
 
 // --- Relabel GiveWP's built-in "Donation" / "Donate" strings to
@@ -1882,11 +1932,19 @@ add_action('wp_footer', function () {
         if (footer) panels.push(footer);
       }
 
+      // offsetTop rather than getBoundingClientRect(): panels carry the
+      // scroll-reveal transform (translateY(28px)) until they animate in, and
+      // a rect measurement includes it. The glide then aimed 28px past the
+      // panel top and visibly sprang back when the reveal resolved mid-flight.
+      // offsetTop reports layout position and ignores transforms.
+      function docTop(el) {
+        var y = 0;
+        for (var n = el; n; n = n.offsetParent) { y += n.offsetTop; }
+        return Math.round(y);
+      }
+
       function tops() {
-        var y = window.scrollY || document.documentElement.scrollTop;
-        return panels.map(function (el) {
-          return Math.round(el.getBoundingClientRect().top + y);
-        });
+        return panels.map(docTop);
       }
 
       function currentIndex() {
@@ -1905,6 +1963,20 @@ add_action('wp_footer', function () {
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       }
 
+      // `html` carries `scroll-behavior: smooth` for anchor links. Left alone,
+      // every per-frame scrollTo below would kick off its own smooth scroll on
+      // top of this animation, and the two fight: the page lurches, stalls and
+      // occasionally runs backwards. Ask for this one jump to be instant and
+      // the CSS keeps working for anchors.
+      var root = document.documentElement;
+      function jumpTo(y) {
+        try {
+          window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+        } catch (err) {
+          window.scrollTo(0, y);
+        }
+      }
+
       function glideTo(index) {
         var t = tops();
         if (index < 0 || index >= t.length) return;
@@ -1913,14 +1985,22 @@ add_action('wp_footer', function () {
         if (Math.abs(to - from) < 4) return;
 
         animating = true;
+        // CSS snap would also try to steer while we are mid-flight. Hand the
+        // scroll over completely for the duration, then give it back so a
+        // scrollbar drag still settles on a panel.
+        var snapWas = root.style.scrollSnapType;
+        root.style.scrollSnapType = 'none';
+
         var start = null;
         function step(ts) {
           if (start === null) start = ts;
           var p = Math.min(1, (ts - start) / DURATION);
-          window.scrollTo(0, from + (to - from) * ease(p));
+          jumpTo(from + (to - from) * ease(p));
           if (p < 1) {
             requestAnimationFrame(step);
           } else {
+            jumpTo(to);               // land exactly, not a sub-pixel short
+            root.style.scrollSnapType = snapWas;
             // Small tail so a trailing trackpad glide does not immediately
             // trigger the next panel.
             setTimeout(function () { animating = false; }, 120);
