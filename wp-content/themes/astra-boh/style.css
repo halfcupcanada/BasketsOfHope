@@ -5825,3 +5825,27 @@ a.boh-rohit-brand,
   .boh-gallery-section__title { font-size: 22px; }
   .boh-gallery-section__note { font-size: 11px; margin-bottom: 16px; }
 }
+
+/* ── No scroll-reveal on the front-page tiles ────────────────────────
+   Reveal-on-scroll suits a continuously scrolled page, where content
+   drifts up into view as you read. It fights a full-screen tile: the
+   incoming panel sat at opacity 0 and translateY(28px) while the glide
+   was already carrying it into view, then faded in and slid up 28px
+   against a page scrolling down. Two opposed motions plus a fade,
+   mid-scroll — which read as a flicker on arrival.
+
+   A tile is arrived at deliberately and fills the window, so it should
+   simply be there. Reveals stay on for every other page. */
+@media (min-width: 901px) and (min-height: 700px) {
+  body.home .entry-content > .wp-block-cover,
+  body.home .entry-content > .wp-block-group,
+  body.home .entry-content .boh-reveal,
+  body.home .entry-content .boh-reveal-stagger > *,
+  body.home .boh-footer .boh-reveal,
+  body.home .boh-footer .boh-reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
