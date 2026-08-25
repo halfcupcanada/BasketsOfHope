@@ -1134,7 +1134,16 @@ function boh_gallery_block(array $items, string $label): string
       <?php else : ?>
         <div class="boh-gallery__grid">
           <?php foreach ($items as $i => $item) : ?>
-            <figure class="boh-gallery__cell boh-gallery__cell--<?php echo esc_attr($item['type']); ?>">
+            <?php
+            // Real aspect ratio drives the tile's shape, so the masonry is made
+            // of the photographs themselves rather than arbitrary spans — and
+            // nothing is cropped. Falls back to 4:3 when dimensions are unknown.
+            $g_ar = (!empty($item['w']) && !empty($item['h']))
+                ? (int) $item['w'] . ' / ' . (int) $item['h']
+                : '4 / 3';
+            ?>
+            <figure class="boh-gallery__cell boh-gallery__cell--<?php echo esc_attr($item['type']); ?>"
+                    style="--boh-ar: <?php echo esc_attr($g_ar); ?>">
               <button type="button" class="boh-gallery__open" data-boh-index="<?php echo (int) $i; ?>"
                       aria-label="<?php echo esc_attr(
                           ($item['caption'] ?? '') !== ''
@@ -2256,7 +2265,9 @@ function boh_hero_slide_fallback(): array
 {
     return [
         '/wp-content/uploads/2026/06/RC_BoH_112722_181108_LR-13-1024x683.jpg',
-        '/wp-content/uploads/2026/07/boh-flower-main.jpg',
+        // 1395x2048 (250KB) rather than the 5.8MB original — this is a
+        // background image, not a print asset.
+        '/wp-content/uploads/2026/07/boh-flower-main-1395x2048.jpg',
     ];
 }
 

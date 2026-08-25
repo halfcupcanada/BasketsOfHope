@@ -3951,7 +3951,10 @@ figure.boh-about-image ~ p {
   right: -60px;
   width: 320px;
   height: 320px;
-  background: url('/wp-content/uploads/2026/07/boh-flower-main.jpg') center / contain no-repeat;
+  /* 697x1024 (74KB), not the 5.8MB original: this flourish paints into a
+     320x320 box, and the full-size file was being downloaded on every
+     sub-page just to draw a decorative corner. */
+  background: url('/wp-content/uploads/2026/07/boh-flower-main-697x1024.jpg') center / contain no-repeat;
   opacity: 0.60;
   filter: saturate(0.9);
   pointer-events: none;
@@ -5924,3 +5927,44 @@ a.boh-rohit-brand,
   object-fit: contain;
 }
 .boh-lightbox__meta { flex: 0 0 auto; }
+
+/* ── Gallery: true masonry, no holes ─────────────────────────────────
+   The span-based mosaic left real gaps: a 4-column grid cannot be tiled
+   evenly by a 6-item pattern of 2x3 / 2x2 / 1x3 / 1x2 blocks, and
+   `dense` can only backfill a hole with an item small enough to fit.
+   Measured 5-6 empty tracks per section — roughly 4-7% of the grid, each
+   one a ~280x180px patch of white.
+
+   Multi-column layout cannot leave holes by construction: each column is
+   a continuous stack. Every tile takes its real aspect ratio (from the
+   photo's own dimensions), so the varied shapes come from the pictures
+   rather than from an arbitrary pattern, and nothing is cropped. */
+.boh-gallery__grid {
+  display: block;
+  columns: 4;
+  column-gap: 14px;
+  grid-template-columns: none;
+  grid-auto-rows: auto;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.boh-gallery__cell {
+  /* A tile must never be split across a column break. */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  display: block;
+  width: 100%;
+  margin: 0 0 14px;
+  aspect-ratio: var(--boh-ar, 4 / 3);
+  grid-column: auto;
+  grid-row: auto;
+}
+/* True ratios mean the image already fills its frame exactly; `cover`
+   stays as a guard for the fallback 4:3 tiles. */
+.boh-gallery__cell img,
+.boh-gallery__cell video { object-fit: cover; }
+
+@media (max-width: 1100px) { .boh-gallery__grid { columns: 3; } }
+@media (max-width: 760px)  { .boh-gallery__grid { columns: 2; column-gap: 10px; } .boh-gallery__cell { margin-bottom: 10px; } }
+@media (max-width: 420px)  { .boh-gallery__grid { columns: 2; } }
