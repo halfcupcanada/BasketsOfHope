@@ -500,6 +500,18 @@ add_action('wp_footer', function () {
  * link), header elevation on scroll, and stat counter count-up animation.
  * All vanilla, no jQuery. Respects prefers-reduced-motion.
  */
+/**
+ * Mark the document as JS-capable before anything paints.
+ *
+ * The scroll-reveal hides content until JS reveals it. If the script never
+ * runs — an error earlier on the page, a blocked file — that content stays
+ * invisible for good. Gating the hidden state on this class means the
+ * no-JS path renders everything instead of nothing.
+ */
+add_action('wp_head', function () {
+    echo "<script>document.documentElement.classList.add('boh-js');</script>\n";
+}, 1);
+
 add_action('wp_footer', function () {
     ?>
     <script>
@@ -538,7 +550,19 @@ add_action('wp_footer', function () {
       });
 
       // ── 2. IntersectionObserver to toggle .is-in ────────────────
+      const revealSel = '.boh-reveal, .boh-reveal-stagger, .boh-stats';
+      function revealAll() {
+        document.querySelectorAll(revealSel).forEach(el => el.classList.add('is-in'));
+      }
+
       if (!reduced && 'IntersectionObserver' in window) {
+        // threshold 0, NOT a ratio. A ratio threshold is unreachable for any
+        // element taller than the viewport: the gallery page wraps every year
+        // in one 8600px group, whose maximum possible intersectionRatio in a
+        // 900px window is 0.105 — under the old 0.12 it never fired, so the
+        // whole gallery stayed at opacity 0 and looked like a white screen.
+        // Firing on first pixel, with the root shortened from the bottom,
+        // behaves identically for small blocks and correctly for huge ones.
         const io = new IntersectionObserver((entries) => {
           entries.forEach(e => {
             if (e.isIntersecting) {
@@ -546,10 +570,23 @@ add_action('wp_footer', function () {
               io.unobserve(e.target);
             }
           });
-        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-        document.querySelectorAll('.boh-reveal, .boh-reveal-stagger, .boh-stats').forEach(el => io.observe(el));
+        }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
+        document.querySelectorAll(revealSel).forEach(el => io.observe(el));
+
+        // Failsafe. Content that is hidden until JS says otherwise must never
+        // be able to stay hidden: anything still unrevealed once the page has
+        // settled is shown regardless of what the observer did.
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            document.querySelectorAll(revealSel).forEach(el => {
+              if (el.classList.contains('is-in')) return;
+              const r = el.getBoundingClientRect();
+              if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-in');
+            });
+          }, 1200);
+        });
       } else {
-        document.querySelectorAll('.boh-reveal, .boh-reveal-stagger, .boh-stats').forEach(el => el.classList.add('is-in'));
+        revealAll();
       }
 
       // ── 3. Stat counter — count up from 0 to target ─────────────

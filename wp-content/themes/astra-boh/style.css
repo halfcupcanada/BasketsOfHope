@@ -89,7 +89,7 @@ body {
    ANIMATIONS — scroll-reveal, hero pulse, stat counter, button micro
    ─────────────────────────────────────────────────────────────────── */
 /* Scroll-reveal — elements start hidden + offset, animate in via JS toggle */
-.boh-reveal {
+.boh-js .boh-reveal {
   opacity: 0;
   transform: translateY(28px);
   transition: opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1);
@@ -104,7 +104,7 @@ body {
 .boh-reveal--left.is-in,
 .boh-reveal--right.is-in { transform: translateX(0); }
 /* Stagger children: each subsequent child gets a longer delay */
-.boh-reveal-stagger > * {
+.boh-js .boh-reveal-stagger > * {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1);
@@ -5014,8 +5014,8 @@ a.boh-rohit-brand,
 /* Reveal-stagger support for grids with up to 6 children */
 .boh-reveal-stagger.is-in > *:nth-child(6) { transition-delay: .55s; opacity: 1; transform: none; }
 
-.boh-how-it-works--compact .boh-how-it-works__grid.boh-reveal-stagger > *,
-.boh-quick-links.boh-reveal-stagger > * {
+.boh-js .boh-how-it-works--compact .boh-how-it-works__grid.boh-reveal-stagger > *,
+.boh-js .boh-quick-links.boh-reveal-stagger > * {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1);
