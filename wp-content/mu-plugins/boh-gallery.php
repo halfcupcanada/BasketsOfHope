@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 const BOH_GALLERY_DIR       = '/gallery';
 const BOH_GALLERY_MIN_YEAR  = 2022;
 const BOH_GALLERY_MAX_YEAR  = 2026;
-const BOH_GALLERY_CACHE_KEY = 'boh_gallery_items_v1';
+const BOH_GALLERY_CACHE_KEY = 'boh_gallery_items_v2';
 
 add_filter( 'boh_gallery_items', function ( $items ) {
 	$cached = get_transient( BOH_GALLERY_CACHE_KEY );
@@ -69,6 +69,14 @@ add_filter( 'boh_gallery_items', function ( $items ) {
 				'url'     => $url,
 				'caption' => $caption,
 			];
+
+			// Resized copies for the grid and the viewer. Each key falls back
+			// to the original when a derivative has not been built yet, so the
+			// page degrades to "heavy but working" rather than to blanks.
+			if ( $type === 'image' && function_exists( 'boh_gallery_item_sources' ) ) {
+				$item += boh_gallery_item_sources( $year, $file, $url );
+			}
+
 			// Optional matching poster image for videos:
 			//   my-clip.mp4  → my-clip.jpg (if it exists)
 			if ( $type === 'video' ) {

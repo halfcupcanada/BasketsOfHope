@@ -1117,6 +1117,13 @@ if (!defined('BOH_GALLERY_RECENT_YEARS')) {
  */
 function boh_gallery_block(array $items, string $label): string
 {
+    // Only the first block on the page is above the fold. Every later section
+    // (2024, 2023, Past Events) starts thousands of pixels down, so eager
+    // loading there would fetch a hundred photos nobody has scrolled to.
+    static $block_index = 0;
+    $boh_gallery_eager = ($block_index === 0);
+    $block_index++;
+
     ob_start(); ?>
     <div class="boh-gallery" data-selected-year="<?php echo esc_attr($label); ?>">
       <?php if (empty($items)) : ?>
@@ -1140,10 +1147,25 @@ function boh_gallery_block(array $items, string $label): string
                   </video>
                   <span class="boh-gallery__play" aria-hidden="true"></span>
                 <?php else : ?>
-                  <?php // First row is above the fold — lazy-loading it only delays the LCP. ?>
-                  <img src="<?php echo esc_url($item['url']); ?>" alt="<?php echo esc_attr($item['caption'] ?? ''); ?>"
-                       loading="<?php echo $i < 3 ? 'eager' : 'lazy'; ?>"
-                       decoding="<?php echo $i < 3 ? 'sync' : 'async'; ?>">
+                  <?php
+                  // Serve the resized copies, never the original: these files are
+                  // camera masters up to 15MB and the tile is a few hundred pixels.
+                  // `small`/`thumb`/`large` fall back to the original when the
+                  // derivatives have not been built for that photo yet.
+                  $g_small = $item['small'] ?? $item['url'];
+                  $g_thumb = $item['thumb'] ?? $item['url'];
+                  // Only the opening tiles of the first section are worth fetching
+                  // eagerly; everything else waits until it is near the viewport.
+                  $g_eager = $boh_gallery_eager && $i < 4;
+                  ?>
+                  <img src="<?php echo esc_url($g_thumb); ?>"
+                       <?php if ($g_small !== $g_thumb) : ?>srcset="<?php echo esc_attr(esc_url($g_small) . ' 480w, ' . esc_url($g_thumb) . ' 960w'); ?>"
+                       sizes="(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 320px"<?php endif; ?>
+                       alt="<?php echo esc_attr($item['caption'] ?? ''); ?>"
+                       <?php if (!empty($item['w']) && !empty($item['h'])) : ?>width="<?php echo (int) $item['w']; ?>" height="<?php echo (int) $item['h']; ?>"<?php endif; ?>
+                       loading="<?php echo $g_eager ? 'eager' : 'lazy'; ?>"
+                       <?php if (!$g_eager) : ?>fetchpriority="low" <?php endif; ?>
+                       decoding="<?php echo $g_eager ? 'sync' : 'async'; ?>">
                 <?php endif; ?>
               </button>
               <?php if (!empty($item['caption'])) : ?>
@@ -1158,7 +1180,10 @@ function boh_gallery_block(array $items, string $label): string
         $payload = array_map(function ($it) {
             return [
                 'type'    => $it['type'],
-                'url'     => $it['url'],
+                // The viewer gets the 1800px copy. Opening a 15MB master to fill
+                // a ~1000px box is what made tapping a photo feel broken.
+                'url'     => $it['large'] ?? $it['url'],
+                'thumb'   => $it['small'] ?? ($it['thumb'] ?? $it['url']),
                 'caption' => $it['caption'] ?? '',
                 'poster'  => $it['poster'] ?? '',
             ];
@@ -1224,6 +1249,15 @@ function boh_gallery_block(array $items, string $label): string
           function open(i, trigger) {
             index = i;
             opener = trigger || null;
+            // The viewer is position:fixed, but an ancestor of the gallery
+            // carries a transform (the scroll-reveal), and a transformed
+            // ancestor becomes the containing block for fixed descendants —
+            // so the viewer was positioning itself against that element and
+            // opening thousands of pixels down the page instead of over the
+            // screen. Re-parent it to <body> once, where nothing traps it.
+            if (box.parentNode !== document.body) {
+              document.body.appendChild(box);
+            }
             box.hidden = false;
             document.body.style.overflow = 'hidden';
             render();

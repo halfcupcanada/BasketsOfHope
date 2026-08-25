@@ -5849,3 +5849,78 @@ a.boh-rohit-brand,
     animation: none !important;
   }
 }
+
+/* ── Gallery: mosaic grid + viewer hardening ─────────────────────────
+   The grid was uniform 4:3 tiles in fixed 260-340px tracks. A varied
+   mosaic reads far better for event photography and gives the strongest
+   frames room to breathe. Rows are a fixed height with `dense` flow, so
+   the taller and wider tiles backfill gaps instead of leaving holes. */
+.boh-gallery__grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-auto-rows: 180px;
+  grid-auto-flow: dense;
+  gap: 14px;
+  max-width: 1180px;
+  margin: 0 auto;
+  justify-content: stretch;
+}
+/* The span rules below set each tile's shape, so a fixed ratio would fight
+   them. Height comes from the row span instead. */
+.boh-gallery__cell {
+  aspect-ratio: auto;
+  grid-column: span 1;
+  grid-row: span 2;
+}
+/* A repeating 1-6 rhythm: one big feature, one wide, one tall, the rest
+   standard. Deliberately not random — it stays stable across reloads. */
+.boh-gallery__cell:nth-child(6n + 1) { grid-column: span 2; grid-row: span 3; }
+.boh-gallery__cell:nth-child(6n + 4) { grid-column: span 2; grid-row: span 2; }
+.boh-gallery__cell:nth-child(6n + 6) { grid-row: span 3; }
+/* Video tiles are always given a generous frame — the play badge needs it. */
+.boh-gallery__cell--video { grid-column: span 2; grid-row: span 2; }
+
+@media (max-width: 1000px) {
+  .boh-gallery__grid { grid-auto-rows: 150px; }
+}
+@media (max-width: 600px) {
+  .boh-gallery__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 120px;
+    gap: 10px;
+  }
+  /* Two columns leaves no room for a 2-wide feature beside anything else,
+     so the feature simply becomes a full-width band. */
+  .boh-gallery__cell:nth-child(6n + 1) { grid-column: span 2; grid-row: span 2; }
+  .boh-gallery__cell:nth-child(6n + 4) { grid-column: span 2; grid-row: span 2; }
+  .boh-gallery__cell:nth-child(6n + 6) { grid-row: span 2; }
+  .boh-gallery__cell--video { grid-column: span 2; }
+}
+
+/* A tile with no image yet still occupies its space rather than collapsing,
+   and the tint hints that something is arriving. */
+.boh-gallery__cell img { background: var(--boh-paper-2, #F7F5F0); }
+
+/* Viewer: never taller than the screen. The stage was capped at 88vh while
+   the backdrop also carried up to 56px of padding, so on a short window the
+   caption row was pushed past the bottom edge. Size everything off the
+   backdrop's own box instead of the viewport. */
+.boh-lightbox {
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.boh-lightbox__stage {
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+.boh-lightbox__media {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.boh-lightbox__media img,
+.boh-lightbox__media video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.boh-lightbox__meta { flex: 0 0 auto; }

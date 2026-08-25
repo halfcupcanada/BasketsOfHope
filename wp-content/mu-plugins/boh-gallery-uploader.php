@@ -74,17 +74,26 @@ function boh_gallery_uploader_render() {
 					// Also remove companion .txt caption if any
 					$txt = $dest_dir . '/' . pathinfo( $file, PATHINFO_FILENAME ) . '.txt';
 					if ( is_file( $txt ) ) unlink( $txt );
+					// ...and the resized copies, or they linger as orphans.
+					if ( function_exists( 'boh_gallery_deriv_dir' ) ) {
+						$dv = boh_gallery_deriv_dir( $year );
+						foreach ( BOH_GALLERY_DERIV_WIDTHS as $w ) {
+							$d = $dv . '/' . boh_gallery_deriv_name( $file, $w );
+							if ( is_file( $d ) ) unlink( $d );
+						}
+					}
 					$notices[] = [ 'success', "Deleted <code>$file</code>." ];
 				} else {
 					$notices[] = [ 'error', 'File not found.' ];
 				}
-				delete_transient( 'boh_gallery_items_v1' );
+				delete_transient( 'boh_gallery_items_v2' );
 			}
 
 			// Upload action
 			if ( ! empty( $_FILES['gallery_files']['name'][0] ) ) {
 				$uploaded = 0;
 				$skipped  = [];
+				$new_dims = [];
 				$files    = $_FILES['gallery_files'];
 				$count    = count( $files['name'] );
 				for ( $i = 0; $i < $count; $i++ ) {
@@ -112,12 +121,35 @@ function boh_gallery_uploader_render() {
 					}
 					if ( move_uploaded_file( $files['tmp_name'][ $i ], $target ) ) {
 						@chmod( $target, 0644 );
+						// Build the small/medium/large copies now so the public
+						// grid never serves this camera original. Decoding a big
+						// photo needs more than the 128M web limit allows.
+						if ( function_exists( 'boh_gallery_build_one' ) ) {
+							wp_raise_memory_limit( 'image' );
+							$deriv = boh_gallery_build_one( $target, $year );
+							if ( $deriv['error'] ) {
+								$skipped[] = $name . ' (saved, but resizing failed: ' . $deriv['error'] . ')';
+							} elseif ( $deriv['dims'] ) {
+								$new_dims[ $name ] = $deriv['dims'];
+							}
+						}
 						$uploaded++;
 					} else {
 						$skipped[] = $name . ' (move failed)';
 					}
 				}
-				delete_transient( 'boh_gallery_items_v1' );
+					// Merge the new dimensions into the per-year index the front
+					// end reads to reserve each tile's space.
+					if ( $new_dims && function_exists( 'boh_gallery_deriv_dir' ) ) {
+						$idx_dir = boh_gallery_deriv_dir( $year );
+						if ( is_dir( $idx_dir ) ) {
+							$idx_path = $idx_dir . '/index.json';
+							$idx = is_file( $idx_path ) ? json_decode( (string) file_get_contents( $idx_path ), true ) : [];
+							if ( ! is_array( $idx ) ) { $idx = []; }
+							file_put_contents( $idx_path, wp_json_encode( array_merge( $idx, $new_dims ) ) );
+						}
+					}
+				delete_transient( 'boh_gallery_items_v2' );
 				if ( $uploaded ) {
 					$notices[] = [ 'success', "Uploaded {$uploaded} file(s) to /gallery/{$year}/." ];
 				}
