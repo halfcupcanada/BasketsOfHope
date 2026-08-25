@@ -27,6 +27,9 @@ add_action('wp_head', function () {
     echo '<link rel="icon" type="image/png" sizes="150x150" href="' . $icon . '">' . "\n";
     echo '<link rel="shortcut icon" type="image/png" href="' . $icon . '">' . "\n";
     echo '<link rel="apple-touch-icon" href="' . $logo . '">' . "\n";
+    // Android home-screen icon; without a 192px entry Chrome falls back to a
+    // screenshot of the page rather than the mark.
+    echo '<link rel="icon" type="image/png" sizes="192x192" href="' . esc_url(home_url('/wp-content/uploads/2026/06/boh-logo-275x300.png')) . '">' . "\n";
 }, 1);
 
 // --- Theme supports ------------------------------------------------------
@@ -500,6 +503,85 @@ add_action('wp_footer', function () {
  * link), header elevation on scroll, and stat counter count-up animation.
  * All vanilla, no jQuery. Respects prefers-reduced-motion.
  */
+/**
+ * Social sharing metadata (Open Graph + Twitter Card) and the site icon.
+ *
+ * No SEO plugin is active — Yoast is installed but switched off — so nothing
+ * was emitting og: tags at all. Pasting a link into WhatsApp, iMessage,
+ * Slack, Facebook or LinkedIn produced a bare URL with no image.
+ *
+ * Every page shares the same brand card (assets/share-card.png, 1200x630)
+ * so the logo is what people see, which is what was asked for. Titles and
+ * descriptions are still per-page.
+ */
+function boh_share_description(): string
+{
+    if (is_front_page() || !is_singular()) {
+        $desc = get_bloginfo('description');
+    } else {
+        $post = get_queried_object();
+        $desc = has_excerpt($post) ? get_the_excerpt($post) : '';
+        if ($desc === '' && $post instanceof WP_Post) {
+            // Shortcodes and blocks would otherwise leak markup into the
+            // preview text, so strip them before trimming.
+            $raw  = strip_shortcodes((string) $post->post_content);
+            $raw  = wp_strip_all_tags(do_blocks($raw));
+            $desc = trim(preg_replace('/\s+/', ' ', $raw));
+        }
+        if ($desc === '') {
+            $desc = get_bloginfo('description');
+        }
+    }
+    return wp_html_excerpt(html_entity_decode($desc, ENT_QUOTES, 'UTF-8'), 200, '…');
+}
+
+add_action('wp_head', function () {
+    $card  = get_stylesheet_directory_uri() . '/assets/share-card.png';
+    $title = is_front_page()
+        ? get_bloginfo('name') . ' — ' . get_bloginfo('description')
+        : wp_get_document_title();
+    $url   = is_singular() ? get_permalink() : home_url(add_query_arg([], $GLOBALS['wp']->request ?? ''));
+    $desc  = boh_share_description();
+
+    $tags = [
+        ['property', 'og:site_name',   get_bloginfo('name')],
+        ['property', 'og:type',        is_front_page() ? 'website' : 'article'],
+        ['property', 'og:title',       $title],
+        ['property', 'og:description', $desc],
+        ['property', 'og:url',         $url],
+        ['property', 'og:locale',      get_locale()],
+        ['property', 'og:image',       $card],
+        // Facebook and LinkedIn render the preview from these without having
+        // to fetch the file first, which is what stops the first share of a
+        // link showing no image.
+        ['property', 'og:image:width',  '1200'],
+        ['property', 'og:image:height', '630'],
+        ['property', 'og:image:type',   'image/png'],
+        ['property', 'og:image:alt',    get_bloginfo('name') . ' logo'],
+        ['name',     'twitter:card',        'summary_large_image'],
+        ['name',     'twitter:title',       $title],
+        ['name',     'twitter:description', $desc],
+        ['name',     'twitter:image',       $card],
+        ['name',     'twitter:image:alt',   get_bloginfo('name') . ' logo'],
+    ];
+
+    foreach ($tags as [$attr, $key, $value]) {
+        if ($value === '' || $value === null) {
+            continue;
+        }
+        printf(
+            "<meta %s=\"%s\" content=\"%s\">\n",
+            esc_attr($attr),
+            esc_attr($key),
+            esc_attr($value)
+        );
+    }
+
+    // A plain description tag too, for search results and for the clients
+    // that read it instead of og:description.
+    printf("<meta name=\"description\" content=\"%s\">\n", esc_attr($desc));
+}, 4);
+
 /**
  * Mark the document as JS-capable before anything paints.
  *
