@@ -21,7 +21,12 @@ function boh_logo_url($size = 'full') {
     // everywhere it appears: header, footer and browser-tab icon. The stored
     // value is already a sized URL from the media picker, so the icon and
     // full variants resolve to the same file in that case.
-    $chosen = function_exists('boh_content') ? boh_content('brand.logo', '') : '';
+    $shipped = home_url('/wp-content/uploads/2026/06/boh-logo.png');
+    $chosen  = function_exists('boh_content') ? boh_content('brand.logo', $shipped) : '';
+    if ($chosen === $shipped) {
+        // Nothing chosen: fall through to the size-aware paths below.
+        $chosen = '';
+    }
     if ($chosen) {
         return $chosen;
     }
@@ -367,9 +372,18 @@ add_shortcode('boh_rsvp', function ($atts) {
     $a = shortcode_atts(['form_id' => BOH_RSVP_FORM_ID], $atts);
 
     ob_start(); ?>
+    <?php
+    // Heading and the optional line beneath it come from
+    // BoH Content -> RSVP & event details.
+    $rsvp_title = boh_content('rsvp.title', 'Let us know if you can join us');
+    $rsvp_intro = boh_content('rsvp.intro', '');
+    ?>
     <div class="boh-rsvp">
       <div class="boh-rsvp__header">
-        <h3 class="boh-rsvp__title">Let us know if you can join us</h3>
+        <h3 class="boh-rsvp__title"><?php echo wp_kses_post($rsvp_title); ?></h3>
+        <?php if (trim(wp_strip_all_tags((string) $rsvp_intro)) !== '') : ?>
+          <div class="boh-rsvp__intro"><?php echo wp_kses_post($rsvp_intro); ?></div>
+        <?php endif; ?>
       </div>
       <?php
       if (!empty($a['form_id']) && function_exists('wpcf7_contact_form')) {
@@ -540,7 +554,7 @@ function boh_share_description(): string
 }
 
 add_action('wp_head', function () {
-    $card  = boh_content('brand.share_card', '') ?: get_stylesheet_directory_uri() . '/assets/share-card.png';
+    $card  = boh_content('brand.share_card', get_stylesheet_directory_uri() . '/assets/share-card.png');
     $title = is_front_page()
         ? get_bloginfo('name') . ' — ' . get_bloginfo('description')
         : wp_get_document_title();
@@ -608,13 +622,18 @@ add_action('wp_head', function () {
     if (!function_exists('boh_content')) {
         return;
     }
+    // The defaults here match the url() fallbacks inside style.css, so the
+    // admin shows the artwork actually in use rather than an empty box.
+    $ship_flourish = home_url('/wp-content/uploads/2026/07/boh-flower-main-697x1024.jpg');
+    $ship_pattern  = home_url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg');
     $map = [
-        '--boh-img-flourish' => boh_content('brand.hero_flourish', ''),
-        '--boh-img-pattern'  => boh_content('brand.flower_pattern', ''),
+        '--boh-img-flourish' => [boh_content('brand.hero_flourish', $ship_flourish), $ship_flourish],
+        '--boh-img-pattern'  => [boh_content('brand.flower_pattern', $ship_pattern), $ship_pattern],
     ];
     $out = '';
-    foreach ($map as $prop => $url) {
-        if ($url) {
+    foreach ($map as $prop => [$url, $ship]) {
+        // Only emit an override when it differs from what the CSS already uses.
+        if ($url && $url !== $ship) {
             $out .= sprintf('%s:url(\'%s\');', $prop, esc_url($url));
         }
     }
@@ -910,7 +929,9 @@ add_shortcode('boh_page_hero', function ($atts) {
     if ( $queried instanceof WP_Post ) {
         $slug = preg_replace( '/[^a-z0-9]/', '', strtolower( $queried->post_name ) );
     }
-    $image = $slug ? boh_content( 'hero.' . $slug, '' ) : '';
+    // Pass the page's own image as the default, so BoH Content -> Page headers
+    // shows the photograph currently in use instead of an empty picker.
+    $image = $slug ? boh_content( 'hero.' . $slug, (string) $a['image'] ) : (string) $a['image'];
     if ( ! $image ) {
         $image = $a['image'];
     }

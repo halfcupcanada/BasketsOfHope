@@ -6035,3 +6035,12 @@ a.boh-rohit-brand,
   body.home .boh-stats__cell { padding: clamp(6px, 1.6vh, 22px) 8px; }
   body.home .boh-stats__label { font-size: clamp(13px, 0.3vw + 0.6vh, 17px) !important; }
 }
+
+/* Optional line under the RSVP form heading, set in BoH Content. */
+.boh-rsvp__intro {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--boh-ink-soft);
+}
+.boh-rsvp__intro p:last-child { margin-bottom: 0; }

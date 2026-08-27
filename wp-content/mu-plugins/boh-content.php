@@ -31,6 +31,14 @@ function boh_content( string $key, $default = '' ) {
 		$stored = get_option( BOH_CONTENT_OPTION, [] );
 		$all    = is_array( $stored ) ? $stored : [];
 	}
+
+	// Remember what the theme ships for this key. Without it the admin fields
+	// render empty on a site that has never been edited — the copy is real,
+	// but it lives as a fallback in code rather than in the database, so there
+	// is nothing to put in the input. Capturing it here keeps one source of
+	// truth: the value the front end actually used.
+	boh_content_note_default( $key, $default );
+
 	$value = $all[ $key ] ?? null;
 
 	if ( $value === null || $value === '' ) {
@@ -55,6 +63,71 @@ function boh_content_row_has_value( $row ): bool {
 		}
 	}
 	return false;
+}
+
+const BOH_CONTENT_DEFAULTS_OPTION = 'boh_content_defaults';
+
+/**
+ * Record the theme's shipped value for a key, so the admin can pre-fill.
+ *
+ * Accumulates in memory and writes once on shutdown, and only when something
+ * new has appeared — so this costs a write the first time a page renders a
+ * given field and nothing thereafter.
+ */
+function boh_content_note_default( string $key, $default ): void {
+	if ( $default === '' || $default === null || $default === [] ) {
+		return;
+	}
+	$known = boh_content_defaults();
+	if ( array_key_exists( $key, $known ) && $known[ $key ] === $default ) {
+		return;
+	}
+	$GLOBALS['boh_content_defaults_pending'][ $key ] = $default;
+
+	static $hooked = false;
+	if ( ! $hooked ) {
+		$hooked = true;
+		add_action( 'shutdown', 'boh_content_flush_defaults', 99 );
+	}
+}
+
+/** All shipped defaults recorded so far. */
+function boh_content_defaults(): array {
+	static $cache = null;
+	if ( $cache === null ) {
+		$stored = get_option( BOH_CONTENT_DEFAULTS_OPTION, [] );
+		$cache  = is_array( $stored ) ? $stored : [];
+	}
+	if ( ! empty( $GLOBALS['boh_content_defaults_pending'] ) ) {
+		return array_merge( $cache, $GLOBALS['boh_content_defaults_pending'] );
+	}
+	return $cache;
+}
+
+function boh_content_flush_defaults(): void {
+	if ( empty( $GLOBALS['boh_content_defaults_pending'] ) ) {
+		return;
+	}
+	$stored = get_option( BOH_CONTENT_DEFAULTS_OPTION, [] );
+	$stored = is_array( $stored ) ? $stored : [];
+	update_option(
+		BOH_CONTENT_DEFAULTS_OPTION,
+		array_merge( $stored, $GLOBALS['boh_content_defaults_pending'] ),
+		false
+	);
+	$GLOBALS['boh_content_defaults_pending'] = [];
+}
+
+/**
+ * What an admin field should show: the saved value, or the theme's own value
+ * when nothing has been saved yet.
+ */
+function boh_content_effective( string $key, array $stored ) {
+	if ( array_key_exists( $key, $stored ) && $stored[ $key ] !== '' && $stored[ $key ] !== [] ) {
+		return $stored[ $key ];
+	}
+	$defaults = boh_content_defaults();
+	return $defaults[ $key ] ?? null;
 }
 
 /**
@@ -155,7 +228,9 @@ function boh_content_schema(): array {
 				[ 'key' => 'hero.faqs',    'label' => 'FAQs',        'type' => 'image' ],
 				[ 'key' => 'hero.gallery', 'label' => 'Gallery',     'type' => 'image' ],
 				[ 'key' => 'hero.rsvp',    'label' => 'RSVP',        'type' => 'image' ],
-				[ 'key' => 'hero.5050',    'label' => '50/50 Raffle','type' => 'image' ],
+				// No 50/50 entry: that page is rendered by the raffle plugin and
+				// has no page-header block, so a picker here would silently do
+				// nothing.
 			],
 		],
 
@@ -322,7 +397,7 @@ function boh_content_render_screen(): void {
 					<?php if ( ! empty( $field['help'] ) ) : ?>
 						<p class="boh-help"><?php echo esc_html( $field['help'] ); ?></p>
 					<?php endif; ?>
-					<?php boh_content_render_field( $field, $stored[ $field['key'] ] ?? null ); ?>
+					<?php boh_content_render_field( $field, boh_content_effective( $field['key'], $stored ) ); ?>
 				</div>
 			<?php endforeach; ?>
 			<p><button type="submit" class="button button-primary button-large">Save changes</button></p>
