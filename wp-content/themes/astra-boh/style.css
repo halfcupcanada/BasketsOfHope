@@ -5150,8 +5150,11 @@ a.boh-rohit-brand,
   gap: 14px;
 }
 .wp-block-cover.boh-hero .boh-hero-headcol .boh-hero-copy__eyebrow {
-  margin: 0 !important;
-  text-align: left !important;
+  margin: 0 auto !important;
+  /* Was `left`, left over from an earlier left-aligned hero. It sits after
+     the centring rule with equal specificity, so it quietly won and pushed
+     the badge 67px off centre on desktop. */
+  text-align: center !important;
 }
 
 /* Rectangular hero block: the whole unit (logo | eyebrow-over-headline,

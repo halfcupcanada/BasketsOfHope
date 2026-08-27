@@ -939,11 +939,6 @@ add_shortcode('boh_hero_slideshow', function () {
       const slideshow = document.querySelector('.boh-hero-slideshow');
       const dotStrip  = document.querySelector('.boh-hero-dots');
       const pauseBtn  = document.querySelector('.boh-hero-pause');
-            // Keep the tour button in the same containing block as the cue.
-      const tourWrap = document.querySelector(".boh-hero-tour");
-      if (container && tourWrap && tourWrap.parentElement !== container) {
-        container.appendChild(tourWrap);
-      }
       if (container && slideshow && slideshow.parentElement !== container) {
         container.insertBefore(slideshow, container.firstChild);
       }
@@ -1128,14 +1123,14 @@ add_shortcode('boh_how_it_works', function ($atts) {
 
 // --- [boh_quick_links] — grid of section-nav cards for the home page ---
 add_shortcode('boh_quick_links', function () {
-    $links = [
-        ['/about/',   'About',    'The story behind the event, our partnership with WIN House, and how it started.'],
-        ['/donate/',  'Donate',   'Make a monetary gift — every dollar goes directly toward filling more baskets.'],
-        ['/sponsor/', 'Sponsor',  'Sponsor a basket or a table and put your name behind a night of giving.'],
-        ['/faqs/',    'FAQs',     'Answers about the event, donations, tax receipts, and how to help.'],
-        ['/gallery/', 'Gallery',  'Photos from past events — moments of care, delivered.'],
-        ['/rsvp/',    'RSVP',     'Reserve your spot for this year’s event on November 3, 2026.'],
-    ];
+    $links = boh_content('home.quick_links', [
+        ['/about/',   'About',    'Learn how Baskets of Hope began and read about the history of the event.'],
+        ['/donate/',  'Donate',   'Make a financial contribution to Baskets of Hope or donate directly to WIN House.'],
+        ['/sponsor/', 'Corporate Sponsorship', 'Explore sponsorship opportunities for this year’s event.'],
+        ['/faqs/',    'FAQs',     'Find answers about the event, what to bring, donations, and more.'],
+        ['/gallery/', 'Gallery',  'See photos and highlights from past Baskets of Hope events.'],
+        ['/rsvp/',    'RSVP',     'Join us for this year’s Baskets of Hope event on November 3, 2026.'],
+    ]);
     ob_start(); ?>
     <div class="boh-quick-links" role="list">
       <?php foreach ($links as [$href, $title, $desc]) : ?>
@@ -1151,13 +1146,14 @@ add_shortcode('boh_quick_links', function () {
 
 // --- [boh_stats] — moved from home to about ----------------------------
 add_shortcode('boh_stats', function () {
-    // TODO: confirm final numbers with the team.
-    $stats = [
+    // Editable in BoH Content -> Home. The figures below are only the
+    // fallback shown before anyone has saved real numbers.
+    $stats = boh_content('home.stats', [
         ['2,847', 'Baskets delivered'],
         ['1,156', 'Families supported'],
         ['3,421', 'Volunteers engaged'],
         ['15',    'Years of service'],
-    ];
+    ]);
     ob_start(); ?>
     <div class="boh-stats">
       <?php foreach ($stats as [$num, $label]) : ?>
@@ -2220,156 +2216,6 @@ add_action('wp_footer', function () {
     <?php
 }, 60);
 
-// --- Guided audio tour ---------------------------------------------------
-// Speaks a short introduction to each section while scrolling to it, using
-// the browser's built-in speech synthesis. No API, no audio files, no cost —
-// and because it is the platform voice, it inherits the visitor's own
-// language and accessibility settings.
-//
-// Captions are always rendered, so the tour still works with the sound off,
-// on a browser without speech support, or for a deaf visitor.
-add_action('wp_footer', function () {
-    if (!is_front_page()) {
-        return;
-    }
-    // Copy is kept here rather than in JS so it stays greppable and
-    // translatable, and so it can move into the editor later.
-    // Written to be spoken, not read. Short sentences, contractions, and one
-    // idea at a time — a long clause-heavy sentence is what makes synthetic
-    // speech sound like a form letter. Each line is split on sentence
-    // boundaries at playback and given a small pause, which does more for
-    // naturalness than any rate or pitch setting.
-    $script = [
-        ['Hi, and welcome. Baskets of Hope is one night a year. Our community fills baskets with comfort for women and families starting over after violence. We\'ve done it every year since 2010.'],
-        ['Here\'s when. The date, the time, and the countdown. If you\'d like to be in the room, the RSVP button is right here.'],
-        ['It\'s a whole city effort. Guests, businesses, volunteers. All of it goes to WIN House, here in Edmonton.'],
-        ['So why a basket, and not just a cheque? Because a basket says something a cheque can\'t. Warm socks. A journal. A small blanket. You are seen. You are not alone.'],
-        ['And this is what it\'s grown into over the years.'],
-        ['It takes four steps. Pick twelve comfort items. Bring them along, or sponsor a basket instead. We pack every one by hand. Then they go to WIN House.'],
-        ['That\'s the tour. You can read more, give, sponsor, or RSVP from here. Thanks for spending a minute with us.'],
-    ];
-    ?>
-    <div class="boh-tour" hidden aria-live="polite">
-      <div class="boh-tour__inner">
-        <p class="boh-tour__caption" data-tour-caption></p>
-        <div class="boh-tour__controls">
-          <span class="boh-tour__progress" data-tour-progress></span>
-          <button type="button" class="boh-tour__btn" data-tour-toggle>Pause</button>
-          <button type="button" class="boh-tour__btn boh-tour__btn--end" data-tour-stop>End tour</button>
-        </div>
-      </div>
-    </div>
-    <script>
-    (function () {
-      var LINES = <?php echo wp_json_encode(array_map(static fn($l) => $l[0], $script)); ?>;
-      var box      = document.querySelector('.boh-tour');
-      var caption  = document.querySelector('[data-tour-caption]');
-      var progress = document.querySelector('[data-tour-progress]');
-      var toggle   = document.querySelector('[data-tour-toggle]');
-      var stopBtn  = document.querySelector('[data-tour-stop]');
-      var starters = document.querySelectorAll('[data-boh-tour-start]');
-      if (!box || !starters.length) return;
-
-      var synth = window.speechSynthesis || null;
-      var idx = 0, running = false;
-
-      // Prefer a natural-sounding local voice where the platform offers one.
-      // Names vary by OS, so this is a preference list, not a requirement —
-      // if none match we simply use the default.
-      var preferred = ['Samantha', 'Serena', 'Karen', 'Moira', 'Google UK English Female', 'Microsoft Aria'];
-      function pickVoice() {
-        if (!synth) return null;
-        var voices = synth.getVoices() || [];
-        for (var i = 0; i < preferred.length; i++) {
-          for (var j = 0; j < voices.length; j++) {
-            if (voices[j].name.indexOf(preferred[i]) !== -1) return voices[j];
-          }
-        }
-        // Otherwise the first English voice, rather than whatever is first.
-        for (var k = 0; k < voices.length; k++) {
-          if (/^en/i.test(voices[k].lang)) return voices[k];
-        }
-        return null;
-      }
-
-      /**
-       * Speak a line one sentence at a time with a short gap between.
-       * A single long utterance is read at a flat, unbroken pace, which is
-       * most of what makes synthesised speech sound robotic; the pauses
-       * restore something closer to how a person actually talks.
-       */
-      function speak(text, done) {
-        if (!synth) { setTimeout(done, 4200); return; }   // caption-only pacing
-        var parts = text.match(/[^.!?]+[.!?]*/g) || [text];
-        var i = 0;
-        var voice = pickVoice();
-
-        (function next() {
-          if (!running || i >= parts.length) { return done(); }
-          var chunk = parts[i++].trim();
-          if (!chunk) { return next(); }
-          var u = new SpeechSynthesisUtterance(chunk);
-          u.rate  = 0.95;                                 // slightly under default reads calmer
-          u.pitch = 1.02;                                 // a touch of lift, not sing-song
-          u.lang  = document.documentElement.lang || 'en-CA';
-          if (voice) { u.voice = voice; }
-          // Longer beat after a full stop than after a comma-led fragment.
-          u.onend = function () { setTimeout(next, /[.!?]$/.test(chunk) ? 260 : 120); };
-          u.onerror = function () { setTimeout(next, 120); };  // never strand the tour
-          synth.speak(u);
-        })();
-      }
-
-      function step() {
-        if (!running || idx >= LINES.length) { return stop(); }
-        progress.textContent = 'Section ' + (idx + 1) + ' of ' + LINES.length;
-        caption.textContent = LINES[idx];
-        if (window.bohTiles) { window.bohTiles.glideTo(idx); }
-        // Let the glide finish before speaking so the voice matches the view.
-        setTimeout(function () {
-          if (!running) return;
-          speak(LINES[idx], function () {
-            if (!running) return;
-            idx++;
-            setTimeout(step, 400);                        // a beat between sections
-          });
-        }, 950);
-      }
-
-      function start() {
-        if (running) return;
-        running = true; idx = 0;
-        box.hidden = false;
-        toggle.textContent = 'Pause';
-        if (synth) { synth.cancel(); }
-        step();
-      }
-
-      function stop() {
-        running = false;
-        box.hidden = true;
-        if (synth) { synth.cancel(); }
-      }
-
-      starters.forEach(function (b) { b.addEventListener('click', function (e) {
-        e.preventDefault(); start();
-      }); });
-
-      toggle.addEventListener('click', function () {
-        if (!synth) return;
-        if (synth.paused) { synth.resume(); toggle.textContent = 'Pause'; }
-        else { synth.pause(); toggle.textContent = 'Resume'; }
-      });
-      stopBtn.addEventListener('click', stop);
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && running) { stop(); }
-      });
-      // Speech keeps talking after navigation in some browsers otherwise.
-      window.addEventListener('pagehide', stop);
-    })();
-    </script>
-    <?php
-}, 61);
 
 // --- Hero images: admin-managed slideshow --------------------------------
 // The hero slides used to be a hardcoded array, which meant a code change
