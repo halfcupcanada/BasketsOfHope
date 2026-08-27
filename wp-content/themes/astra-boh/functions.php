@@ -2146,150 +2146,150 @@ add_action('wp_footer', function () {
     <?php
 }, 90);
 
-// --- Front-page tile scrolling ------------------------------------------
-// CSS scroll-snap decides *where* the page settles but gives no control over
-// *how fast*, and the browser's snap is abrupt. This drives the movement
-// itself so the glide can be paced and eased. CSS is left on `proximity` so
-// it acts as a fallback without fighting the animation mid-flight.
+// --- Front-page tile navigation -----------------------------------------
+// Scrolling is left entirely to the browser. An earlier version hijacked the
+// wheel to glide panel-to-panel, which fought the browser's own scrolling and
+// then broke outright: converting the page's copy to native blocks introduced
+// zero-height marker paragraphs between the panels, so consecutive entries in
+// the panel list shared a top. "Next panel" resolved to the current position,
+// the glide saw a zero-length move and bailed, and the page sat stuck on the
+// first tile.
+//
+// Instead there are explicit up/down controls. They glide smoothly, they can
+// only ever land on a real panel, and nothing intercepts an ordinary scroll.
 add_action('wp_footer', function () {
     if (!is_front_page()) {
         return;
     }
     ?>
+    <div class="boh-tilenav" hidden>
+      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--prev" aria-label="Previous section">
+        <span aria-hidden="true"></span>
+      </button>
+      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--next" aria-label="Next section">
+        <span aria-hidden="true"></span>
+      </button>
+    </div>
     <script>
     (function () {
       var mq = window.matchMedia('(min-width: 901px) and (min-height: 700px)');
       var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (!mq.matches || reduce.matches) return;   // phones and reduced-motion keep native scrolling
+      var nav = document.querySelector('.boh-tilenav');
+      if (!nav) return;
 
-      var DURATION = 900;                          // ms for a full panel change
+      var DURATION = 780;
       var panels = [];
       var animating = false;
-      var lastRun = 0;
+      var root = document.documentElement;
 
+      // Only real panels. Marker paragraphs the editor leaves behind have no
+      // height, and two entries at the same offset would make "next" a no-op.
       function collect() {
         var content = document.querySelector('.entry-content');
-        if (!content) return;
-        panels = Array.prototype.slice.call(content.children);
+        if (!content) { panels = []; return; }
+        var seen = {};
+        panels = [];
+        var kids = Array.prototype.slice.call(content.children);
         var footer = document.querySelector('.boh-footer');
-        if (footer) panels.push(footer);
+        if (footer) kids.push(footer);
+        kids.forEach(function (el) {
+          if (el.getBoundingClientRect().height < 200) return;
+          var top = docTop(el);
+          if (seen[top]) return;
+          seen[top] = 1;
+          panels.push(el);
+        });
       }
 
-      // offsetTop rather than getBoundingClientRect(): panels carry the
-      // scroll-reveal transform (translateY(28px)) until they animate in, and
-      // a rect measurement includes it. The glide then aimed 28px past the
-      // panel top and visibly sprang back when the reveal resolved mid-flight.
-      // offsetTop reports layout position and ignores transforms.
+      // offsetTop, not getBoundingClientRect: panels elsewhere on the site
+      // carry a scroll-reveal transform, and a rect includes it.
       function docTop(el) {
         var y = 0;
         for (var n = el; n; n = n.offsetParent) { y += n.offsetTop; }
         return Math.round(y);
       }
 
-      function tops() {
-        return panels.map(docTop);
-      }
+      function tops() { return panels.map(docTop); }
 
-      function currentIndex() {
-        var y = window.scrollY || document.documentElement.scrollTop;
-        var t = tops(), best = 0, bestDist = Infinity;
-        for (var i = 0; i < t.length; i++) {
-          var d = Math.abs(t[i] - y);
-          if (d < bestDist) { bestDist = d; best = i; }
-        }
-        return best;
-      }
-
-      // easeInOutCubic — slow at both ends, quick through the middle, which
-      // reads as deliberate rather than snappy.
       function ease(t) {
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       }
 
-      // `html` carries `scroll-behavior: smooth` for anchor links. Left alone,
-      // every per-frame scrollTo below would kick off its own smooth scroll on
-      // top of this animation, and the two fight: the page lurches, stalls and
-      // occasionally runs backwards. Ask for this one jump to be instant and
-      // the CSS keeps working for anchors.
-      var root = document.documentElement;
       function jumpTo(y) {
-        try {
-          window.scrollTo({ top: y, left: 0, behavior: 'instant' });
-        } catch (err) {
-          window.scrollTo(0, y);
-        }
+        // `html` carries scroll-behavior:smooth for anchor links; without
+        // asking for instant here, every frame would start its own smooth
+        // scroll on top of this animation.
+        try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
+        catch (err) { window.scrollTo(0, y); }
       }
 
       function glideTo(index) {
         var t = tops();
         if (index < 0 || index >= t.length) return;
-        var from = window.scrollY || document.documentElement.scrollTop;
+        var from = window.scrollY || root.scrollTop;
         var to = t[index];
         if (Math.abs(to - from) < 4) return;
+        if (reduce.matches) { jumpTo(to); update(); return; }
 
         animating = true;
-        // CSS snap would also try to steer while we are mid-flight. Hand the
-        // scroll over completely for the duration, then give it back so a
-        // scrollbar drag still settles on a panel.
-        var snapWas = root.style.scrollSnapType;
-        root.style.scrollSnapType = 'none';
-
         var start = null;
         function step(ts) {
           if (start === null) start = ts;
           var p = Math.min(1, (ts - start) / DURATION);
           jumpTo(from + (to - from) * ease(p));
-          if (p < 1) {
-            requestAnimationFrame(step);
-          } else {
-            jumpTo(to);               // land exactly, not a sub-pixel short
-            root.style.scrollSnapType = snapWas;
-            // Small tail so a trailing trackpad glide does not immediately
-            // trigger the next panel.
-            setTimeout(function () { animating = false; }, 120);
-          }
+          if (p < 1) { requestAnimationFrame(step); }
+          else { jumpTo(to); animating = false; update(); }
         }
         requestAnimationFrame(step);
       }
 
-      function move(dir) {
-        var now = Date.now();
-        if (animating || now - lastRun < 200) return;
-        lastRun = now;
-        glideTo(currentIndex() + dir);
+      // Which panel fills most of the screen right now.
+      function currentIndex() {
+        var y = (window.scrollY || root.scrollTop) + window.innerHeight * 0.35;
+        var t = tops(), best = 0;
+        for (var i = 0; i < t.length; i++) { if (t[i] <= y) best = i; }
+        return best;
       }
 
-      window.addEventListener('wheel', function (e) {
-        // Leave genuinely scrollable inner regions alone.
-        for (var n = e.target; n && n !== document.body; n = n.parentElement) {
-          if (n.scrollHeight > n.clientHeight + 4) {
-            var oy = getComputedStyle(n).overflowY;
-            if (oy === 'auto' || oy === 'scroll') return;
-          }
-        }
-        if (Math.abs(e.deltaY) < 2) return;
-        e.preventDefault();
-        move(e.deltaY > 0 ? 1 : -1);
-      }, { passive: false });
+      var prev = nav.querySelector('.boh-tilenav__btn--prev');
+      var next = nav.querySelector('.boh-tilenav__btn--next');
 
-      // Keyboard parity — the wheel handler must not make the page
-      // navigable only by mouse.
-      window.addEventListener('keydown', function (e) {
-        if (e.metaKey || e.ctrlKey || e.altKey) return;
-        var tag = (e.target.tagName || '').toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
-        if (e.key === 'PageDown' || e.key === 'ArrowDown') { e.preventDefault(); move(1); }
-        else if (e.key === 'PageUp' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-        else if (e.key === 'Home') { e.preventDefault(); glideTo(0); }
-        else if (e.key === 'End') { e.preventDefault(); glideTo(panels.length - 1); }
+      function update() {
+        if (!mq.matches || panels.length < 2) { nav.hidden = true; return; }
+        nav.hidden = false;
+        var i = currentIndex();
+        var y = window.scrollY || root.scrollTop;
+        var maxScroll = Math.max(0, root.scrollHeight - window.innerHeight);
+        var atTop = y < 8;
+        // The last panel is the footer, which is shorter than the viewport —
+        // its top sits past the furthest the page can scroll, so it never
+        // becomes "current". Being at the bottom of the document is the
+        // honest end condition.
+        var atEnd = i >= panels.length - 1 || y >= maxScroll - 8;
+        prev.disabled = atTop;
+        next.disabled = atEnd;
+      }
+
+      prev.addEventListener('click', function () { if (!animating) glideTo(currentIndex() - 1); });
+      next.addEventListener('click', function () {
+        if (!animating) glideTo(currentIndex() + 1);
       });
 
-      collect();
-      window.addEventListener('resize', collect);
-      window.addEventListener('load', collect);
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () { ticking = false; if (!animating) update(); });
+      }, { passive: true });
 
-      // Exposed so the guided tour can reuse the same easing and panel list
-      // rather than implementing a second, subtly different scroller.
+      window.addEventListener('resize', function () { collect(); update(); });
+      window.addEventListener('load', function () { collect(); update(); });
+      mq.addEventListener && mq.addEventListener('change', function () { collect(); update(); });
+
+      collect();
+      update();
+
+      // The guided tour used to reuse this scroller; keep the same surface.
       window.bohTiles = {
         glideTo: glideTo,
         panelCount: function () { return panels.length; },

@@ -5380,7 +5380,9 @@ a.boh-rohit-brand,
   html:has(body.home) {
     /* Proximity rather than mandatory: the JS below animates the actual
        panel-to-panel movement, and mandatory would fight it mid-flight. */
-    scroll-snap-type: y proximity;
+    /* No snapping. Scrolling is the browser's, and the up/down controls
+       handle panel-to-panel movement — snap fought both. */
+    scroll-snap-type: none;
     /* The 100px anchor offset above exists so #links clear the sticky
        header. Applied to a full-viewport panel it lands the panel 100px
        down and leaves a slice of the previous one on screen, so it is
@@ -5408,8 +5410,7 @@ a.boh-rohit-brand,
     min-height: 100vh;
     /* Land the panel top at the viewport top, and require a stop on each
        one so a fast flick cannot skip past a whole view. */
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-align: none;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -5429,8 +5430,7 @@ a.boh-rohit-brand,
      mandatory snapping pulls the view back to the last panel and the footer
      becomes unreachable. Make it a target too. */
   body.home .boh-footer {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-align: none;
   }
   /* Inner wide wrappers would otherwise stretch to the panel height and
      pull their content back to the top. */
@@ -6044,3 +6044,60 @@ a.boh-rohit-brand,
   color: var(--boh-ink-soft);
 }
 .boh-rsvp__intro p:last-child { margin-bottom: 0; }
+
+/* ── Front-page section controls ─────────────────────────────────────
+   Explicit up/down buttons replace the old wheel hijack: scrolling stays
+   the browser's, and these glide between panels on demand. */
+.boh-tilenav {
+  position: fixed;
+  right: 22px;
+  bottom: 26px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.boh-tilenav[hidden] { display: none; }
+.boh-tilenav__btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(31,26,36,0.10);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 26px -12px rgba(31,26,36,0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background .18s ease, transform .18s ease, opacity .18s ease;
+}
+.boh-tilenav__btn:hover:not(:disabled) {
+  background: #fff;
+  transform: translateY(-2px);
+}
+.boh-tilenav__btn:focus-visible {
+  outline: 3px solid var(--boh-magenta);
+  outline-offset: 3px;
+}
+.boh-tilenav__btn:disabled {
+  opacity: 0.32;
+  cursor: default;
+  box-shadow: none;
+}
+/* Chevron drawn in CSS so the control needs no icon asset. */
+.boh-tilenav__btn span {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-right: 2.5px solid var(--boh-ink, #1F1A24);
+  border-bottom: 2.5px solid var(--boh-ink, #1F1A24);
+}
+.boh-tilenav__btn--next span { transform: translateY(-2px) rotate(45deg); }
+.boh-tilenav__btn--prev span { transform: translateY(2px) rotate(-135deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .boh-tilenav__btn { transition: none; }
+}
