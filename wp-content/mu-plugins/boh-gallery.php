@@ -53,6 +53,22 @@ add_filter( 'boh_gallery_items', function ( $items ) {
 			if ( ! is_file( $path ) ) continue;
 
 			$ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+
+			// Skip WordPress's own size variants. Registering these photos in
+			// the media library made WP write thumbnail/medium copies next to
+			// the originals, and this scan treated every one as another
+			// gallery photo — 138 tiles became 506. A name ending -WxH only
+			// counts as a variant when the un-suffixed original sits beside
+			// it, so a real photo that happens to be named that way survives.
+			// -WxH is a thumbnail; -scaled is WordPress's downsized copy of a
+			// large upload. Either only counts as a derivative when the
+			// un-suffixed original sits beside it, so a real photo that
+			// happens to carry such a name is still shown.
+			if ( preg_match( '/^(.*?)(?:-\d+x\d+|-scaled)$/', pathinfo( $file, PATHINFO_FILENAME ), $m )
+				&& is_file( $year_dir . '/' . $m[1] . '.' . $ext ) ) {
+				continue;
+			}
+
 			if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp', 'gif' ], true ) ) {
 				$type = 'image';
 			} elseif ( in_array( $ext, [ 'mp4', 'webm' ], true ) ) {

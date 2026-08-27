@@ -344,10 +344,16 @@ function boh_content_render_screen(): void {
 	$group   = $schema[ $current ];
 	$saved   = false;
 
+	$restored = false;
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		check_admin_referer( 'boh_content_save' );
-		boh_content_save( $group['fields'] );
-		$saved = true;
+		if ( isset( $_POST['boh_restore'] ) ) {
+			boh_content_restore( $group['fields'] );
+			$restored = true;
+		} else {
+			boh_content_save( $group['fields'] );
+			$saved = true;
+		}
 	}
 
 	$stored = get_option( BOH_CONTENT_OPTION, [] );
@@ -358,6 +364,9 @@ function boh_content_render_screen(): void {
 
 		<?php if ( $saved ) : ?>
 			<div class="notice notice-success is-dismissible"><p>Saved. <a href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank">View the site</a>.</p></div>
+		<?php endif; ?>
+		<?php if ( $restored ) : ?>
+			<div class="notice notice-success is-dismissible"><p>This screen has been reset to the original content.</p></div>
 		<?php endif; ?>
 
 		<h2 class="nav-tab-wrapper">
@@ -400,7 +409,11 @@ function boh_content_render_screen(): void {
 					<?php boh_content_render_field( $field, boh_content_effective( $field['key'], $stored ) ); ?>
 				</div>
 			<?php endforeach; ?>
-			<p><button type="submit" class="button button-primary button-large">Save changes</button></p>
+			<p style="display:flex;align-items:center;gap:16px">
+				<button type="submit" class="button button-primary button-large">Save changes</button>
+				<button type="submit" name="boh_restore" value="1" class="button"
+				        onclick="return confirm('Reset every field on this screen back to the original site content? Anything you have saved here will be replaced.');">Restore original content</button>
+			</p>
 		</form>
 	</div>
 	<?php
@@ -569,9 +582,42 @@ function boh_content_save( array $fields ): void {
 		}
 	}
 
+	// Keep the previous state so a mistaken save is recoverable. Twelve FAQs
+	// were once replaced by two test rows this way, before the fields
+	// pre-filled; the shipped copy is always recoverable via "Restore
+	// original content", and this covers edits made after that.
+	$prior = get_option( BOH_CONTENT_OPTION, [] );
+	update_option( 'boh_content_previous', is_array( $prior ) ? $prior : [], false );
+
 	update_option( BOH_CONTENT_OPTION, $stored );
 	// The gallery//front-page caches hold rendered copy.
 	delete_transient( 'boh_gallery_items_v2' );
+	if ( function_exists( 'wp_cache_flush' ) ) {
+		wp_cache_flush();
+	}
+}
+
+/**
+ * Reset one screen's fields to the values the theme ships, discarding any
+ * saved overrides for those keys only.
+ */
+function boh_content_restore( array $fields ): void {
+	$stored   = get_option( BOH_CONTENT_OPTION, [] );
+	$stored   = is_array( $stored ) ? $stored : [];
+	$prior    = $stored;
+	$defaults = boh_content_defaults();
+
+	foreach ( $fields as $field ) {
+		$key = $field['key'];
+		if ( array_key_exists( $key, $defaults ) ) {
+			$stored[ $key ] = $defaults[ $key ];
+		} else {
+			unset( $stored[ $key ] );
+		}
+	}
+
+	update_option( 'boh_content_previous', $prior, false );
+	update_option( BOH_CONTENT_OPTION, $stored );
 	if ( function_exists( 'wp_cache_flush' ) ) {
 		wp_cache_flush();
 	}
