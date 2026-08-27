@@ -105,6 +105,19 @@ function boh_gallery_build_one( string $abs_path, int $year, bool $force = false
 		return [ 'built' => 0, 'dims' => null, 'error' => 'unreadable: ' . $file ];
 	}
 
+	// getimagesize reports stored pixels and ignores the EXIF orientation
+	// flag, but a browser honours it — so a phone photo tagged "rotate 90"
+	// is landscape here and portrait on screen. Swap now, so the recorded
+	// aspect ratio is right even when the derivatives are already built and
+	// the resize loop below is skipped entirely.
+	if ( in_array( $ext, [ 'jpg', 'jpeg' ], true ) && function_exists( 'exif_read_data' ) ) {
+		$exif = @exif_read_data( $abs_path );
+		$orientation = (int) ( $exif['Orientation'] ?? 1 );
+		if ( in_array( $orientation, [ 5, 6, 7, 8 ], true ) ) {
+			$dims = [ $dims[1], $dims[0] ];
+		}
+	}
+
 	$src_mtime = (int) @filemtime( $abs_path );
 	$built     = 0;
 
@@ -124,6 +137,22 @@ function boh_gallery_build_one( string $abs_path, int $year, bool $force = false
 			return [ 'built' => $built, 'dims' => $dims, 'error' => $editor->get_error_message() ];
 		}
 		$editor->set_quality( 82 );
+
+		// Apply EXIF rotation before resizing. GD ignores the orientation flag
+		// entirely, so a phone photo stored landscape-with-rotate-90 came out
+		// of here sideways while the original displayed upright in a browser.
+		// 11 of the gallery's photos are affected.
+		if ( method_exists( $editor, 'maybe_exif_rotate' ) ) {
+			$editor->maybe_exif_rotate();
+		}
+		// Re-read the size after rotating: a rotated photo's width and height
+		// have swapped, and both the resize target and the recorded aspect
+		// ratio must follow, or tiles get the wrong shape.
+		$size_now = $editor->get_size();
+		if ( ! empty( $size_now['width'] ) ) {
+			$dims     = [ (int) $size_now['width'], (int) $size_now['height'] ];
+			$target_w = min( $width, $dims[0] );
+		}
 		// Only resize when there is something to shrink. Asking WordPress to
 		// "resize" an image to its own width fails with "Could not calculate
 		// resized image dimensions" — for those we just re-encode to WebP,

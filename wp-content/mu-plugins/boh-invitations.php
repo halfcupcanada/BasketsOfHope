@@ -25,7 +25,7 @@ function boh_invitations_maybe_install() {
 	global $wpdb;
 	$table = $wpdb->prefix . BOH_INV_TABLE;
 	$installed_version = get_option( 'boh_invitations_schema_version' );
-	if ( $installed_version === '1.0' ) return;
+	if ( $installed_version === '1.1' ) return;
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset = $wpdb->get_charset_collate();
@@ -39,13 +39,14 @@ function boh_invitations_maybe_install() {
 		reminder_sent_at DATETIME NULL,
 		responded_at DATETIME NULL,
 		party_size VARCHAR(64) NULL,
+		source VARCHAR(20) NOT NULL DEFAULT 'invited',
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
 		UNIQUE KEY email (email),
 		KEY status (invitation_sent_at, responded_at)
 	) $charset";
 	dbDelta( $sql );
-	update_option( 'boh_invitations_schema_version', '1.0' );
+	update_option( 'boh_invitations_schema_version', '1.1' );
 
 	// Seed default templates
 	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
@@ -255,16 +256,118 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 
 	global $wpdb;
 	$t = boh_invitations_table();
-	$inv = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE email = %s", $email ) );
-	if ( ! $inv || $inv->responded_at ) return;
-
+	$inv   = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE email = %s", $email ) );
 	$party = sanitize_text_field( $posted['party-size'] ?? '' );
+	$now   = current_time( 'mysql', true );
+
+	// Somebody who was never on the invite list can still RSVP from the site.
+	// Previously that response was dropped here and survived only inside
+	// Flamingo, so the guest list was quietly incomplete. Record them as a
+	// walk-up so one screen shows every RSVP.
+	if ( ! $inv ) {
+		$name = trim(
+			sanitize_text_field( $posted['first-name'] ?? '' ) . ' ' .
+			sanitize_text_field( $posted['last-name'] ?? '' )
+		);
+		$wpdb->insert( $t, [
+			'name'         => $name,
+			'email'        => $email,
+			'responded_at' => $now,
+			'party_size'   => $party,
+			'source'       => 'website',
+			'created_at'   => $now,
+			'updated_at'   => $now,
+		] );
+		return;
+	}
+
+	if ( $inv->responded_at ) return;
+
 	$wpdb->update( $t,
 		[
-			'responded_at' => current_time( 'mysql', true ),
+			'responded_at' => $now,
 			'party_size'   => $party,
-			'updated_at'   => current_time( 'mysql', true ),
+			'updated_at'   => $now,
 		],
 		[ 'id' => $inv->id ]
 	);
 }, 20, 2 );
+
+/**
+ * Guest-list export.
+ *
+ * "How many people are actually coming" could not be answered from the admin
+ * screens: party size is stored as the form's own label ("1 — Just me", "2",
+ * "10+"), so it needed interpreting, and walk-up RSVPs were not in the table
+ * at all until the handler above started recording them.
+ */
+function boh_invitations_party_count( string $party ): int {
+	$party = trim( $party );
+	if ( $party === '' ) {
+		return 0;
+	}
+	// Labels look like "1 — Just me", "4", or "10+"; the leading number is
+	// the guest count in every case.
+	if ( preg_match( '/(\d+)/', $party, $m ) ) {
+		return max( 0, (int) $m[1] );
+	}
+	return 0;
+}
+
+add_action( 'admin_post_boh_invitations_export', function () {
+	if ( ! current_user_can( BOH_INV_CAP ) ) {
+		wp_die( 'You do not have permission to export the guest list.' );
+	}
+	check_admin_referer( 'boh_invitations_export' );
+
+	global $wpdb;
+	$t    = boh_invitations_table();
+	$rows = $wpdb->get_results(
+		"SELECT name, email, company, party_size, source, invitation_sent_at, responded_at
+		 FROM $t ORDER BY responded_at IS NULL, responded_at DESC, name ASC",
+		ARRAY_A
+	);
+
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename=boh-rsvps-' . gmdate( 'Y-m-d' ) . '.csv' );
+
+	$out = fopen( 'php://output', 'w' );
+	fputcsv( $out, [ 'Name', 'Email', 'Company', 'Party size', 'Guests', 'Source', 'Invited at', 'Responded at' ] );
+
+	$guests = 0;
+	$yes    = 0;
+	foreach ( (array) $rows as $r ) {
+		$n = $r['responded_at'] ? boh_invitations_party_count( (string) $r['party_size'] ) : 0;
+		$guests += $n;
+		if ( $r['responded_at'] ) {
+			$yes++;
+		}
+		fputcsv( $out, [
+			$r['name'], $r['email'], $r['company'], $r['party_size'], $n ?: '',
+			$r['source'] === 'website' ? 'Website RSVP' : 'Invited',
+			$r['invitation_sent_at'], $r['responded_at'],
+		] );
+	}
+	fputcsv( $out, [] );
+	fputcsv( $out, [ 'Responses', $yes ] );
+	fputcsv( $out, [ 'Total guests expected', $guests ] );
+	fclose( $out );
+	exit;
+} );
+
+/** Totals for the list screen, so the number is visible without exporting. */
+function boh_invitations_guest_total(): array {
+	global $wpdb;
+	$t    = boh_invitations_table();
+	$rows = $wpdb->get_results( "SELECT party_size, source FROM $t WHERE responded_at IS NOT NULL", ARRAY_A );
+	$guests = 0;
+	$walkup = 0;
+	foreach ( (array) $rows as $r ) {
+		$guests += boh_invitations_party_count( (string) $r['party_size'] );
+		if ( ( $r['source'] ?? '' ) === 'website' ) {
+			$walkup++;
+		}
+	}
+	return [ 'responses' => count( (array) $rows ), 'guests' => $guests, 'walkup' => $walkup ];
+}

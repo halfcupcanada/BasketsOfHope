@@ -99,6 +99,23 @@ function boh_invitations_render_list() {
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-import' ) ); ?>" class="page-title-action">Add invitees</a>
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-flamingo' ) ); ?>" class="page-title-action">From Flamingo</a>
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-templates' ) ); ?>" class="page-title-action">Templates</a>
+		<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=boh_invitations_export' ), 'boh_invitations_export' ) ); ?>" class="page-title-action">Export CSV</a>
+
+		<?php
+		// Headline numbers: how many said yes, and how many people that is
+		// once party sizes are added up.
+		$boh_totals = function_exists( 'boh_invitations_guest_total' ) ? boh_invitations_guest_total() : null;
+		if ( $boh_totals ) : ?>
+			<div class="notice notice-info" style="margin:14px 0;padding:10px 14px">
+				<p style="margin:0;font-size:14px">
+					<strong><?php echo (int) $boh_totals['responses']; ?></strong> RSVP<?php echo $boh_totals['responses'] === 1 ? '' : 's'; ?> ·
+					<strong><?php echo (int) $boh_totals['guests']; ?></strong> guests expected
+					<?php if ( $boh_totals['walkup'] ) : ?>
+						· <strong><?php echo (int) $boh_totals['walkup']; ?></strong> from the website (not on the invite list)
+					<?php endif; ?>
+				</p>
+			</div>
+		<?php endif; ?>
 
 		<?php foreach ( $notices as [$type, $msg] ) : ?>
 			<div class="notice notice-<?php echo esc_attr( $type ); ?> is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
