@@ -6351,3 +6351,18 @@ a.boh-rohit-brand,
 @media (max-width: 720px) {
   .boh-donate-cards { gap: 28px; }
 }
+
+/* ── No horizontal scroll from full-bleed sections ───────────────────
+   The hero and the sub-page banners are full-bleed via the standard
+   `width: 100vw; margin-inline: calc(50% - 50vw)` pattern. 100vw counts the
+   vertical scrollbar, but the content area does not — so on any desktop
+   browser showing a classic scrollbar those sections land ~15px wider than
+   the page and produce a horizontal scrollbar at 100% zoom. It does not
+   reproduce in a headless browser, which draws no scrollbars.
+
+   `clip` rather than `hidden` on purpose: hidden would make the root a
+   scroll container, which breaks position:fixed descendants and the
+   section controls. clip just trims the overhang. */
+html {
+  overflow-x: clip;
+}
