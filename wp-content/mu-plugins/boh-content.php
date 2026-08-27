@@ -128,6 +128,24 @@ function boh_content_schema(): array {
 			],
 		],
 
+		'about' => [
+			'title'  => 'About',
+			'help'   => 'The alternating image-and-copy blocks on the About page. Reorder with the arrows; the body accepts links and formatting.',
+			'fields' => [
+				[
+					'key'   => 'about.modules',
+					'label' => 'About sections',
+					'type'  => 'repeater',
+					'cols'  => [
+						[ 'label' => 'Image',    'type' => 'image',    'width' => '20%' ],
+						[ 'label' => 'Heading',  'type' => 'text',     'width' => '22%' ],
+						[ 'label' => 'Body',     'type' => 'textarea', 'width' => '44%' ],
+						[ 'label' => 'Image alt','type' => 'text',     'width' => '14%' ],
+					],
+				],
+			],
+		],
+
 		'donate' => [
 			'title'  => 'Donate',
 			'fields' => [

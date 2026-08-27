@@ -2442,3 +2442,41 @@ function boh_hero_images_screen(): void
     </div>
     <?php
 }
+
+// --- [boh_about_modules] — the About page's alternating image/copy blocks
+// Was raw HTML inside the page, which meant the team could not touch it
+// without editing markup. Renders from BoH Content -> About instead; the
+// stored rows carry image, heading, body (rich text) and alt text.
+add_shortcode('boh_about_modules', function () {
+    $mods = boh_content('about.modules', []);
+    if (!is_array($mods) || !$mods) {
+        return '';
+    }
+    ob_start(); ?>
+    <div class="boh-about-modules">
+      <?php foreach ($mods as $mod) :
+        $mod  = array_values((array) $mod);
+        $img  = $mod[0] ?? '';
+        $head = $mod[1] ?? '';
+        $body = $mod[2] ?? '';
+        $alt  = $mod[3] ?? '';
+        if ($head === '' && $body === '') { continue; }
+      ?>
+        <div class="boh-about-module">
+          <?php if ($img) : ?>
+            <div class="boh-about-module__image">
+              <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy" decoding="async">
+            </div>
+          <?php endif; ?>
+          <div class="boh-about-module__copy">
+            <?php if ($head !== '') : ?>
+              <h3><?php echo wp_kses_post($head); ?></h3>
+            <?php endif; ?>
+            <?php echo wp_kses_post($body); ?>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
