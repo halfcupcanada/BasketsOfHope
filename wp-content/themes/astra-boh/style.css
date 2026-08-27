@@ -6321,3 +6321,33 @@ a.boh-rohit-brand,
     padding-right: 12px !important;
   }
 }
+
+/* ── Donate form: even, roomier row rhythm ───────────────────────────
+   Row spacing was uneven — 14px, 15px, 18px and 20px between successive
+   blocks, depending on which plugin default happened to win. The
+   sponsorship form runs a consistent 18px; this sets a slightly roomier 22px
+   and, more importantly, makes every gap the same. */
+.entry-content #give-form .give-total-wrap,
+.entry-content #give-form .give-donation-amount,
+.entry-content #give-form .give-select-level,
+.entry-content #give-form > .give-form > fieldset,
+.entry-content #give-form .give-form > div,
+.entry-content #give-form fieldset {
+  margin-bottom: 22px !important;
+}
+.entry-content #give-form .give-donation-amount { margin-bottom: 22px !important; }
+/* Field groups inside a fieldset get the same gap between them. */
+.entry-content #give-form fieldset > p,
+.entry-content #give-form fieldset > div:not(:last-child) {
+  margin-bottom: 22px !important;
+}
+/* The submit block sits a little further clear of the fields above it. */
+.entry-content #give-form .give-donation-submit,
+.entry-content #give-form .give-submit-button-wrap {
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+}
+/* Stacked cards on narrow screens are rows too — give them the same air. */
+@media (max-width: 720px) {
+  .boh-donate-cards { gap: 28px; }
+}
