@@ -5971,3 +5971,67 @@ a.boh-rohit-brand,
 @media (max-width: 1100px) { .boh-gallery__grid { columns: 3; } }
 @media (max-width: 760px)  { .boh-gallery__grid { columns: 2; column-gap: 10px; } .boh-gallery__cell { margin-bottom: 10px; } }
 @media (max-width: 420px)  { .boh-gallery__grid { columns: 2; } }
+
+/* ── Front-page tiles: give sparse panels presence ───────────────────
+   Each panel is locked to one screen, so a section with only a heading
+   and a short lede floated in the middle of a 900px field: measured 367px
+   of empty space above AND below the impact band, 339px on the "why a
+   basket" panel. The panel height is deliberate, so the fix is to let the
+   composition grow into it rather than to shrink the panel.
+
+   Sizes below are keyed to viewport HEIGHT as well as width — a taller
+   window is exactly where the hollowness showed worst. */
+@media (min-width: 901px) and (min-height: 700px) {
+  body.home .boh-home-section__heading {
+    font-size: clamp(38px, 2.6vw + 1.8vh, 62px);
+    line-height: 1.06;
+    margin-bottom: clamp(18px, 2.2vh, 30px);
+  }
+  body.home .boh-home-section__lede {
+    font-size: clamp(18px, 0.6vw + 1.1vh, 23px);
+    line-height: 1.7;
+    /* A narrower measure sets more lines, which both reads better at this
+       size and lets the text block occupy more of the panel. */
+    max-width: 54ch;
+    margin-bottom: clamp(22px, 2.6vh, 36px);
+  }
+  body.home .boh-home-section__meta {
+    font-size: clamp(15px, 0.4vw + 0.8vh, 19px);
+  }
+  body.home .boh-home-section__cta { margin-top: clamp(8px, 1.4vh, 20px); }
+
+  /* The impact band was the emptiest panel of all: four short numbers in a
+     single wide row, 166px of content in a 900px screen. Two rows of two,
+     set much larger, turns it into a composition instead of a strip. */
+  body.home .boh-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(28px, 5vh, 64px) clamp(24px, 3vw, 72px) !important;
+    max-width: 900px;
+  }
+  body.home .boh-stats__cell { border-right: 0; padding: 0 8px; }
+  body.home .boh-stats__cell h2 {
+    font-size: clamp(52px, 3vw + 2.4vh, 92px) !important;
+    line-height: 1;
+  }
+  body.home .boh-stats__label {
+    font-size: clamp(12px, 0.3vw + 0.5vh, 15px);
+    letter-spacing: 0.14em;
+  }
+
+  /* Countdown and the explore cards get the same treatment so the whole
+     page reads at one scale rather than one panel suddenly shrinking. */
+  body.home .boh-countdown { gap: clamp(12px, 1.6vw, 24px); }
+  body.home .boh-countdown__num { font-size: clamp(34px, 1.8vw + 1.6vh, 56px); }
+  body.home .boh-quick-links { gap: clamp(14px, 1.8vh, 26px); }
+}
+
+/* The impact band is still the sparsest panel after the pass above, so it
+   gets more room between rows and a larger label. Kept as its own block so
+   it is easy to dial back independently. */
+@media (min-width: 901px) and (min-height: 700px) {
+  body.home .boh-stats {
+    gap: clamp(40px, 8.5vh, 104px) clamp(24px, 3vw, 72px) !important;
+  }
+  body.home .boh-stats__cell { padding: clamp(6px, 1.6vh, 22px) 8px; }
+  body.home .boh-stats__label { font-size: clamp(13px, 0.3vw + 0.6vh, 17px) !important; }
+}
