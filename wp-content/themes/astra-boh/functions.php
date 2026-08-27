@@ -283,28 +283,24 @@ add_shortcode('boh_transparency', function ($atts) {
 
 // --- [boh_event_meta] ----------------------------------------------------
 add_shortcode('boh_event_meta', function () {
+    // Every value is editable in BoH Content -> RSVP & event details.
+    $cells = [
+        ['When',     boh_content('event.when',     'Tue, Nov 3, 2026'),   boh_content('event.when_sub',     '6:00 PM MT')],
+        ['Where',    boh_content('event.where',    'Rohit Group Office'), boh_content('event.where_sub',    '10130 112 St NW, Edmonton')],
+        ['Benefits', boh_content('event.benefits', 'WIN House'),          boh_content('event.benefits_sub', "Edmonton's shelter for survivors")],
+        ['Bring',    boh_content('event.bring',    '12 comfort items'),   boh_content('event.bring_sub',    'Or contribute online')],
+    ];
     ob_start(); ?>
     <div class="boh-event-meta">
-      <div class="boh-event-meta__cell">
-        <div class="boh-event-meta__label">When</div>
-        <div class="boh-event-meta__val">Tue, Nov 3, 2026</div>
-        <div class="boh-event-meta__sub">6:00 PM MT</div>
-      </div>
-      <div class="boh-event-meta__cell">
-        <div class="boh-event-meta__label">Where</div>
-        <div class="boh-event-meta__val">Rohit Group Office</div>
-        <div class="boh-event-meta__sub">10130 112 St NW, Edmonton</div>
-      </div>
-      <div class="boh-event-meta__cell">
-        <div class="boh-event-meta__label">Benefits</div>
-        <div class="boh-event-meta__val">WIN House</div>
-        <div class="boh-event-meta__sub">Edmonton's shelter for survivors</div>
-      </div>
-      <div class="boh-event-meta__cell">
-        <div class="boh-event-meta__label">Bring</div>
-        <div class="boh-event-meta__val">12 comfort items</div>
-        <div class="boh-event-meta__sub">Or contribute online</div>
-      </div>
+      <?php foreach ($cells as [$label, $val, $sub]) : ?>
+        <div class="boh-event-meta__cell">
+          <div class="boh-event-meta__label"><?php echo esc_html($label); ?></div>
+          <div class="boh-event-meta__val"><?php echo esc_html($val); ?></div>
+          <?php if ($sub !== '') : ?>
+            <div class="boh-event-meta__sub"><?php echo esc_html($sub); ?></div>
+          <?php endif; ?>
+        </div>
+      <?php endforeach; ?>
     </div>
     <?php
     return ob_get_clean();
@@ -872,11 +868,24 @@ add_shortcode('boh_page_hero', function ($atts) {
         'sub'     => '',
         'align'   => 'center', // center | left
     ], $atts);
+    // A photo chosen in BoH Content -> Page headers wins over the one written
+    // into the page, so the header image can be swapped from the media
+    // library without editing the page markup. Keyed by page slug:
+    // /about/ -> hero.about, /50-50/ -> hero.5050.
+    $slug  = '';
+    $queried = get_queried_object();
+    if ( $queried instanceof WP_Post ) {
+        $slug = preg_replace( '/[^a-z0-9]/', '', strtolower( $queried->post_name ) );
+    }
+    $image = $slug ? boh_content( 'hero.' . $slug, '' ) : '';
+    if ( ! $image ) {
+        $image = $a['image'];
+    }
     ob_start(); ?>
     <section class="boh-page-hero boh-page-hero--<?php echo esc_attr( $a['align'] ); ?>">
-      <?php if ( $a['image'] ) : ?>
+      <?php if ( $image ) : ?>
         <div class="boh-page-hero__image" role="img" aria-label="<?php echo esc_attr( wp_strip_all_tags( $a['title'] ) ); ?>"
-             style="background-image:url('<?php echo esc_url( $a['image'] ); ?>')"></div>
+             style="background-image:url('<?php echo esc_url( $image ); ?>')"></div>
       <?php endif; ?>
       <div class="boh-page-hero__flourish" aria-hidden="true"></div>
       <div class="boh-page-hero__body">
@@ -1019,27 +1028,28 @@ add_shortcode('boh_donate_cards', function () {
     $winhouse_url = 'https://form-renderer-app.donorperfect.io/give/win-house-edmonton-women-shelter-ltd/3p---rohit-baskets-of-hope-2026';
     ob_start(); ?>
     <div class="boh-donate-cards">
+      <?php
+      // Both cards are editable in BoH Content -> Donate. The bodies are rich
+      // text, so bullet lists and links can be set there; the defaults below
+      // reproduce the original markup exactly.
+      $card1_url = boh_content('donate.card1_url', $winhouse_url);
+      ?>
       <article class="boh-donate-card boh-donate-card--winhouse">
-        <div class="boh-donate-card__eyebrow">Donate</div>
-        <h3 class="boh-donate-card__title">Donate directly to WIN&nbsp;House</h3>
-        <p class="boh-donate-card__lede">Make a one-time or monthly gift directly to WIN House. Donations support shelter programs, services, and ongoing work with women, non-binary individuals, and children. Donations are tax-deductible.</p>
-        <ul class="boh-donate-card__list">
-          <li>Tax receipt</li>
-          <li>Monthly or one-time gift</li>
-          <li>Used toward WIN House programming</li>
-        </ul>
-        <a class="boh-donate-card__cta" href="<?php echo esc_url( $winhouse_url ); ?>" target="_blank" rel="noopener">Donate to WIN House ↗</a>
+        <div class="boh-donate-card__eyebrow"><?php echo esc_html(boh_content('donate.card1_eyebrow', 'Donate')); ?></div>
+        <h3 class="boh-donate-card__title"><?php echo wp_kses_post(boh_content('donate.card1_title', 'Donate directly to WIN&nbsp;House')); ?></h3>
+        <div class="boh-donate-card__lede"><?php echo wp_kses_post(boh_content('donate.card1_body',
+            '<p>Make a one-time or monthly gift directly to WIN House. Donations support shelter programs, services, and ongoing work with women, non-binary individuals, and children. Donations are tax-deductible.</p>'
+            . '<ul class="boh-donate-card__list"><li>Tax receipt</li><li>Monthly or one-time gift</li><li>Used toward WIN House programming</li></ul>')); ?></div>
+        <a class="boh-donate-card__cta" href="<?php echo esc_url( $card1_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html(boh_content('donate.card1_button', 'Donate to WIN House ↗')); ?></a>
       </article>
 
       <article class="boh-donate-card boh-donate-card--sponsor">
-        <div class="boh-donate-card__eyebrow">Sponsor a basket</div>
-        <h3 class="boh-donate-card__title">Sponsor a basket</h3>
-        <p class="boh-donate-card__lede">Can't attend the event or prefer to contribute financially? Sponsor a basket and we'll use your gift to purchase thoughtful comfort items for recipients.</p>
-        <ul class="boh-donate-card__list">
-          <li>If you can't join us at the event, feel free to get in touch to drop off your basket items.</li>
-          <li>You can also sponsor a basket by making a cash donation.</li>
-        </ul>
-        <a class="boh-donate-card__cta boh-donate-card__cta--primary" href="#give-form">Sponsor a basket →</a>
+        <div class="boh-donate-card__eyebrow"><?php echo esc_html(boh_content('donate.card2_eyebrow', 'Sponsor a basket')); ?></div>
+        <h3 class="boh-donate-card__title"><?php echo wp_kses_post(boh_content('donate.card2_title', 'Sponsor a basket')); ?></h3>
+        <div class="boh-donate-card__lede"><?php echo wp_kses_post(boh_content('donate.card2_body',
+            "<p>Can't attend the event or prefer to contribute financially? Sponsor a basket and we'll use your gift to purchase thoughtful comfort items for recipients.</p>"
+            . "<ul class=\"boh-donate-card__list\"><li>If you can't join us at the event, feel free to get in touch to drop off your basket items.</li><li>You can also sponsor a basket by making a cash donation.</li></ul>")); ?></div>
+        <a class="boh-donate-card__cta boh-donate-card__cta--primary" href="#give-form"><?php echo esc_html(boh_content('donate.card2_button', 'Sponsor a basket →')); ?></a>
       </article>
     </div>
     <?php
@@ -1059,7 +1069,16 @@ add_shortcode('boh_how_it_works', function ($atts) {
     // detail, so the compact home-page version says something concrete
     // rather than showing four bare headings.
     $up = '/wp-content/uploads/2026/06/';
-    $steps = [
+    // Editable in BoH Content -> Home ("How it works — steps"). Columns are
+    // number / title / full text / short text / image; the alt text below is
+    // kept in code because it is accessibility copy tied to each photograph.
+    $alts = [
+        'Volunteers selecting toiletries and self-care items from organized donation bins',
+        'Donation station at Rohit headquarters with comfort items ready to pack',
+        'Volunteers gathered at a past Baskets of Hope event',
+        'A basket being delivered to WIN House',
+    ];
+    $steps = boh_content('home.steps', [
         [
             '01', 'Choose items',
             'Guests select and purchase 12 new comfort items that recipients can use and enjoy.',
@@ -1088,19 +1107,30 @@ add_shortcode('boh_how_it_works', function ($atts) {
             $up . 'IMG_5843-1024x768.jpg',
             'A basket being delivered to WIN House',
         ],
-    ];
+    ]);
     $classes = 'boh-how-it-works' . ($compact ? ' boh-how-it-works--compact' : '');
     ob_start(); ?>
     <div class="<?php echo esc_attr($classes); ?>">
       <?php if ($atts['intro'] === '1') : ?>
       <div class="boh-how-it-works__intro">
         <span class="boh-eyebrow">How it works</span>
-        <h2>From your hands to a family in <em>need</em>.</h2>
-        <p>Four simple steps. One basket. A real moment of comfort for someone starting over.</p>
+        <h2><?php echo wp_kses_post(boh_content('home.steps_heading', 'From your hands to a family in <em>need</em>.')); ?></h2>
+        <?php
+        // Rich text, so the team can link words in this paragraph — the
+        // Donate link below is the default rather than something that has to
+        // be re-added by hand after every edit.
+        echo wp_kses_post(boh_content('home.steps_lede',
+            '<p>Four simple steps. One basket. A real moment of comfort for someone starting over. '
+            . 'Prefer to give financially? <a href="/donate/">Make a donation</a> instead.</p>'));
+        ?>
       </div>
       <?php endif; ?>
       <div class="boh-how-it-works__grid">
-        <?php foreach ($steps as [$num, $title, $body, $detail, $img, $alt]) : ?>
+        <?php foreach ($steps as $si => $step) :
+          // Saved rows carry five columns; the shipped defaults carry six.
+          [$num, $title, $body, $detail, $img] = array_pad(array_slice((array) $step, 0, 5), 5, '');
+          $alt = $step[5] ?? ($alts[$si] ?? '');
+        ?>
           <div class="boh-how-it-works__step">
             <figure class="boh-how-it-works__media">
               <img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($alt); ?>"
@@ -1169,7 +1199,8 @@ add_shortcode('boh_stats', function () {
 
 // --- [boh_faqs] — accordion-style FAQ list -----------------------------
 add_shortcode('boh_faqs', function () {
-    $faqs = [
+    // Editable in BoH Content -> FAQs. Add, reorder or delete questions there.
+    $faqs = boh_content('faqs.items', [
         ['What is Rohit\'s Baskets of Hope?',
          'Rohit\'s Baskets of Hope is an annual community giving event that collects monetary and in-kind donations for people supported by WIN House in Edmonton. Guests bring comfort items, help fill baskets, and support an evening dedicated to care, dignity, and hope.'],
         ['Who does Baskets of Hope support?',
@@ -1194,7 +1225,7 @@ add_shortcode('boh_faqs', function () {
          'Donations made directly to WIN House are handled through WIN House, including receipting. Please confirm receipt details for basket sponsorships or other event contributions before making a gift.'],
         ['Who can I contact with questions?',
          'Email <a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a> and a member of the team will follow up.'],
-    ];
+    ]);
     ob_start(); ?>
     <div class="boh-faqs">
       <?php foreach ($faqs as $i => [$q, $a]) : ?>
