@@ -6276,3 +6276,48 @@ a.boh-rohit-brand,
   padding: 0 !important;
   margin: 0 0 18px !important;
 }
+
+/* ── Donate: cards flush with the form board ─────────────────────────
+   The two cards were capped at 1000px inside an alignwide group that also
+   carries 24px of horizontal padding, so they sat 120px inside the form
+   board below them on each side. Both blocks are alignwide, so matching the
+   board's outer edge just means dropping the cap and clearing the padding. */
+.entry-content > .wp-block-group.alignwide:has(.boh-donate-cards) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.entry-content .boh-donate-cards {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+@media (max-width: 900px) {
+  /* Below the wide breakpoint the board takes its own gutters back, so the
+     cards follow rather than running to the screen edge. */
+  .entry-content > .wp-block-group.alignwide:has(.boh-donate-cards) {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* Below the wide breakpoint the form boards ran flush to the screen edge,
+   which clipped their rounded corners and left them 24px out of step with
+   the cards above. Give them the same gutter the cards use. */
+@media (max-width: 900px) {
+  .entry-content #give-form,
+  .entry-content #sponsorship-form {
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+  }
+}
+@media (max-width: 480px) {
+  .entry-content #give-form,
+  .entry-content #sponsorship-form {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+  .entry-content > .wp-block-group.alignwide:has(.boh-donate-cards) {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
