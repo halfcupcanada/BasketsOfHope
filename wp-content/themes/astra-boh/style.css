@@ -2432,7 +2432,7 @@ h2.has-text-align-center + p,
   width: 52px !important;
   border: 1.5px solid var(--boh-rule) !important;
   border-right: 0 !important;
-  border-radius: 12px 0 0 12px !important;
+  border-radius: 6px 0 0 6px !important;
   background: var(--boh-paper) !important;
   color: var(--boh-ink) !important;
   font-weight: 700 !important;
@@ -3060,7 +3060,9 @@ figure.boh-about-image ~ p {
 }
 #give-form .give-form-wrap {
   box-sizing: border-box !important;
-  max-width: 620px !important;
+  /* 760px matches the sponsorship form's measure, so the two read as one
+     family rather than two plugins. */
+  max-width: 760px !important;
   padding: clamp(20px, 2.5vw, 28px) !important;
 }
 #give-form .give-form-wrap *,
@@ -3097,7 +3099,7 @@ figure.boh-about-image ~ p {
   align-items: center !important;
   background: var(--boh-paper) !important;
   border: 1.5px solid var(--boh-rule) !important;
-  border-radius: 12px 0 0 12px !important;
+  border-radius: 6px 0 0 6px !important;
   border-right: 0 !important;
   color: var(--boh-ink) !important;
   display: flex !important;
@@ -3117,7 +3119,7 @@ figure.boh-about-image ~ p {
 #give-form .give-form-wrap input#give-amount.give-amount-top {
   background: #fff !important;
   border: 1.5px solid var(--boh-rule) !important;
-  border-radius: 0 12px 12px 0 !important;
+  border-radius: 0 6px 6px 0 !important;
   box-shadow: none !important;
   color: var(--boh-ink) !important;
   flex: 1 1 auto !important;
@@ -6138,3 +6140,99 @@ a.boh-rohit-brand,
 
   body.home .boh-countdown__num { font-size: clamp(30px, 1.4vw + 1.2vh, 44px); }
 }
+
+/* ── Donate form: match the sponsorship form ─────────────────────────
+   The two forms sit on the same board but were built by different plugins,
+   so their insides diverged: GiveWP's fields ran narrower (562px against
+   the sponsorship form's 760px) and a size larger, and its notices used the
+   plugin's own alert styling, which reads as an error on a page that is
+   working perfectly well. */
+.entry-content #give-form .give-form-wrap {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+.entry-content #give-form .give-form {
+  max-width: 760px;
+  margin: 0 auto;
+}
+/* Field metrics copied from #sponsorship-form so the two read as one family. */
+.entry-content #give-form .give-select,
+.entry-content #give-form input[type="text"],
+.entry-content #give-form input[type="email"],
+.entry-content #give-form input[type="tel"],
+.entry-content #give-form input[type="number"],
+.entry-content #give-form textarea {
+  font-size: 15px !important;
+  padding: 13px 16px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--boh-rule, #E5E5E5) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  height: auto !important;
+  line-height: 1.35 !important;
+}
+.entry-content #give-form .give-select:focus,
+.entry-content #give-form input:focus,
+.entry-content #give-form textarea:focus {
+  outline: none !important;
+  border-color: var(--boh-magenta) !important;
+  box-shadow: 0 0 0 3px rgba(208,20,130,0.12) !important;
+}
+/* Submit: the same magenta pill the sponsorship form uses. */
+.entry-content #give-form .give-submit,
+.entry-content #give-form input[type="submit"],
+.entry-content #give-form button[type="submit"] {
+  background: var(--boh-magenta) !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 14px 36px !important;
+  box-shadow: 0 10px 24px -12px rgba(208,20,130,0.6) !important;
+}
+.entry-content #give-form .give-submit:hover {
+  filter: brightness(1.06);
+}
+/* Goal bar in brand colours rather than the plugin's default green. */
+.entry-content #give-form .give-goal-progress { margin-bottom: 22px; }
+.entry-content #give-form .give-goal-progress .raised {
+  font-size: 14px;
+  color: var(--boh-ink-soft);
+}
+.entry-content #give-form .give-goal-progress .income,
+.entry-content #give-form .give-goal-progress .goal-text {
+  color: var(--boh-magenta);
+  font-weight: 800;
+}
+.entry-content #give-form .give-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(31,26,36,0.08);
+  overflow: hidden;
+}
+.entry-content #give-form .give-progress-bar > span {
+  background: linear-gradient(90deg, var(--boh-yellow, #f9d135), var(--boh-magenta)) !important;
+  display: block;
+  height: 100%;
+}
+/* Notices: informational, not alarming. The test-mode notice in particular
+   is telling the truth about a correctly configured sandbox — it should not
+   look like the page has fallen over. */
+.entry-content #give-form .give_error,
+.entry-content #give-form .give_warning,
+.entry-content #give-form .give_notice {
+  background: var(--boh-paper-2, #F7F5F0) !important;
+  border: 1px solid rgba(31,26,36,0.10) !important;
+  border-left: 3px solid var(--boh-yellow, #f9d135) !important;
+  border-radius: 8px !important;
+  color: var(--boh-ink-soft) !important;
+  font-size: 13.5px !important;
+  padding: 12px 16px !important;
+  box-shadow: none !important;
+  margin-bottom: 20px !important;
+}
+.entry-content #give-form .give_error p,
+.entry-content #give-form .give_warning p { margin: 0 !important; }
+.entry-content #give-form .give_error strong { color: var(--boh-ink); }
