@@ -304,7 +304,11 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 function boh_invitations_party_count( string $party ): int {
 	$party = trim( $party );
 	if ( $party === '' ) {
-		return 0;
+		// Someone who replied but left the party field blank is still one
+		// person attending. Counting zero would understate the room. New
+		// RSVPs always carry a value — the field defaults to "1 — Just me" —
+		// so this only covers responses taken before that change.
+		return 1;
 	}
 	// Labels look like "1 — Just me", "4", or "10+"; the leading number is
 	// the guest count in every case.
