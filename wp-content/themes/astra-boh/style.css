@@ -3508,7 +3508,7 @@ figure.boh-about-image ~ p {
   position: absolute;
   pointer-events: none;
   z-index: 0;
-  background: url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg') center / contain no-repeat;
+  background: var(--boh-img-pattern, url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg')) center / contain no-repeat;
   opacity: 0.16;
   mix-blend-mode: multiply;
 }
@@ -3865,7 +3865,7 @@ figure.boh-about-image ~ p {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg') center / cover no-repeat;
+  background: var(--boh-img-pattern, url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg')) center / cover no-repeat;
   opacity: 0.08;
   mix-blend-mode: overlay;
   pointer-events: none;
@@ -3954,7 +3954,7 @@ figure.boh-about-image ~ p {
   /* 697x1024 (74KB), not the 5.8MB original: this flourish paints into a
      320x320 box, and the full-size file was being downloaded on every
      sub-page just to draw a decorative corner. */
-  background: url('/wp-content/uploads/2026/07/boh-flower-main-697x1024.jpg') center / contain no-repeat;
+  background: var(--boh-img-flourish, url('/wp-content/uploads/2026/07/boh-flower-main-697x1024.jpg')) center / contain no-repeat;
   opacity: 0.60;
   filter: saturate(0.9);
   pointer-events: none;
@@ -4007,7 +4007,7 @@ figure.boh-about-image ~ p {
   right: -80px;
   width: 260px;
   height: 260px;
-  background: url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg') center / contain no-repeat;
+  background: var(--boh-img-pattern, url('/wp-content/uploads/2026/07/boh-flower-pattern.jpg')) center / contain no-repeat;
   opacity: 0.28;
   pointer-events: none;
   z-index: 0;

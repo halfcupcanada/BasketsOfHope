@@ -114,6 +114,37 @@ function boh_content_schema(): array {
 			],
 		],
 
+		'brand' => [
+			'title'  => 'Brand & images',
+			'help'   => 'The images that are not part of any one page: the logo, the decorative flower artwork used across the sub-pages, and the card shown when a link is shared. Leave a field empty to keep the current image.',
+			'fields' => [
+				[
+					'key'   => 'brand.logo',
+					'label' => 'Logo',
+					'help'  => 'Used in the header, the footer and as the browser tab icon. A square-ish PNG with a transparent background works best.',
+					'type'  => 'image',
+				],
+				[
+					'key'   => 'brand.hero_flourish',
+					'label' => 'Page-header flourish',
+					'help'  => 'The flower artwork in the top corner of every sub-page header.',
+					'type'  => 'image',
+				],
+				[
+					'key'   => 'brand.flower_pattern',
+					'label' => 'Decorative flower pattern',
+					'help'  => 'Used behind the event header, the call-to-action banner and flourished sections.',
+					'type'  => 'image',
+				],
+				[
+					'key'   => 'brand.share_card',
+					'label' => 'Link preview image',
+					'help'  => 'Shown when someone shares a link in WhatsApp, Slack, Facebook or LinkedIn. 1200x630 works best.',
+					'type'  => 'image',
+				],
+			],
+		],
+
 		'heroes' => [
 			'title'  => 'Page headers',
 			'help'   => 'The photograph behind each sub-page title. Leave empty to keep the current one.',

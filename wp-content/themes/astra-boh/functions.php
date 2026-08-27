@@ -17,6 +17,14 @@ add_action('wp_enqueue_scripts', function () {
 });
 
 function boh_logo_url($size = 'full') {
+    // A logo chosen in BoH Content -> Brand & images replaces the shipped one
+    // everywhere it appears: header, footer and browser-tab icon. The stored
+    // value is already a sized URL from the media picker, so the icon and
+    // full variants resolve to the same file in that case.
+    $chosen = function_exists('boh_content') ? boh_content('brand.logo', '') : '';
+    if ($chosen) {
+        return $chosen;
+    }
     $file = $size === 'icon' ? 'boh-logo-150x150.png' : 'boh-logo.png';
     return home_url('/wp-content/uploads/2026/06/' . $file);
 }
@@ -532,7 +540,7 @@ function boh_share_description(): string
 }
 
 add_action('wp_head', function () {
-    $card  = get_stylesheet_directory_uri() . '/assets/share-card.png';
+    $card  = boh_content('brand.share_card', '') ?: get_stylesheet_directory_uri() . '/assets/share-card.png';
     $title = is_front_page()
         ? get_bloginfo('name') . ' — ' . get_bloginfo('description')
         : wp_get_document_title();
@@ -589,6 +597,31 @@ add_action('wp_head', function () {
 add_action('wp_head', function () {
     echo "<script>document.documentElement.classList.add('boh-js');</script>\n";
 }, 1);
+
+/**
+ * Decorative artwork lives in CSS backgrounds, so a chosen image is handed to
+ * the stylesheet as a custom property rather than by rewriting the CSS file.
+ * Nothing is printed unless something was actually chosen — the stylesheet
+ * keeps its own url() as the fallback inside each var().
+ */
+add_action('wp_head', function () {
+    if (!function_exists('boh_content')) {
+        return;
+    }
+    $map = [
+        '--boh-img-flourish' => boh_content('brand.hero_flourish', ''),
+        '--boh-img-pattern'  => boh_content('brand.flower_pattern', ''),
+    ];
+    $out = '';
+    foreach ($map as $prop => $url) {
+        if ($url) {
+            $out .= sprintf('%s:url(\'%s\');', $prop, esc_url($url));
+        }
+    }
+    if ($out) {
+        printf("<style id=\"boh-brand-images\">:root{%s}</style>\n", $out);
+    }
+}, 2);
 
 add_action('wp_footer', function () {
     ?>
