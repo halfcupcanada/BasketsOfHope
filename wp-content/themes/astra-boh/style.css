@@ -6236,3 +6236,61 @@ a.boh-rohit-brand,
 .entry-content #give-form .give_error p,
 .entry-content #give-form .give_warning p { margin: 0 !important; }
 .entry-content #give-form .give_error strong { color: var(--boh-ink); }
+
+/* ── Donate form: same shell as the sponsorship form ─────────────────
+   Both forms sit on the cream board, but GiveWP's wrapper added a second
+   white card inside it — border, 20px radius and its own shadow — so the
+   donate form read as a box within a box while the sponsorship fields sit
+   directly on the board. Strip the inner card and match the labels. */
+.entry-content #give-form .give-form-wrap {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+}
+/* Labels: 13px semibold ink, stacked above the field, as on #sponsorship-form. */
+/* :not(.give-hidden) — GiveWP hides some labels for screen readers only, and
+   a blanket display:block put "Choose Your Sponsorship Amount" back on the
+   page. */
+.entry-content #give-form label:not(.give-hidden):not(.screen-reader-text),
+.entry-content #give-form .give-label:not(.give-hidden) {
+  display: block !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--boh-ink) !important;
+  margin-bottom: 6px !important;
+}
+/* Checkbox and radio labels stay inline — stacking those would break the
+   control away from its own text. */
+.entry-content #give-form label:has(> input[type="checkbox"]),
+.entry-content #give-form label:has(> input[type="radio"]),
+.entry-content #give-form .give-gateway-option {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 9px;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  margin-bottom: 0 !important;
+}
+.entry-content #give-form .give-required-indicator {
+  color: var(--boh-magenta) !important;
+  font-weight: 800;
+}
+/* Section headings inside the form, to match the sponsorship form's rhythm. */
+.entry-content #give-form legend,
+.entry-content #give-form .give-section-title {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: var(--boh-ink) !important;
+  margin: 4px 0 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.entry-content #give-form fieldset {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 0 18px !important;
+}
