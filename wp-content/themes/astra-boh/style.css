@@ -6195,28 +6195,10 @@ a.boh-rohit-brand,
 .entry-content #give-form .give-submit:hover {
   filter: brightness(1.06);
 }
-/* Goal bar in brand colours rather than the plugin's default green. */
-.entry-content #give-form .give-goal-progress { margin-bottom: 22px; }
-.entry-content #give-form .give-goal-progress .raised {
-  font-size: 14px;
-  color: var(--boh-ink-soft);
-}
-.entry-content #give-form .give-goal-progress .income,
-.entry-content #give-form .give-goal-progress .goal-text {
-  color: var(--boh-magenta);
-  font-weight: 800;
-}
-.entry-content #give-form .give-progress-bar {
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(31,26,36,0.08);
-  overflow: hidden;
-}
-.entry-content #give-form .give-progress-bar > span {
-  background: linear-gradient(90deg, var(--boh-yellow, #f9d135), var(--boh-magenta)) !important;
-  display: block;
-  height: 100%;
-}
+/* No goal-bar styling here any more: the goal is switched off on the form
+   itself (Donation Goal -> disabled), so the markup is never rendered. The
+   brand colours it used to carry are kept out of the stylesheet rather than
+   left as dead rules. */
 /* Notices: informational, not alarming. The test-mode notice in particular
    is telling the truth about a correctly configured sandbox — it should not
    look like the page has fallen over. */
