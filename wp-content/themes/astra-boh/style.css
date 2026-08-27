@@ -666,7 +666,13 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
 /* Non-hero pages: leave room for the fixed header. Pages opening with a
    full-bleed banner — a cover block or [boh_page_hero] — are excluded so
    the photo runs to the top and sits under the menu. */
-.boh-main .entry-content:not(:has(> .wp-block-cover:first-child)):not(:has(> .boh-page-hero:first-child)) {
+/* `:first-child` was too literal. The block editor leaves an empty <p>
+   wrapping each section comment, and once one of those became the first
+   child this stopped matching on the home page — so a page that opens with
+   a full-bleed hero got 96px of header padding anyway, showing as a band of
+   white between the menu and the photo. Matching on the banner being a
+   direct child at all is what was actually meant. */
+.boh-main .entry-content:not(:has(> .wp-block-cover)):not(:has(> .boh-page-hero)) {
   margin-top: 0;
   padding-top: 96px;
 }
@@ -5200,9 +5206,11 @@ a.boh-rohit-brand,
    !importants beat the `.boh-hero > :not(...)` position:relative rule. */
 .wp-block-cover.boh-hero .boh-hero-pause {
   position: absolute !important;
-  right: 24px !important;
+  /* Bottom-left: the section up/down controls are fixed to the bottom-right
+     and the two sat on top of each other once the hero filled the screen. */
+  left: 24px !important;
   bottom: 24px !important;
-  left: auto !important;
+  right: auto !important;
   top: auto !important;
   z-index: 6;
   width: 42px;
@@ -5674,7 +5682,8 @@ a.boh-rohit-brand,
   .wp-block-cover.boh-hero .boh-hero-pause {
     width: 34px;
     height: 34px;
-    right: 14px !important;
+    left: 14px !important;
+    right: auto !important;
     bottom: 12px !important;
   }
   .boh-hero-pause__icon { width: 8px; height: 10px; border-left-width: 2.5px; border-right-width: 2.5px; }
@@ -6100,4 +6109,32 @@ a.boh-rohit-brand,
 
 @media (prefers-reduced-motion: reduce) {
   .boh-tilenav__btn { transition: none; }
+}
+
+/* ── Tile content: one step down ─────────────────────────────────────
+   The earlier pass grew this type to fill the full-screen panels, and it
+   overshot — headings in particular read as oversized. These replace the
+   sizes set in "Front-page tiles: give sparse panels presence"; the panels
+   still fill, just less loudly. */
+@media (min-width: 901px) and (min-height: 700px) {
+  body.home .boh-home-section__heading {
+    font-size: clamp(32px, 1.9vw + 1.3vh, 48px);
+    margin-bottom: clamp(14px, 1.7vh, 24px);
+  }
+  body.home .boh-home-section__lede {
+    font-size: clamp(16px, 0.42vw + 0.8vh, 19px);
+    line-height: 1.66;
+    max-width: 58ch;
+    margin-bottom: clamp(18px, 2vh, 28px);
+  }
+  body.home .boh-home-section__meta { font-size: clamp(14px, 0.3vw + 0.6vh, 16px); }
+
+  body.home .boh-stats {
+    gap: clamp(28px, 6vh, 72px) clamp(20px, 2.6vw, 60px) !important;
+  }
+  body.home .boh-stats__cell { padding: clamp(4px, 1vh, 14px) 8px; }
+  body.home .boh-stats__cell h2 { font-size: clamp(42px, 2.2vw + 1.8vh, 70px) !important; }
+  body.home .boh-stats__label { font-size: clamp(12px, 0.25vw + 0.45vh, 14px) !important; letter-spacing: 0.12em; }
+
+  body.home .boh-countdown__num { font-size: clamp(30px, 1.4vw + 1.2vh, 44px); }
 }
