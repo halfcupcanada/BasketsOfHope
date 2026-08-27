@@ -456,3 +456,95 @@ function boh_gallery_select_screen(): void {
 	</div>
 	<?php
 }
+
+/* ── Event-year filter inside the media picker ───────────────────────── */
+
+/**
+ * The media modal only offers "All dates", so the event-year grouping was
+ * invisible exactly where images get chosen — leaving the upload date as the
+ * only way to find last year's photos. This adds an "All event years"
+ * dropdown beside it, in both the picker and the grid view.
+ *
+ * WordPress strips unknown keys out of the attachment query before handing it
+ * over, so the value is read back off the request rather than from $args.
+ */
+add_filter( 'ajax_query_attachments_args', function ( $args ) {
+	$q = isset( $_REQUEST['query'] ) && is_array( $_REQUEST['query'] ) ? $_REQUEST['query'] : [];
+	$year = isset( $q[ BOH_GALLERY_TAX ] ) ? sanitize_text_field( wp_unslash( $q[ BOH_GALLERY_TAX ] ) ) : '';
+	if ( $year === '' || $year === 'all' ) {
+		return $args;
+	}
+	$args['tax_query'] = [ [
+		'taxonomy' => BOH_GALLERY_TAX,
+		'field'    => 'slug',
+		'terms'    => $year,
+	] ];
+	return $args;
+} );
+
+add_action( 'admin_enqueue_scripts', function () {
+	if ( ! function_exists( 'wp_enqueue_media' ) ) {
+		return;
+	}
+	$terms = get_terms( [ 'taxonomy' => BOH_GALLERY_TAX, 'hide_empty' => false ] );
+	if ( is_wp_error( $terms ) || ! $terms ) {
+		return;
+	}
+	$options = [];
+	foreach ( $terms as $t ) {
+		$options[] = [ 'slug' => $t->slug, 'label' => $t->name . ' (' . (int) $t->count . ')' ];
+	}
+
+	$inline = 'window.BOH_GALLERY_YEARS = ' . wp_json_encode( [
+		'taxonomy' => BOH_GALLERY_TAX,
+		'options'  => $options,
+	] ) . ';';
+
+	wp_register_script( 'boh-media-year-filter', '', [ 'media-views' ], null, true );
+	wp_enqueue_script( 'boh-media-year-filter' );
+	wp_add_inline_script( 'boh-media-year-filter', $inline . <<<'JS'
+
+(function () {
+	if ( ! window.wp || ! wp.media || ! wp.media.view || ! wp.media.view.AttachmentFilters ) { return; }
+	var cfg = window.BOH_GALLERY_YEARS || {};
+	if ( ! cfg.options || ! cfg.options.length ) { return; }
+
+	wp.media.view.AttachmentFilters.BohYear = wp.media.view.AttachmentFilters.extend( {
+		id: 'boh-gallery-year-filter',
+
+		createFilters: function () {
+			var filters = {};
+			filters.all = {
+				text: 'All event years',
+				props: {},
+				priority: 10
+			};
+			filters.all.props[ cfg.taxonomy ] = '';
+
+			cfg.options.forEach( function ( o, i ) {
+				var f = { text: o.label, props: {}, priority: 20 + i };
+				f.props[ cfg.taxonomy ] = o.slug;
+				filters[ 'year-' + o.slug ] = f;
+			} );
+			this.filters = filters;
+		}
+	} );
+
+	var Browser = wp.media.view.AttachmentsBrowser;
+	wp.media.view.AttachmentsBrowser = Browser.extend( {
+		createToolbar: function () {
+			Browser.prototype.createToolbar.call( this );
+			// Only where a filter bar exists at all — not, for example, in the
+			// single-image replace flow.
+			if ( ! this.toolbar || ! this.options.filters ) { return; }
+			this.toolbar.set( 'bohYearFilter', new wp.media.view.AttachmentFilters.BohYear( {
+				controller: this.controller,
+				model:      this.collection.props,
+				priority:   -75
+			} ).render() );
+		}
+	} );
+})();
+JS
+	);
+} );
