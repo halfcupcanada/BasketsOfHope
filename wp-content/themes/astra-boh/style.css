@@ -6366,3 +6366,18 @@ a.boh-rohit-brand,
 html {
   overflow-x: clip;
 }
+
+/* Hero logo badge: phones and stacked tablets only. The desktop hero keeps
+   the composition it already has. */
+.boh-hero-mark--auto { display: none; }
+/* min-height guard: on a short phone the badge pushed the hero copy down
+   into the scroll cue. It only appears where there is room for it. */
+@media (max-width: 880px) and (min-height: 720px) {
+  .boh-hero-mark--auto { display: block; margin: 0 auto; }
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
+    padding: 14px;
+  }
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto .boh-hero-mark__img {
+    width: min(26vw, 116px);
+  }
+}
