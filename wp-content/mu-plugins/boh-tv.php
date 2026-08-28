@@ -180,11 +180,6 @@ function boh_tv_render(): void {
     padding: 2.6vh 3vw;
   }
   .top img { height: 8.4vh; width: auto; display: block; }
-  .top h1 {
-    margin: 0; font-size: 2.6vh; font-weight: 800; letter-spacing: .01em;
-    text-shadow: 0 2px 18px rgba(0,0,0,.5);
-  }
-  .top h1 em { font-style: normal; color: var(--magenta); }
 
   .bottom {
     position: fixed; left: 0; right: 0; bottom: 0;
@@ -198,21 +193,32 @@ function boh_tv_render(): void {
   }
   .count { text-align: right; flex: 0 0 auto; }
   .count__label {
-    font-size: 1.9vh; letter-spacing: .18em; text-transform: uppercase;
-    color: var(--yellow); margin-bottom: 1vh; font-weight: 800;
+    font-size: 1.6vh; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--yellow); margin-bottom: 1.1vh; font-weight: 800;
   }
-  .count__row { display: flex; gap: 1.4vw; }
-  .count__cell { min-width: 9vh; }
+  .count__row { display: flex; gap: 0.9vh; }
+  /* Each unit in its own bordered cell, so the group reads as a clock
+     rather than four very large numbers sitting on the photograph. */
+  .count__cell {
+    min-width: 8.4vh;
+    padding: 1vh 1.1vh 0.9vh;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 1vh;
+    background: rgba(18,16,15,0.42);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
   .count__num {
-    font-size: 8.6vh; font-weight: 800; line-height: 1;
+    font-size: 4.4vh; font-weight: 800; line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 4px 30px rgba(0,0,0,.6);
+    letter-spacing: 0.02em;
   }
   .count__unit {
-    font-size: 1.6vh; letter-spacing: .16em; text-transform: uppercase;
-    opacity: .72; margin-top: .6vh;
+    font-size: 1.15vh; letter-spacing: .18em; text-transform: uppercase;
+    opacity: .66; margin-top: .7vh;
   }
   .count--live .count__num { color: var(--magenta); }
+  .count--live .count__cell { border-color: rgba(208,20,130,0.55); }
 
   .progress {
     position: fixed; left: 0; bottom: 0; height: 4px;
@@ -230,8 +236,9 @@ function boh_tv_render(): void {
   <div class="veil"></div>
 
   <header class="top">
-    <?php if ( $logo ) : ?><img src="<?php echo esc_url( $logo ); ?>" alt=""><?php endif; ?>
-    <h1><?php echo esc_html( $name ); ?></h1>
+    <?php // Mark only. The name is already on the wall, on the banners and in
+          // the room — a screen this size does not need to repeat it. ?>
+    <?php if ( $logo ) : ?><img src="<?php echo esc_url( $logo ); ?>" alt="<?php echo esc_attr( $name ); ?>"><?php endif; ?>
   </header>
 
   <div class="bottom">
