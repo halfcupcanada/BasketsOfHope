@@ -6381,3 +6381,81 @@ html {
     width: min(26vw, 116px);
   }
 }
+
+/* ── Header brand: wordmark always, mark once scrolled ───────────────
+   The home hero carries a large logo of its own, so showing the header
+   mark at the same time reads as a duplicate. The name stays visible
+   throughout; the mark fades in once the visitor moves off the hero. */
+.boh-header__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.boh-header__wordmark {
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  font-size: clamp(14px, 1.1vw, 17px);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--boh-magenta);
+  white-space: nowrap;
+}
+/* Home page: the mark is absent until the hero is behind us. Width and
+   margin collapse too, so the name does not sit in a reserved gap. */
+body.home .boh-header__logo {
+  opacity: 0;
+  width: 0 !important;
+  margin: 0 !important;
+  transform: scale(0.9);
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+body.home.boh-past-top .boh-header__logo {
+  opacity: 1;
+  width: var(--boh-logo-size, 56px) !important;
+  transform: none;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.home .boh-header__logo { transition: none; }
+}
+/* The name needs to stay legible over the photo before the header fills in. */
+body.home:not(.boh-past-top) .boh-header__wordmark {
+  text-shadow: 0 1px 12px rgba(255,255,255,0.85), 0 1px 3px rgba(255,255,255,0.9);
+}
+@media (max-width: 600px) {
+  .boh-header__wordmark {
+    font-size: 13px;
+    white-space: normal;
+    max-width: 150px;
+  }
+}
+
+/* ── Hero eyebrow: one line on phones ────────────────────────────────
+   It was allowed to wrap to fix an earlier bug where the words ran outside
+   the pill's rounded background. Wrapping is no longer needed: keeping the
+   flex row intact and sizing the text to the viewport holds it on one line
+   inside the pill, which is what it was always meant to look like. */
+@media (max-width: 880px) {
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    max-width: calc(100vw - 32px) !important;
+    /* Sized off viewport width so the line shrinks to fit rather than
+       spilling: ~2.35vw tracks the string across phone widths. */
+    font-size: clamp(7.6px, 2.35vw, 11px) !important;
+    letter-spacing: 0.06em !important;
+    padding: 7px 14px !important;
+    row-gap: 0 !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow .boh-rohit-brand {
+    white-space: nowrap;
+  }
+}
+@media (max-width: 480px) {
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
+    font-size: clamp(7.6px, 2.35vw, 10px) !important;
+    padding: 6px 12px !important;
+  }
+}

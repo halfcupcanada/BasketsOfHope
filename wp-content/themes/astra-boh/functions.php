@@ -781,6 +781,11 @@ add_action('wp_footer', function () {
           scrolled = isScrolled;
           document.body.classList.toggle('boh-scrolled', isScrolled);
         }
+
+        // Separate, earlier trigger for the header mark. `boh-scrolled` only
+        // flips at 80% of the hero, which is most of a screen — too late for
+        // the logo to feel like it belongs to the scroll.
+        document.body.classList.toggle('boh-past-top', y > window.innerHeight * 0.22);
       }
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', onScroll);

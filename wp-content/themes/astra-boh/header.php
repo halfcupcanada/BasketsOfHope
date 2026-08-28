@@ -22,13 +22,15 @@
   <div class="boh-header__inner">
     <div class="boh-header__brand">
       <?php
-      // Logo carries the brand identity by itself — no adjacent text label.
-      // aria-label / alt keep the site name available to screen readers now
-      // that there is no visible text next to the mark.
+      // The mark and the name sit side by side. On the home page the mark is
+      // hidden until the visitor scrolls off the hero, because the hero
+      // already carries a large logo — two of them at once read as a
+      // duplicate rather than as branding.
       $brand_label = sprintf( '%s — home', get_bloginfo( 'name' ) );
       ?>
-      <a class="boh-header__title boh-header__title--icon-only" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $brand_label ); ?>">
-        <img class="boh-header__logo" src="<?php echo esc_url( function_exists( 'boh_logo_url' ) ? boh_logo_url( 'icon' ) : home_url( '/wp-content/uploads/2026/06/boh-logo-150x150.png' ) ); ?>" alt="<?php echo esc_attr( $brand_label ); ?>" width="80" height="80" decoding="async">
+      <a class="boh-header__title" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $brand_label ); ?>">
+        <img class="boh-header__logo" src="<?php echo esc_url( function_exists( 'boh_logo_url' ) ? boh_logo_url( 'icon' ) : home_url( '/wp-content/uploads/2026/06/boh-logo-150x150.png' ) ); ?>" alt="" aria-hidden="true" width="80" height="80" decoding="async">
+        <span class="boh-header__wordmark"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
       </a>
     </div>
 
