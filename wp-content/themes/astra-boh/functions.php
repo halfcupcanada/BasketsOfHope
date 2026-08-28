@@ -1736,6 +1736,10 @@ add_action( 'wp_footer', function () {
                 '&location=' + encodeURIComponent(<?php echo wp_json_encode( $event_where ); ?>);
             const ics = '/?boh_ics=1';
 
+            // The modal sends as this person, so it needs their details from
+            // the form they have just submitted.
+            window.BOH_REFERRER = { name: first, email: email };
+
             const html = ''
               + '<div class="boh-rsvp-success">'
               +   '<div class="boh-rsvp-success__eyebrow">You\'re in</div>'
@@ -1763,7 +1767,7 @@ add_action( 'wp_footer', function () {
               +     '<a class="boh-rsvp-success__cta boh-rsvp-success__cta--primary" href="' + gcal + '" target="_blank" rel="noopener">Add to Google Calendar</a>'
               +     '<a class="boh-rsvp-success__cta" href="' + ics + '">Download .ics (Apple / Outlook)</a>'
               +   '</div>'
-              +   '<p class="boh-rsvp-success__share">Know someone who\'d love this? <a href="mailto:?subject=' + encodeURIComponent("You should come — Rohit's Baskets of Hope 2026") + '&body=' + encodeURIComponent("I just RSVPed for Rohit's Baskets of Hope on Nov 3. Great cause — free evening, WIN House support. Sign up at https://boh.halfcup.ca/rsvp/") + '">Forward the invitation.</a></p>'
+              +   '<p class="boh-rsvp-success__share">Know someone who\'d love this? <button type="button" class="boh-rsvp-success__forward" data-boh-forward>Forward the invitation</button></p>'
               + '</div>';
 
             // Hide the form + old spots row + welcome banner
@@ -2426,6 +2430,23 @@ add_action('admin_menu', function () {
             'boh-content', 'Hero slideshow', 'Hero slideshow', 'edit_theme_options',
             'boh-hero-images', 'boh_hero_images_screen'
         );
+        // Registered last, so lift it to the top of the list afterwards —
+        // the hero is the first thing anyone edits.
+        add_action('admin_menu', function () {
+            global $submenu;
+            if (empty($submenu['boh-content'])) {
+                return;
+            }
+            foreach ($submenu['boh-content'] as $i => $item) {
+                if (($item[2] ?? '') === 'boh-hero-images') {
+                    $entry = $submenu['boh-content'][$i];
+                    unset($submenu['boh-content'][$i]);
+                    array_unshift($submenu['boh-content'], $entry);
+                    $submenu['boh-content'] = array_values($submenu['boh-content']);
+                    break;
+                }
+            }
+        }, 999);
     } else {
         add_theme_page(
             'Hero Images', 'Hero Images', 'edit_theme_options',
@@ -2458,7 +2479,8 @@ function boh_hero_images_screen(): void
     $ids = boh_hero_slide_ids();
     ?>
     <div class="wrap">
-      <h1>Hero Images</h1>
+      <h1>BoH Content — Hero slideshow</h1>
+      <?php if ( function_exists( 'boh_content_tabs' ) ) { boh_content_tabs( 'hero' ); } ?>
       <p>These images rotate behind the headline on the home page. Add as many
          as you like, drag to reorder, and remove any you no longer want.
          Landscape photographs at least 1600px wide work best.</p>

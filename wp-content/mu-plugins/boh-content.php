@@ -369,16 +369,7 @@ function boh_content_render_screen(): void {
 			<div class="notice notice-success is-dismissible"><p>This screen has been reset to the original content.</p></div>
 		<?php endif; ?>
 
-		<h2 class="nav-tab-wrapper">
-			<?php
-			$first = array_key_first( $schema );
-			foreach ( $schema as $slug => $g ) :
-				$url = admin_url( 'admin.php?page=' . ( $slug === $first ? 'boh-content' : 'boh-content-' . $slug ) );
-				?>
-				<a href="<?php echo esc_url( $url ); ?>"
-				   class="nav-tab <?php echo $slug === $current ? 'nav-tab-active' : ''; ?>"><?php echo esc_html( $g['title'] ); ?></a>
-			<?php endforeach; ?>
-		</h2>
+		<?php boh_content_tabs( $current ); ?>
 
 		<?php if ( ! empty( $group['help'] ) ) : ?>
 			<p class="description" style="margin:14px 0 0;max-width:760px"><?php echo esc_html( $group['help'] ); ?></p>
@@ -418,6 +409,41 @@ function boh_content_render_screen(): void {
 	</div>
 	<?php
 	boh_content_admin_js();
+}
+
+/**
+ * The tab strip, shared by every BoH Content screen and by the hero
+ * slideshow page — which lives in the same menu and should not look like a
+ * different part of the admin.
+ *
+ * $current is a schema key, or 'hero' for the slideshow screen.
+ */
+function boh_content_tabs( string $current ): void {
+	$schema = boh_content_schema();
+	$first  = array_key_first( $schema );
+
+	$tabs = [
+		'hero' => [
+			'title' => 'Hero slideshow',
+			'url'   => admin_url( 'admin.php?page=boh-hero-images' ),
+		],
+	];
+	foreach ( $schema as $slug => $g ) {
+		$tabs[ $slug ] = [
+			'title' => $g['title'],
+			'url'   => admin_url( 'admin.php?page=' . ( $slug === $first ? 'boh-content' : 'boh-content-' . $slug ) ),
+		];
+	}
+	echo '<h2 class="nav-tab-wrapper">';
+	foreach ( $tabs as $key => $tab ) {
+		printf(
+			'<a href="%s" class="nav-tab %s">%s</a>',
+			esc_url( $tab['url'] ),
+			$key === $current ? 'nav-tab-active' : '',
+			esc_html( $tab['title'] )
+		);
+	}
+	echo '</h2>';
 }
 
 function boh_content_render_field( array $field, $value ): void {

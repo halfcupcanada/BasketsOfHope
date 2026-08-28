@@ -13,6 +13,29 @@ function boh_invitations_render_list() {
 
 	// Handle bulk actions
 	$notices = [];
+
+	// Saving edited headcounts. Separate from the bulk actions because it
+	// applies to every row on screen, not to a checkbox selection.
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_save_guests'] ) ) {
+		check_admin_referer( 'boh_invitations_bulk' );
+		$changed = 0;
+		foreach ( (array) ( $_POST['guests'] ?? [] ) as $id => $n ) {
+			$id = (int) $id;
+			$n  = max( 0, min( 99, (int) $n ) );
+			if ( ! $id ) {
+				continue;
+			}
+			$changed += (int) $wpdb->update(
+				$t,
+				[ 'guest_count' => $n, 'updated_at' => current_time( 'mysql', true ) ],
+				[ 'id' => $id ]
+			);
+		}
+		$notices[] = [ 'success', $changed
+			? sprintf( 'Updated %d headcount%s.', $changed, $changed === 1 ? '' : 's' )
+			: 'No headcounts changed.' ];
+	}
+
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && ! empty( $_POST['action'] ) ) {
 		check_admin_referer( 'boh_invitations_bulk' );
 		$ids = array_map( 'intval', (array) ( $_POST['ids'] ?? [] ) );
@@ -168,12 +191,14 @@ function boh_invitations_render_list() {
 						<th style="width:110px">Invited</th>
 						<th style="width:110px">Reminded</th>
 						<th style="width:110px">Responded</th>
-						<th style="width:100px">Party</th>
+						<th style="width:150px">Party</th>
+						<th style="width:96px">Guests</th>
+						<th style="width:150px">Invited by</th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( empty( $rows ) ) : ?>
-						<tr><td colspan="8" style="text-align:center;padding:32px;color:#666">No invitees match this filter.</td></tr>
+						<tr><td colspan="10" style="text-align:center;padding:32px;color:#666">No invitees match this filter.</td></tr>
 					<?php endif; ?>
 					<?php foreach ( $rows as $r ) : ?>
 					<tr>
@@ -190,11 +215,30 @@ function boh_invitations_render_list() {
 								<span style="color:#999">—</span>
 							<?php endif; ?>
 						</td>
-						<td><?php echo esc_html( $r->party_size ?: '' ); ?></td>
+						<td><?php echo esc_html( $r->party_size ?: '—' ); ?></td>
+						<?php
+						// The form stores the RSVP's own wording ("1 — Just me",
+						// "6+"), so the headcount is derived from it — and stays
+						// editable, because a reply by email or at the door will
+						// not match whatever the dropdown offered.
+						$boh_guests = function_exists( 'boh_invitations_party_count' ) && $r->responded_at
+							? boh_invitations_party_count( (string) $r->party_size )
+							: 0;
+						?>
+						<td>
+							<input type="number" min="0" max="99" name="guests[<?php echo (int) $r->id; ?>]"
+							       value="<?php echo (int) $boh_guests; ?>"
+							       style="width:64px" aria-label="Guests coming with <?php echo esc_attr( $r->name ?: $r->email ); ?>">
+						</td>
+						<td><?php echo esc_html( $r->referred_by ?? '' ); ?></td>
 					</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			<p style="margin:14px 0 0">
+				<button type="submit" name="boh_save_guests" value="1" class="button button-primary">Save headcounts</button>
+				<span class="description" style="margin-left:10px">Set how many people are coming with each guest. Blank rows count as their RSVP said.</span>
+			</p>
 			<?php
 			$total_pages = (int) ceil( $total / $per_page );
 			if ( $total_pages > 1 ) {

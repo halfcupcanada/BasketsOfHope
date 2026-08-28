@@ -25,7 +25,7 @@ function boh_invitations_maybe_install() {
 	global $wpdb;
 	$table = $wpdb->prefix . BOH_INV_TABLE;
 	$installed_version = get_option( 'boh_invitations_schema_version' );
-	if ( $installed_version === '1.1' ) return;
+	if ( $installed_version === '1.2' ) return;
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset = $wpdb->get_charset_collate();
@@ -39,6 +39,7 @@ function boh_invitations_maybe_install() {
 		reminder_sent_at DATETIME NULL,
 		responded_at DATETIME NULL,
 		party_size VARCHAR(64) NULL,
+		guest_count INT NULL,
 		source VARCHAR(20) NOT NULL DEFAULT 'invited',
 		created_at DATETIME NOT NULL,
 		updated_at DATETIME NOT NULL,
@@ -46,7 +47,7 @@ function boh_invitations_maybe_install() {
 		KEY status (invitation_sent_at, responded_at)
 	) $charset";
 	dbDelta( $sql );
-	update_option( 'boh_invitations_schema_version', '1.1' );
+	update_option( 'boh_invitations_schema_version', '1.2' );
 
 	// Seed default templates
 	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
@@ -327,7 +328,8 @@ add_action( 'admin_post_boh_invitations_export', function () {
 	global $wpdb;
 	$t    = boh_invitations_table();
 	$rows = $wpdb->get_results(
-		"SELECT name, email, company, party_size, source, invitation_sent_at, responded_at
+		"SELECT name, email, company, party_size, guest_count, source, referred_by,
+		        invitation_sent_at, responded_at
 		 FROM $t ORDER BY responded_at IS NULL, responded_at DESC, name ASC",
 		ARRAY_A
 	);
@@ -337,19 +339,20 @@ add_action( 'admin_post_boh_invitations_export', function () {
 	header( 'Content-Disposition: attachment; filename=boh-rsvps-' . gmdate( 'Y-m-d' ) . '.csv' );
 
 	$out = fopen( 'php://output', 'w' );
-	fputcsv( $out, [ 'Name', 'Email', 'Company', 'Party size', 'Guests', 'Source', 'Invited at', 'Responded at' ] );
+	fputcsv( $out, [ 'Name', 'Email', 'Company', 'Party size', 'Guests', 'Source', 'Invited by', 'Invited at', 'Responded at' ] );
 
 	$guests = 0;
 	$yes    = 0;
 	foreach ( (array) $rows as $r ) {
-		$n = $r['responded_at'] ? boh_invitations_party_count( (string) $r['party_size'] ) : 0;
+		$n = boh_invitations_guests_for( $r );
 		$guests += $n;
 		if ( $r['responded_at'] ) {
 			$yes++;
 		}
 		fputcsv( $out, [
 			$r['name'], $r['email'], $r['company'], $r['party_size'], $n ?: '',
-			$r['source'] === 'website' ? 'Website RSVP' : 'Invited',
+			$r['source'] === 'website' ? 'Website RSVP' : ( $r['source'] === 'referral' ? 'Referral' : 'Invited' ),
+			$r['referred_by'] ?? '',
 			$r['invitation_sent_at'], $r['responded_at'],
 		] );
 	}
@@ -360,15 +363,32 @@ add_action( 'admin_post_boh_invitations_export', function () {
 	exit;
 } );
 
+/**
+ * Headcount for one invitee: the admin's own figure when they have set one,
+ * otherwise read off the RSVP's party-size wording.
+ */
+function boh_invitations_guests_for( $row ): int {
+	if ( is_object( $row ) ) {
+		$row = (array) $row;
+	}
+	if ( isset( $row['guest_count'] ) && $row['guest_count'] !== null && $row['guest_count'] !== '' ) {
+		return max( 0, (int) $row['guest_count'] );
+	}
+	if ( empty( $row['responded_at'] ) ) {
+		return 0;
+	}
+	return boh_invitations_party_count( (string) ( $row['party_size'] ?? '' ) );
+}
+
 /** Totals for the list screen, so the number is visible without exporting. */
 function boh_invitations_guest_total(): array {
 	global $wpdb;
 	$t    = boh_invitations_table();
-	$rows = $wpdb->get_results( "SELECT party_size, source FROM $t WHERE responded_at IS NOT NULL", ARRAY_A );
+	$rows = $wpdb->get_results( "SELECT party_size, source, guest_count, responded_at FROM $t WHERE responded_at IS NOT NULL", ARRAY_A );
 	$guests = 0;
 	$walkup = 0;
 	foreach ( (array) $rows as $r ) {
-		$guests += boh_invitations_party_count( (string) $r['party_size'] );
+		$guests += boh_invitations_guests_for( $r );
 		if ( ( $r['source'] ?? '' ) === 'website' ) {
 			$walkup++;
 		}
