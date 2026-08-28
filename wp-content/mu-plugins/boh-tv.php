@@ -134,8 +134,24 @@ function boh_tv_render(): void {
     background: var(--ink); color: #fff;
     font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   }
-  /* The cursor is a distraction on a screen nobody touches. */
+  /* The cursor is a distraction on a screen nobody touches. It comes back
+     for anyone who moves a mouse — a visitor who arrived from the gallery
+     needs to see where they are and how to leave. */
   body { cursor: none; }
+  body.is-awake { cursor: default; }
+
+  .exit {
+    position: absolute; top: 3vh; right: 3.4vw; z-index: 6;
+    display: inline-flex; align-items: center; gap: 0.7vh;
+    padding: 1vh 1.6vh; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.24);
+    background: rgba(18,16,15,0.5); backdrop-filter: blur(6px);
+    color: rgba(255,255,255,0.86); text-decoration: none;
+    font-size: 1.5vh; letter-spacing: .06em;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  body.is-awake .exit { opacity: 1; pointer-events: auto; }
+  .exit:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
 
   .stage { position: fixed; inset: 0; }
   .slide {
@@ -234,6 +250,8 @@ function boh_tv_render(): void {
 <body>
   <div class="stage" id="stage"></div>
   <div class="veil"></div>
+
+  <a class="exit" href="<?php echo esc_url( home_url( '/gallery/' ) ); ?>">&larr; Back to the gallery</a>
 
   <header class="top">
     <?php // Mark only. The name is already on the wall, on the banners and in
@@ -364,11 +382,28 @@ function boh_tv_render(): void {
     if (e.key === ' ')          { e.preventDefault(); paused = !paused; runBar(); }
     else if (e.key === 'ArrowRight') { paused = true; next(); }
     else if (e.key === 'ArrowLeft')  { paused = true; prev(); }
+    else if (e.key === 'Escape') {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (history.length > 1) { history.back(); }
+      else { location.href = document.querySelector('.exit').href; }
+    }
     else if (e.key.toLowerCase() === 'f') {
       if (document.fullscreenElement) { document.exitFullscreen(); }
       else { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
     }
   });
+
+  /* On a television nothing ever moves, so the chrome stays hidden. On a
+     laptop the first flick of the mouse brings back the cursor and the way
+     out, and three still seconds take them away again. */
+  var sleep;
+  function wake() {
+    document.body.classList.add('is-awake');
+    clearTimeout(sleep);
+    sleep = setTimeout(function () { document.body.classList.remove('is-awake'); }, 3000);
+  }
+  document.addEventListener('mousemove', wake);
+  document.addEventListener('touchstart', wake, { passive: true });
 
   /* Reload periodically so photographs added during the evening appear,
      and so a display left running for days cannot drift or leak. */

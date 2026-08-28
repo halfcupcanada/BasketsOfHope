@@ -1588,6 +1588,14 @@ add_shortcode('boh_gallery', function ($atts) {
     }
 
     ob_start(); ?>
+    <p class="boh-gallery-play">
+      <a class="boh-gallery-play__btn" href="<?php echo esc_url( home_url( '/tv/' ) ); ?>">
+        <span class="boh-gallery-play__icon" aria-hidden="true"></span>
+        Play slideshow
+      </a>
+      <span class="boh-gallery-play__note">Every photograph, full screen</span>
+    </p>
+
     <div class="boh-gallery-sections">
       <?php // The year rail is printed after the sections so it can name the
             // "Past Events" entry only when that section actually exists;

@@ -6960,3 +6960,55 @@ body.boh-past-top .boh-header__wordmark {
   background: none; border: 0; color: var(--boh-ink-soft); font: inherit; font-size: 14px; cursor: pointer;
 }
 .boh-refer__cancel:hover { color: var(--boh-ink); }
+
+/* ── Gallery: play the slideshow ─────────────────────────────────────── */
+.boh-gallery-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 clamp(28px, 4vh, 48px);
+}
+.boh-gallery-play__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 26px 13px 20px;
+  border-radius: 999px;
+  background: var(--boh-magenta);
+  color: #fff !important;
+  text-decoration: none !important;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 14px 30px -14px rgba(208,20,130,0.7);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.boh-gallery-play__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 38px -16px rgba(208,20,130,0.75);
+}
+.boh-gallery-play__btn:focus-visible {
+  outline: 3px solid var(--boh-ink);
+  outline-offset: 3px;
+}
+/* Play triangle drawn in CSS, so the button needs no icon asset. */
+.boh-gallery-play__icon {
+  width: 0; height: 0;
+  border-left: 12px solid #fff;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  margin-left: 2px;
+}
+.boh-gallery-play__note {
+  font-size: 13px;
+  color: var(--boh-ink-soft);
+}
+@media (max-width: 600px) {
+  .boh-gallery-play { gap: 8px; }
+  .boh-gallery-play__note { flex: 1 0 100%; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-gallery-play__btn { transition: none; }
+}
