@@ -30,7 +30,19 @@
       ?>
       <a class="boh-header__title" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $brand_label ); ?>">
         <img class="boh-header__logo" src="<?php echo esc_url( function_exists( 'boh_logo_url' ) ? boh_logo_url( 'icon' ) : home_url( '/wp-content/uploads/2026/06/boh-logo-150x150.png' ) ); ?>" alt="" aria-hidden="true" width="80" height="80" decoding="async">
-        <span class="boh-header__wordmark"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></span>
+        <?php
+        // Only the last word carries the accent colour — "Rohit's Baskets of
+        // Hope" reads ink with "Hope" in magenta. Split on the final word
+        // rather than the literal string, so renaming the site keeps working.
+        $brand_name = get_bloginfo( 'name' );
+        if ( preg_match( '/^(.*\s)(\S+)$/u', $brand_name, $brand_parts ) ) {
+            $brand_html = esc_html( $brand_parts[1] )
+                . '<span class="boh-header__wordmark-accent">' . esc_html( $brand_parts[2] ) . '</span>';
+        } else {
+            $brand_html = esc_html( $brand_name );
+        }
+        ?>
+        <span class="boh-header__wordmark"><?php echo $brand_html; // already escaped per part ?></span>
       </a>
     </div>
 

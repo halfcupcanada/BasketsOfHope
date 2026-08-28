@@ -6398,9 +6398,11 @@ html {
   font-size: clamp(14px, 1.1vw, 17px);
   letter-spacing: -0.01em;
   line-height: 1.15;
-  color: var(--boh-magenta);
+  color: var(--boh-ink);
   white-space: nowrap;
 }
+/* Just the closing word, to match how the name is set elsewhere. */
+.boh-header__wordmark-accent { color: var(--boh-magenta); }
 /* Home page: the mark is absent until the hero is behind us. Width and
    margin collapse too, so the name does not sit in a reserved gap. */
 body.home .boh-header__logo {
