@@ -2559,40 +2559,38 @@ add_shortcode('boh_about_modules', function () {
     return ob_get_clean();
 });
 
-// --- Hero logo badge on small screens ------------------------------------
-// The hero's headrow was built to carry a circular logo badge beside the
-// headline — the styling for it is all still in the stylesheet — but the
-// markup was removed from the page at some point. On a phone the copy is
-// centred in a full-height hero, which left an obvious empty band above the
-// headline. Putting the badge back fills it.
+// --- Hero logo badge -----------------------------------------------------
+// The hero's headrow was built to carry a logo badge beside the headline;
+// the markup had been removed from the page at some point, leaving an empty
+// band above the headline on a phone.
 //
-// Inserted here rather than in the page content so the desktop hero, which
-// is signed off as it is, keeps its current composition: the badge is hidden
-// above the stacked breakpoint.
-add_action('wp_footer', function () {
-    if (!is_front_page()) {
-        return;
+// Rendered server-side, into the content itself, rather than injected with
+// JavaScript. An injected badge disappears for anyone served a cached copy
+// of the page from before the script existed, or whenever the script does
+// not run — which is exactly how it came to be missing on a real phone
+// while every headless check showed it present.
+add_filter('the_content', function ($content) {
+    if (!is_front_page() || is_admin() || strpos($content, 'boh-hero-headrow') === false) {
+        return $content;
     }
+    if (strpos($content, 'boh-hero-mark') !== false) {
+        return $content; // the page already carries one
+    }
+
     $logo = esc_url(boh_logo_url());
     $alt  = esc_attr(get_bloginfo('name'));
-    ?>
-    <script>
-    (function () {
-      var row = document.querySelector('.wp-block-cover.boh-hero .boh-hero-headrow');
-      if (!row || row.querySelector('.boh-hero-mark')) return;
-      var badge = document.createElement('div');
-      badge.className = 'boh-hero-mark boh-hero-mark--auto';
-      var img = document.createElement('img');
-      img.className = 'boh-hero-mark__img';
-      img.src = <?php echo wp_json_encode($logo); ?>;
-      img.alt = <?php echo wp_json_encode($alt); ?>;
-      img.decoding = 'async';
-      badge.appendChild(img);
-      row.insertBefore(badge, row.firstChild);
-    })();
-    </script>
-    <?php
-}, 62);
+    $badge = '<div class="boh-hero-mark boh-hero-mark--auto">'
+           . '<img class="boh-hero-mark__img" src="' . $logo . '" alt="' . $alt . '" decoding="async">'
+           . '</div>';
+
+    // Insert as the first child of the headrow, whatever attributes it carries.
+    return preg_replace(
+        '/(<div[^>]*class="[^"]*\bboh-hero-headrow\b[^"]*"[^>]*>)/',
+        '$1' . $badge,
+        $content,
+        1
+    );
+}, 20);
 
 // --- In-page popup for the address and the WIN House link ----------------
 // Both used to open a new tab, which pushes a visitor off the site mid-read.
