@@ -391,12 +391,15 @@ body.boh-scrolled .boh-header__title { color: var(--boh-ink); }
   transition: width .3s cubic-bezier(.2,.8,.2,1);
 }
 .boh-header__logo {
-  position: absolute;
-  top: 0;
-  left: 0;
+  /* Was absolutely positioned at top:0 for the old icon-only header, where
+     an oversized mark deliberately hung below the bar into the hero. The
+     mark now sits in a flex row beside the name, so static positioning lets
+     that row centre it instead of pinning it to the top edge. */
+  position: static;
   display: block;
-  width: var(--boh-logo-size, 104px);
-  height: var(--boh-logo-size, 104px);
+  flex: 0 0 auto;
+  width: var(--boh-logo-size, 52px);
+  height: var(--boh-logo-size, 52px);
   object-fit: contain;
   filter: drop-shadow(0 6px 18px rgba(31,26,36,0.18));
   transition: width .3s cubic-bezier(.2,.8,.2,1),
@@ -6584,4 +6587,30 @@ body:not(.boh-past-top) .boh-header__wordmark {
 }
 @media (prefers-reduced-motion: reduce) {
   .boh-embed__spinner { animation: none; }
+}
+
+/* Header brand row: one consistent mark size, vertically centred. The old
+   oversized-hanging-mark sizes are no longer used now that the mark only
+   appears once scrolled. */
+.boh-header__brand,
+.boh-header__title { align-items: center; }
+.boh-header__logo { --boh-logo-size: 52px; }
+@media (max-width: 900px) { .boh-header__logo { --boh-logo-size: 46px; } }
+@media (max-width: 600px) { .boh-header__logo { --boh-logo-size: 40px; } }
+
+/* Hero logo badge on every screen, stacked above the headline exactly as it
+   is on a phone — the headrow becomes a column wherever the badge is
+   present, instead of putting the mark beside the text on wide screens. */
+.wp-block-cover.boh-hero .boh-hero-headrow:has(.boh-hero-mark--auto) {
+  flex-direction: column;
+  align-items: center;
+}
+@media (min-height: 720px) {
+  .boh-hero-mark--auto { display: block; margin: 0 auto; }
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
+    padding: clamp(14px, 1.4vw, 20px);
+  }
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto .boh-hero-mark__img {
+    width: clamp(96px, 9vw, 132px);
+  }
 }
