@@ -1581,8 +1581,17 @@ add_shortcode('boh_gallery', function ($atts) {
     $recent = array_slice($years, 0, BOH_GALLERY_RECENT_YEARS);
     $older  = array_slice($years, BOH_GALLERY_RECENT_YEARS);
 
+    // Rail entries: one per rendered section, in the same order.
+    $rail = [];
+    foreach ($recent as $y) {
+        $rail[] = ['id' => 'gallery-' . (int) $y, 'label' => (string) (int) $y];
+    }
+
     ob_start(); ?>
     <div class="boh-gallery-sections">
+      <?php // The year rail is printed after the sections so it can name the
+            // "Past Events" entry only when that section actually exists;
+            // CSS puts it back alongside them. ?>
       <?php foreach ($recent as $y) : ?>
         <section class="boh-gallery-section" id="gallery-<?php echo (int) $y; ?>">
           <h3 class="boh-gallery-section__title"><?php echo (int) $y; ?></h3>
@@ -1604,12 +1613,30 @@ add_shortcode('boh_gallery', function ($atts) {
           $newest = (int) reset($older);
           $range  = $oldest === $newest ? (string) $oldest : $oldest . ' – ' . $newest;
           if (!empty($past)) : ?>
+        <?php $rail[] = ['id' => 'gallery-past', 'label' => 'Past']; ?>
         <section class="boh-gallery-section" id="gallery-past">
           <h3 class="boh-gallery-section__title">Past Events</h3>
           <p class="boh-gallery-section__note"><?php echo esc_html($range); ?></p>
           <?php echo boh_gallery_block($past, 'Past events'); ?>
         </section>
       <?php endif; endif; ?>
+
+      <?php if (count($rail) > 1) : ?>
+        <nav class="boh-yearrail" aria-label="Jump to a year">
+          <ol class="boh-yearrail__list">
+            <?php foreach ($rail as $i => $r) : ?>
+              <li class="boh-yearrail__item">
+                <a class="boh-yearrail__link<?php echo $i === 0 ? ' is-current' : ''; ?>"
+                   href="#<?php echo esc_attr($r['id']); ?>"
+                   data-boh-year="<?php echo esc_attr($r['id']); ?>">
+                  <span class="boh-yearrail__dot" aria-hidden="true"></span>
+                  <span class="boh-yearrail__label"><?php echo esc_html($r['label']); ?></span>
+                </a>
+              </li>
+            <?php endforeach; ?>
+          </ol>
+        </nav>
+      <?php endif; ?>
     </div>
     <?php
     return (string) ob_get_clean();
@@ -2576,6 +2603,78 @@ add_shortcode('boh_about_modules', function () {
     <?php
     return ob_get_clean();
 });
+
+// --- Gallery year rail behaviour ----------------------------------------
+// Smooth scrolling to a section, and highlighting whichever section is
+// currently on screen. The header is fixed, so the offset is read from it
+// rather than hardcoded.
+add_action('wp_footer', function () {
+    if (!is_page('gallery')) {
+        return;
+    }
+    ?>
+    <script>
+    (function () {
+      var rail = document.querySelector('.boh-yearrail');
+      if (!rail) return;
+      var links = Array.prototype.slice.call(rail.querySelectorAll('.boh-yearrail__link'));
+      if (!links.length) return;
+
+      var sections = links.map(function (a) {
+        return document.getElementById(a.dataset.bohYear);
+      }).filter(Boolean);
+
+      function headerOffset() {
+        var h = document.querySelector('.boh-header');
+        var railH = window.matchMedia('(max-width: 1099px)').matches ? rail.offsetHeight : 0;
+        return (h ? h.offsetHeight : 0) + railH + 16;
+      }
+
+      function mark(id) {
+        links.forEach(function (a) {
+          a.classList.toggle('is-current', a.dataset.bohYear === id);
+        });
+      }
+
+      links.forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          var target = document.getElementById(a.dataset.bohYear);
+          if (!target) return;
+          e.preventDefault();
+          var y = 0;
+          for (var n = target; n; n = n.offsetParent) { y += n.offsetTop; }
+          window.scrollTo({ top: Math.max(0, y - headerOffset()), behavior: 'smooth' });
+          mark(a.dataset.bohYear);
+          // Update the address bar without the jump a bare hash would cause.
+          if (history.replaceState) { history.replaceState(null, '', '#' + a.dataset.bohYear); }
+        });
+      });
+
+      // Highlight whichever section occupies the upper part of the screen.
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) { mark(en.target.id); }
+          });
+        }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+        sections.forEach(function (s) { io.observe(s); });
+      }
+
+      // Arriving with a hash should land clear of the fixed header.
+      if (location.hash) {
+        var t = document.getElementById(location.hash.slice(1));
+        if (t && sections.indexOf(t) !== -1) {
+          setTimeout(function () {
+            var y = 0; for (var n = t; n; n = n.offsetParent) { y += n.offsetTop; }
+            window.scrollTo({ top: Math.max(0, y - headerOffset()), behavior: 'instant' });
+            mark(t.id);
+          }, 60);
+        }
+      }
+    })();
+    </script>
+    <?php
+}, 64);
 
 // --- Hero logo badge -----------------------------------------------------
 // The hero's headrow was built to carry a logo badge beside the headline;

@@ -6720,3 +6720,124 @@ body:not(.boh-past-top) .boh-header__wordmark {
   .boh-halfcup__mark .hc-liquid-line { opacity: 0.6; }
   .boh-halfcup__mark.is-playing * { animation: none !important; }
 }
+
+/* ── Gallery year rail ───────────────────────────────────────────────
+   A timeline down the side of the gallery on desktop, and a sticky strip
+   across the top on phones — the same control, in the shape each screen
+   can actually spare the room for. */
+.boh-gallery-sections { position: relative; }
+
+.boh-yearrail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.boh-yearrail__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none !important;
+  color: var(--boh-ink-soft);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  padding: 8px 12px;
+  border-radius: 999px;
+  transition: color .2s ease, background .2s ease;
+}
+.boh-yearrail__dot {
+  flex: 0 0 auto;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--boh-rule, #E5E5E5);
+  background: #fff;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+.boh-yearrail__link:hover { color: var(--boh-ink); }
+.boh-yearrail__link:hover .boh-yearrail__dot { border-color: var(--boh-magenta); }
+.boh-yearrail__link.is-current { color: var(--boh-magenta); }
+.boh-yearrail__link.is-current .boh-yearrail__dot {
+  background: var(--boh-magenta);
+  border-color: var(--boh-magenta);
+  transform: scale(1.35);
+}
+.boh-yearrail__link:focus-visible {
+  outline: 3px solid var(--boh-magenta);
+  outline-offset: 2px;
+}
+
+/* Desktop: a true vertical timeline, pinned beside the photographs. */
+@media (min-width: 1100px) {
+  .boh-gallery-sections {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 0 28px;
+    align-items: start;
+  }
+  .boh-gallery-section { grid-column: 2; }
+  .boh-yearrail {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: 140px;
+    align-self: start;
+  }
+  /* The connecting line the dots sit on. */
+  .boh-yearrail__list { position: relative; padding: 6px 0; }
+  .boh-yearrail__list::before {
+    content: '';
+    position: absolute;
+    left: 17.5px;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--boh-rule, #E5E5E5), rgba(208,20,130,0.35));
+    border-radius: 2px;
+  }
+  .boh-yearrail__item + .boh-yearrail__item { margin-top: 6px; }
+  .boh-yearrail__link { position: relative; }
+  .boh-yearrail__dot { box-shadow: 0 0 0 4px #fff; }   /* punch through the line */
+}
+
+/* Phones and tablets: a sticky strip that scrolls sideways. */
+@media (max-width: 1099px) {
+  .boh-yearrail {
+    position: sticky;
+    top: 64px;
+    z-index: 20;
+    margin: 0 0 18px;
+    padding: 8px 0;
+    background: linear-gradient(180deg, var(--boh-paper, #fff) 72%, rgba(255,255,255,0));
+  }
+  .boh-yearrail__list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 2px 4px;
+  }
+  .boh-yearrail__list::-webkit-scrollbar { display: none; }
+  .boh-yearrail__item { flex: 0 0 auto; }
+  .boh-yearrail__link {
+    border: 1px solid var(--boh-rule, #E5E5E5);
+    background: #fff;
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+  .boh-yearrail__link.is-current {
+    background: var(--boh-magenta);
+    border-color: var(--boh-magenta);
+    color: #fff;
+  }
+  .boh-yearrail__link.is-current .boh-yearrail__dot {
+    background: #fff; border-color: #fff; transform: none;
+  }
+  .boh-yearrail__dot { width: 8px; height: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boh-yearrail__link,
+  .boh-yearrail__dot { transition: none; }
+}
