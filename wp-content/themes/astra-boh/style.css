@@ -6435,10 +6435,10 @@ body.boh-past-top .boh-header__wordmark {
   .boh-header__wordmark { transition: none; }
 }
 
-/* The name needs to stay legible over the photo before the header fills in. */
-body:not(.boh-past-top) .boh-header__wordmark {
-  text-shadow: 0 1px 12px rgba(255,255,255,0.85), 0 1px 3px rgba(255,255,255,0.9);
-}
+/* No glow behind the name. It was added to hold legibility over the hero
+   photograph before the header fills in, but it reads as a smudge — the
+   header's own backdrop already does that job. */
+.boh-header__wordmark { text-shadow: none; }
 @media (max-width: 600px) {
   .boh-header__wordmark {
     font-size: 13px;
