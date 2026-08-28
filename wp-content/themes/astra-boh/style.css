@@ -6668,3 +6668,55 @@ body:not(.boh-past-top) .boh-header__wordmark {
     order: -1;
   }
 }
+
+/* ── HalfCup mark animation ──────────────────────────────────────────
+   The cup draws itself, fills, then steams. Held until the footer is
+   actually on screen — the alternative is a loop running the whole time
+   someone reads the page, several screens above where it can be seen. */
+.boh-halfcup__mark .hc-cup-outline { stroke-dasharray: 600; stroke-dashoffset: 600; }
+.boh-halfcup__mark .hc-cup-handle  { stroke-dasharray: 200; stroke-dashoffset: 200; }
+.boh-halfcup__mark .hc-liquid-fill { transform: translateY(57.5px); }
+
+.boh-halfcup__mark.is-playing .hc-cup-outline {
+  animation: hcDrawCup 1.2s ease-out 0.15s forwards;
+}
+.boh-halfcup__mark.is-playing .hc-cup-handle {
+  animation: hcDrawHandle 0.8s ease-out 0.75s forwards;
+}
+.boh-halfcup__mark.is-playing .hc-liquid-fill {
+  animation: hcFillLiquid 1s ease-out 1.35s forwards;
+}
+.boh-halfcup__mark.is-playing .hc-liquid-line {
+  animation: hcShowLine 0.5s ease-out 1.95s forwards;
+}
+.boh-halfcup__mark.is-playing .hc-steam {
+  animation: hcRiseSteam 2.4s ease-in-out 2.2s infinite;
+}
+.boh-halfcup__mark.is-playing .hc-steam-2 { animation-delay: 2.6s; }
+.boh-halfcup__mark.is-playing .hc-steam-3 { animation-delay: 3s; }
+
+/* Replay the draw on hover, so the mark responds to being pointed at. */
+.boh-halfcup:hover .boh-halfcup__mark.is-playing .hc-cup-outline,
+.boh-halfcup:hover .boh-halfcup__mark.is-playing .hc-cup-handle {
+  animation: none;
+  stroke-dashoffset: 0;
+}
+
+@keyframes hcDrawCup    { to { stroke-dashoffset: 0; } }
+@keyframes hcDrawHandle { to { stroke-dashoffset: 0; } }
+@keyframes hcFillLiquid { to { transform: translateY(0); } }
+@keyframes hcShowLine   { to { opacity: 0.6; } }
+@keyframes hcRiseSteam {
+  0%   { opacity: 0; transform: translateY(0); }
+  30%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(-12px); }
+}
+
+/* Reduced motion: show the finished cup, never animate it. */
+@media (prefers-reduced-motion: reduce) {
+  .boh-halfcup__mark .hc-cup-outline,
+  .boh-halfcup__mark .hc-cup-handle { stroke-dashoffset: 0; }
+  .boh-halfcup__mark .hc-liquid-fill { transform: none; }
+  .boh-halfcup__mark .hc-liquid-line { opacity: 0.6; }
+  .boh-halfcup__mark.is-playing * { animation: none !important; }
+}

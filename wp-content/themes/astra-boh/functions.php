@@ -511,7 +511,7 @@ add_action('wp_footer', function () {
           <?php endif; ?>
           Developed by
           <a class="boh-halfcup" href="https://halfcup.ca" target="_blank" rel="noopener" aria-label="HalfCup — opens in a new tab">
-            <svg class="boh-halfcup__mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" width="20" height="20" aria-hidden="true" focusable="false">
+            <svg class="boh-halfcup__mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" width="24" height="24" aria-hidden="true" focusable="false">
               <defs>
                 <linearGradient id="bohHalfcupGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="#2563EB"></stop>
@@ -521,17 +521,35 @@ add_action('wp_footer', function () {
                   <path d="M49 55 L49 140 Q49 166 75 166 L125 166 Q151 166 151 140 L151 55 Z"></path>
                 </clipPath>
               </defs>
-              <path d="M45 55 L45 140 Q45 170 75 170 L125 170 Q155 170 155 140 L155 55" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="M155 75 Q185 75 185 105 Q185 135 155 135" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round"></path>
+              <path class="hc-cup-outline" d="M45 55 L45 140 Q45 170 75 170 L125 170 Q155 170 155 140 L155 55" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path class="hc-cup-handle" d="M155 75 Q185 75 185 105 Q185 135 155 135" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round"></path>
               <g clip-path="url(#bohHalfcupClip)">
-                <rect x="49" y="112.5" width="102" height="57.5" fill="url(#bohHalfcupGrad)" opacity="0.15"></rect>
+                <rect class="hc-liquid-fill" x="49" y="112.5" width="102" height="57.5" fill="url(#bohHalfcupGrad)" opacity="0.15"></rect>
               </g>
-              <line x1="49" y1="112.5" x2="151" y2="112.5" stroke="url(#bohHalfcupGrad)" stroke-width="3" stroke-dasharray="6 4" opacity="0.6"></line>
+              <line class="hc-liquid-line" x1="49" y1="112.5" x2="151" y2="112.5" stroke="url(#bohHalfcupGrad)" stroke-width="3" stroke-dasharray="6 4" opacity="0"></line>
+              <path class="hc-steam hc-steam-1" d="M75 45 Q75 30 85 25" stroke="url(#bohHalfcupGrad)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0"></path>
+              <path class="hc-steam hc-steam-2" d="M100 40 Q100 22 110 17" stroke="url(#bohHalfcupGrad)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0"></path>
+              <path class="hc-steam hc-steam-3" d="M125 45 Q125 30 135 25" stroke="url(#bohHalfcupGrad)" stroke-width="4" fill="none" stroke-linecap="round" opacity="0"></path>
             </svg><span class="boh-halfcup__label">HalfCup</span>
           </a>
         </div>
       </div>
     </footer>
+    <script>
+    (function () {
+      // Start the mark only once it is actually on screen. Everything before
+      // that point is a loop nobody can see.
+      var mark = document.querySelector('.boh-halfcup__mark');
+      if (!mark) return;
+      if (!('IntersectionObserver' in window)) { mark.classList.add('is-playing'); return; }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { mark.classList.add('is-playing'); io.disconnect(); }
+        });
+      }, { threshold: 0.35 });
+      io.observe(mark);
+    })();
+    </script>
     <?php
 }, 50);
 
