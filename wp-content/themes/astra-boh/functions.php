@@ -1588,14 +1588,6 @@ add_shortcode('boh_gallery', function ($atts) {
     }
 
     ob_start(); ?>
-    <p class="boh-gallery-play">
-      <a class="boh-gallery-play__btn" href="<?php echo esc_url( home_url( '/tv/' ) ); ?>">
-        <span class="boh-gallery-play__icon" aria-hidden="true"></span>
-        Play slideshow
-      </a>
-      <span class="boh-gallery-play__note">Every photograph, full screen</span>
-    </p>
-
     <div class="boh-gallery-sections">
       <?php // The year rail is printed after the sections so it can name the
             // "Past Events" entry only when that section actually exists;
@@ -1629,8 +1621,9 @@ add_shortcode('boh_gallery', function ($atts) {
         </section>
       <?php endif; endif; ?>
 
-      <?php if (count($rail) > 1) : ?>
+      <?php if (!empty($rail)) : ?>
         <nav class="boh-yearrail" aria-label="Jump to a year">
+          <?php if (count($rail) > 1) : ?>
           <ol class="boh-yearrail__list">
             <?php foreach ($rail as $i => $r) : ?>
               <li class="boh-yearrail__item">
@@ -1643,6 +1636,11 @@ add_shortcode('boh_gallery', function ($atts) {
               </li>
             <?php endforeach; ?>
           </ol>
+          <?php endif; ?>
+          <a class="boh-yearrail__play" href="<?php echo esc_url( home_url( '/tv/' ) ); ?>">
+            <span class="boh-yearrail__playicon" aria-hidden="true"></span>
+            <span>Play all</span>
+          </a>
         </nav>
       <?php endif; ?>
     </div>
@@ -2660,17 +2658,19 @@ add_action('wp_footer', function () {
     (function () {
       var rail = document.querySelector('.boh-yearrail');
       if (!rail) return;
-      var links = Array.prototype.slice.call(rail.querySelectorAll('.boh-yearrail__link'));
-      if (!links.length) return;
-
       // The rail is position:fixed, but the gallery sits inside an element
       // carrying the scroll-reveal transform, and a transformed ancestor
       // becomes the containing block for fixed descendants — which put the
       // rail thousands of pixels below the viewport instead of in the
-      // corner. Re-parent it to <body>, where nothing traps it.
+      // corner. Re-parent it to <body>, where nothing traps it. This has to
+      // happen before the year-link guard below: the rail carries the play
+      // link even when there is only one year and no links to observe.
       if (rail.parentNode !== document.body) {
         document.body.appendChild(rail);
       }
+
+      var links = Array.prototype.slice.call(rail.querySelectorAll('.boh-yearrail__link'));
+      if (!links.length) return;
 
       var sections = links.map(function (a) {
         return document.getElementById(a.dataset.bohYear);
