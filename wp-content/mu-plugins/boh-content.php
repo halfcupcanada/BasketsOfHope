@@ -170,7 +170,7 @@ function boh_content_schema(): array {
 						[ 'label' => 'Title',       'type' => 'text',     'width' => '20%' ],
 						[ 'label' => 'Full text',   'type' => 'textarea', 'width' => '28%' ],
 						[ 'label' => 'Short text',  'type' => 'textarea', 'width' => '24%' ],
-						[ 'label' => 'Image',       'type' => 'image',    'width' => '20%' ],
+						[ 'label' => 'Image',       'type' => 'image',    'width' => '20%', 'ratio' => '4:3', 'px' => '1200 x 900' ],
 					],
 				],
 				[
@@ -193,24 +193,32 @@ function boh_content_schema(): array {
 			'fields' => [
 				[
 					'key'   => 'brand.logo',
+					'ratio' => '1:1',
+					'px'    => '512 x 512',
 					'label' => 'Logo',
 					'help'  => 'Used in the header, the footer and as the browser tab icon. A square-ish PNG with a transparent background works best.',
 					'type'  => 'image',
 				],
 				[
 					'key'   => 'brand.hero_flourish',
+					'ratio' => '2:3',
+					'px'    => '700 x 1050',
 					'label' => 'Page-header flourish',
 					'help'  => 'The flower artwork in the top corner of every sub-page header.',
 					'type'  => 'image',
 				],
 				[
 					'key'   => 'brand.flower_pattern',
+					'ratio' => '1:1',
+					'px'    => '900 x 900',
 					'label' => 'Decorative flower pattern',
 					'help'  => 'Used behind the event header, the call-to-action banner and flourished sections.',
 					'type'  => 'image',
 				],
 				[
 					'key'   => 'brand.share_card',
+					'ratio' => '1200:630',
+					'px'    => '1200 x 630',
 					'label' => 'Link preview image',
 					'help'  => 'Shown when someone shares a link in WhatsApp, Slack, Facebook or LinkedIn. 1200x630 works best.',
 					'type'  => 'image',
@@ -222,12 +230,12 @@ function boh_content_schema(): array {
 			'title'  => 'Page headers',
 			'help'   => 'The photograph behind each sub-page title. Leave empty to keep the current one.',
 			'fields' => [
-				[ 'key' => 'hero.about',   'label' => 'About',       'type' => 'image' ],
-				[ 'key' => 'hero.donate',  'label' => 'Donate',      'type' => 'image' ],
-				[ 'key' => 'hero.sponsor', 'label' => 'Sponsorship', 'type' => 'image' ],
-				[ 'key' => 'hero.faqs',    'label' => 'FAQs',        'type' => 'image' ],
-				[ 'key' => 'hero.gallery', 'label' => 'Gallery',     'type' => 'image' ],
-				[ 'key' => 'hero.rsvp',    'label' => 'RSVP',        'type' => 'image' ],
+				[ 'key' => 'hero.about',   'label' => 'About',       'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
+				[ 'key' => 'hero.donate',  'label' => 'Donate',      'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
+				[ 'key' => 'hero.sponsor', 'label' => 'Sponsorship', 'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
+				[ 'key' => 'hero.faqs',    'label' => 'FAQs',        'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
+				[ 'key' => 'hero.gallery', 'label' => 'Gallery',     'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
+				[ 'key' => 'hero.rsvp',    'label' => 'RSVP',        'type' => 'image', 'ratio' => '3:1', 'px' => '1800 x 600' ],
 				// No 50/50 entry: that page is rendered by the raffle plugin and
 				// has no page-header block, so a picker here would silently do
 				// nothing.
@@ -243,7 +251,7 @@ function boh_content_schema(): array {
 					'label' => 'About sections',
 					'type'  => 'repeater',
 					'cols'  => [
-						[ 'label' => 'Image',    'type' => 'image',    'width' => '20%' ],
+						[ 'label' => 'Image',    'type' => 'image',    'width' => '20%', 'ratio' => '4:3', 'px' => '1200 x 900' ],
 						[ 'label' => 'Heading',  'type' => 'text',     'width' => '22%' ],
 						[ 'label' => 'Body',     'type' => 'textarea', 'width' => '44%' ],
 						[ 'label' => 'Image alt','type' => 'text',     'width' => '14%' ],
@@ -387,6 +395,14 @@ function boh_content_render_screen(): void {
 			.boh-content-admin .boh-thumb { display:block; width:100%; height:84px; object-fit:cover; background:#f0f0f1; border:1px solid #dcdcde; border-radius:4px; margin-bottom:6px; }
 			.boh-content-admin .boh-rowbtns { white-space:nowrap; }
 			.boh-content-admin .boh-img-wrap { max-width:280px; }
+			.boh-content-admin .boh-img-spec {
+				margin:0 0 8px; font-size:11px; color:#646970;
+				display:flex; align-items:center; gap:8px;
+			}
+			.boh-content-admin .boh-img-spec strong {
+				background:#f0f0f1; border:1px solid #dcdcde; border-radius:999px;
+				padding:1px 8px; font-size:11px; color:#1d2327; letter-spacing:.02em;
+			}
 		</style>
 
 		<form method="post">
@@ -473,7 +489,7 @@ function boh_content_render_field( array $field, $value ): void {
 			break;
 
 		case 'image':
-			boh_content_image_control( $name, (string) $value );
+			boh_content_image_control( $name, (string) $value, (string) ( $field['ratio'] ?? '' ), (string) ( $field['px'] ?? '' ) );
 			break;
 
 		case 'url':
@@ -497,13 +513,31 @@ function boh_content_render_field( array $field, $value ): void {
 	}
 }
 
-/** Media-library picker. Stores the URL so shortcodes stay simple. */
-function boh_content_image_control( string $name, string $value ): void {
+/**
+ * Media-library picker. Stores the URL so shortcodes stay simple.
+ *
+ * $ratio ("3:1") and $px ("1800 x 600") describe the shape the image is
+ * rendered in. They are shown to the editor and, when set, drive a crop step
+ * after selection so an image can be made to fit rather than being silently
+ * cropped by the browser.
+ */
+function boh_content_image_control( string $name, string $value, string $ratio = '', string $px = '' ): void {
+	$w = $h = 0;
+	if ( $ratio && strpos( $ratio, ':' ) !== false ) {
+		[ $w, $h ] = array_map( 'intval', explode( ':', $ratio, 2 ) );
+	}
 	?>
-	<div class="boh-img-wrap boh-img" data-boh-image>
+	<div class="boh-img-wrap boh-img" data-boh-image
+	     data-ratio-w="<?php echo (int) $w; ?>" data-ratio-h="<?php echo (int) $h; ?>">
 		<img class="boh-thumb" src="<?php echo esc_url( $value ); ?>" alt=""
-		     style="<?php echo $value ? '' : 'display:none'; ?>">
+		     style="<?php echo $value ? '' : 'display:none'; ?><?php echo $w && $h ? ';aspect-ratio:' . (int) $w . '/' . (int) $h . ';height:auto' : ''; ?>">
 		<input type="hidden" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>">
+		<?php if ( $ratio ) : ?>
+			<p class="boh-img-spec">
+				<strong><?php echo esc_html( $ratio ); ?></strong>
+				<?php if ( $px ) : ?><span><?php echo esc_html( $px ); ?>px</span><?php endif; ?>
+			</p>
+		<?php endif; ?>
 		<button type="button" class="button boh-pick">Choose image</button>
 		<button type="button" class="button-link boh-clear" style="margin-left:8px;color:#b32d2e">Remove</button>
 	</div>
@@ -539,7 +573,7 @@ function boh_content_repeater( array $field, array $rows ): void {
 						<?php if ( ( $c['type'] ?? 'text' ) === 'textarea' ) : ?>
 							<textarea name="<?php echo esc_attr( $cname ); ?>" rows="3"><?php echo esc_textarea( (string) $cell ); ?></textarea>
 						<?php elseif ( ( $c['type'] ?? '' ) === 'image' ) : ?>
-							<?php boh_content_image_control( $cname, (string) $cell ); ?>
+							<?php boh_content_image_control( $cname, (string) $cell, (string) ( $c['ratio'] ?? '' ), (string) ( $c['px'] ?? '' ) ); ?>
 						<?php else : ?>
 							<input type="text" name="<?php echo esc_attr( $cname ); ?>" value="<?php echo esc_attr( (string) $cell ); ?>">
 						<?php endif; ?>
@@ -668,20 +702,90 @@ function boh_content_admin_js(): void {
 			if (!pick) return;
 			e.preventDefault();
 			var wrap = pick.closest('[data-boh-image]');
-			var frame = wp.media({ title: 'Choose an image', multiple: false, library: { type: 'image' } });
-			frame.on('select', function () {
-				var a = frame.state().get('selection').first().toJSON();
-				// Prefer a sized copy: the original can be many megabytes and
-				// these are all rendered small.
-				var url = (a.sizes && (a.sizes.large || a.sizes.medium_large || a.sizes.medium))
-					? (a.sizes.large || a.sizes.medium_large || a.sizes.medium).url
-					: a.url;
+			var rw = parseInt(wrap.dataset.ratioW, 10) || 0;
+			var rh = parseInt(wrap.dataset.ratioH, 10) || 0;
+
+			function apply(url) {
 				wrap.querySelector('input[type=hidden]').value = url;
 				var img = wrap.querySelector('img');
 				img.src = url; img.style.display = '';
+			}
+			// Prefer a sized copy: originals here can be many megabytes and
+			// every one of these boxes renders small.
+			function bestUrl(a) {
+				var s = a.sizes || {};
+				var pick = s.large || s.medium_large || s.medium;
+				return pick ? pick.url : a.url;
+			}
+
+			var frame = wp.media({ title: 'Choose an image', multiple: false, library: { type: 'image' } });
+			frame.on('select', function () {
+				var a = frame.state().get('selection').first().toJSON();
+
+				// No declared shape, or the image is already that shape: take it.
+				if (!rw || !rh || !a.width || !a.height) { apply(bestUrl(a)); return; }
+				var target = rw / rh;
+				var actual = a.width / a.height;
+				if (Math.abs(target - actual) < 0.02) { apply(bestUrl(a)); return; }
+
+				frame.close();
+				bohCrop(a, rw, rh, apply);
 			});
 			frame.open();
 		});
+
+		/* --- crop to the box's shape ---------------------------------------
+		   Uses WordPress's own crop-image endpoint, which needs only the
+		   image-editor nonce and edit_post on the attachment — no customizer
+		   involvement — and returns a new attachment, so the original is
+		   never altered. */
+		function bohCrop(attachment, rw, rh, done) {
+			var scale = Math.min(attachment.width / rw, attachment.height / rh);
+			var cw = Math.round(rw * scale), ch = Math.round(rh * scale);
+
+			var ctrl = {
+				id: 'boh-content-image',
+				params: {
+					width: cw, height: ch,
+					flex_width: false, flex_height: false
+				}
+			};
+			var cropper = new wp.media.controller.Cropper({
+				imgSelectOptions: function (att, controller) {
+					var real = controller.get('control').params;
+					var w = att.get('width'), h = att.get('height');
+					var ratio = 1, sel;
+					var realW = real.width, realH = real.height;
+					if (w / h > realW / realH) { ratio = h / realH; } else { ratio = w / realW; }
+					sel = { x1: 0, y1: 0, x2: Math.round(realW * ratio), y2: Math.round(realH * ratio) };
+					return {
+						handles: true, keys: true, instance: true, persistent: true,
+						imageWidth: w, imageHeight: h,
+						aspectRatio: realW + ':' + realH,
+						x1: sel.x1, y1: sel.y1, x2: sel.x2, y2: sel.y2
+					};
+				}
+			});
+			cropper.set('control', ctrl);
+
+			var frame = wp.media({
+				button: { text: 'Crop and use', close: true },
+				states: [ cropper ]
+			});
+			// Hand the chosen image straight to the cropper.
+			frame.on('open', function () {
+				var sel = new wp.media.model.Selection([ wp.media.attachment(attachment.id) ]);
+				frame.state('cropper').set('selection', sel);
+				frame.setState('cropper');
+			});
+			frame.on('cropped', function (croppedImage) {
+				done(croppedImage.url);
+			});
+			frame.on('skippedcrop', function (att) {
+				done(att.get('url'));
+			});
+			frame.open();
+		}
 
 		// --- repeater rows ------------------------------------------------
 		function reindex(table) {
