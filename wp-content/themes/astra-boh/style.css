@@ -6422,6 +6422,22 @@ body.home.boh-past-top .boh-header__logo {
 @media (prefers-reduced-motion: reduce) {
   body.home .boh-header__logo { transition: none; }
 }
+/* The two swap rather than accumulate: the name introduces the site over the
+   hero, then hands over to the mark once the visitor scrolls. Showing both
+   at once was never the intent. */
+body.home .boh-header__wordmark {
+  transition: opacity .28s ease, max-width .28s ease;
+  overflow: hidden;
+}
+body.home.boh-past-top .boh-header__wordmark {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.home .boh-header__wordmark { transition: none; }
+}
+
 /* The name needs to stay legible over the photo before the header fills in. */
 body.home:not(.boh-past-top) .boh-header__wordmark {
   text-shadow: 0 1px 12px rgba(255,255,255,0.85), 0 1px 3px rgba(255,255,255,0.9);
