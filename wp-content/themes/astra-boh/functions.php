@@ -2418,14 +2418,26 @@ function boh_hero_slide_urls(): array
 }
 
 add_action('admin_menu', function () {
-    add_theme_page(
-        'Hero Images', 'Hero Images', 'edit_theme_options',
-        'boh-hero-images', 'boh_hero_images_screen'
-    );
-});
+    // Sits with the rest of the image controls under BoH Content. It used to
+    // live under Appearance, which is a reasonable home for a theme setting
+    // but the wrong place to go looking once everything else moved.
+    if (menu_page_url('boh-content', false)) {
+        add_submenu_page(
+            'boh-content', 'Hero slideshow', 'Hero slideshow', 'edit_theme_options',
+            'boh-hero-images', 'boh_hero_images_screen'
+        );
+    } else {
+        add_theme_page(
+            'Hero Images', 'Hero Images', 'edit_theme_options',
+            'boh-hero-images', 'boh_hero_images_screen'
+        );
+    }
+}, 12);
 
 add_action('admin_enqueue_scripts', function ($hook) {
-    if ($hook === 'appearance_page_boh-hero-images') {
+    // Match on the page rather than the parent: the hook prefix changes with
+    // whichever menu the screen is registered under.
+    if (strpos((string) $hook, 'boh-hero-images') !== false) {
         wp_enqueue_media();   // required for wp.media to exist
     }
 });
