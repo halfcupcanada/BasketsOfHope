@@ -140,28 +140,30 @@ function boh_tv_render(): void {
   .stage { position: fixed; inset: 0; }
   .slide {
     position: absolute; inset: 0;
-    background-position: center;
-    /* contain, not cover: the whole photograph is shown rather than having
-       its edges cropped away to fill the screen. Portrait shots in
-       particular lost their top and bottom entirely at cover. */
-    background-size: contain;
-    background-repeat: no-repeat;
     opacity: 0;
     transition: opacity 1.4s ease;
     will-change: opacity;
   }
   .slide.is-on { opacity: 1; }
-  /* A blurred, over-scaled copy of the same photograph fills the letterbox
-     that `contain` leaves, so the screen never shows bare black bars. */
-  .slide::before {
-    content: '';
+  /* Two real elements rather than a pseudo-element behind the slide: the
+     slide sets will-change, which makes it a stacking context, and a
+     z-index:-1 pseudo-element cannot escape that — it painted the blurred
+     copy on top of the photograph and made everything look soft. */
+  .slide__fill,
+  .slide__img {
     position: absolute; inset: 0;
-    background-image: inherit;
     background-position: center;
+    background-repeat: no-repeat;
+  }
+  /* Fills the letterbox that `contain` leaves, so there are no bare bars. */
+  .slide__fill {
     background-size: cover;
-    filter: blur(38px) saturate(1.1) brightness(0.55);
-    transform: scale(1.15);
-    z-index: -1;
+    filter: blur(38px) saturate(1.1) brightness(0.5);
+    transform: scale(1.18);
+  }
+  /* The photograph itself: whole, unblurred, never cropped to fill. */
+  .slide__img {
+    background-size: contain;
   }
 
   .veil {
@@ -262,8 +264,19 @@ function boh_tv_render(): void {
   /* ── Slideshow ───────────────────────────────────────────────────
      Two layers that cross-fade, so only ever two images are decoded —
      a hundred-plus <img> tags would exhaust a cheap display stick. */
-  var layers = [document.createElement('div'), document.createElement('div')];
-  layers.forEach(function (l) { l.className = 'slide'; stage.appendChild(l); });
+  var layers = [makeLayer(), makeLayer()];
+  function makeLayer() {
+    var l = document.createElement('div');
+    l.className = 'slide';
+    var fill = document.createElement('div');
+    fill.className = 'slide__fill';
+    var img = document.createElement('div');
+    img.className = 'slide__img';
+    l.appendChild(fill);
+    l.appendChild(img);
+    stage.appendChild(l);
+    return l;
+  }
   var front = 0, idx = -1, timer = null, paused = false;
 
   function preload(i) {
@@ -277,7 +290,9 @@ function boh_tv_render(): void {
     idx = (i + SLIDES.length) % SLIDES.length;
     var s = SLIDES[idx];
     var back = layers[1 - front];
-    back.style.backgroundImage = 'url("' + s.src.replace(/"/g, '\\"') + '")';
+    var url = 'url("' + s.src.replace(/"/g, '\\"') + '")';
+    back.querySelector('.slide__fill').style.backgroundImage = url;
+    back.querySelector('.slide__img').style.backgroundImage = url;
     // Restart the drift on the incoming layer.
     back.classList.remove('is-on');
     void back.offsetWidth;
