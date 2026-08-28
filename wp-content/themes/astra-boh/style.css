@@ -6614,3 +6614,57 @@ body:not(.boh-past-top) .boh-header__wordmark {
     width: clamp(96px, 9vw, 132px);
   }
 }
+
+/* ── Desktop hero: logo beside the headline, lede underneath ─────────
+   This restores the composition the hero markup was built for — the
+   comment on .boh-hero-block describes it exactly: one rectangle holding
+   [logo | eyebrow over headline] with the lede beneath, the whole thing
+   centred on screen. It had been flattened to a single centred column
+   while the logo was missing from the page; the logo is back, so the
+   original arrangement applies again above the stacked breakpoint. */
+@media (min-width: 881px) {
+  .wp-block-cover.boh-hero .boh-hero-headrow:has(.boh-hero-mark--auto),
+  .wp-block-cover.boh-hero .boh-hero-block .boh-hero-headrow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(20px, 2.4vw, 34px);
+  }
+  .wp-block-cover.boh-hero .boh-hero-headcol {
+    align-items: flex-start;
+  }
+  /* Eyebrow and headline read from the same left edge as each other. */
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__eyebrow,
+  .wp-block-cover.boh-hero .boh-hero-headcol .boh-hero-copy__eyebrow {
+    text-align: left !important;
+    margin: 0 !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-copy h1 {
+    text-align: left !important;
+    margin: 0 !important;
+  }
+  /* The lede starts at the logo's left edge and runs to the right edge of
+     the headline above it, so the block reads as one rectangle. Its measure
+     is capped below the headrow's width so the headrow keeps defining how
+     wide that rectangle is. */
+  .wp-block-cover.boh-hero .boh-hero-block .boh-hero-copy__lede,
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__lede {
+    text-align: left !important;
+    /* width:0 + min-width:100% is deliberate. The block is fit-content, so a
+       long paragraph would otherwise decide how wide the rectangle is and
+       overshoot the headline. Contributing zero to the intrinsic width lets
+       the logo-plus-headline row set the width, and min-width then fills it
+       — so the lede runs exactly from the logo's left edge to the headline's
+       right edge. */
+    width: 0 !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    margin: clamp(18px, 2.2vh, 28px) 0 0 !important;
+  }
+  /* The badge keeps its disc but drops the auto-centring margin, so it can
+     sit at the left of the row. */
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
+    margin: 0;
+    order: -1;
+  }
+}
