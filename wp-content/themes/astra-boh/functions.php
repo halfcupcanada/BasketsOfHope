@@ -2620,14 +2620,26 @@ add_action('wp_footer', function () {
       var links = Array.prototype.slice.call(rail.querySelectorAll('.boh-yearrail__link'));
       if (!links.length) return;
 
+      // The rail is position:fixed, but the gallery sits inside an element
+      // carrying the scroll-reveal transform, and a transformed ancestor
+      // becomes the containing block for fixed descendants — which put the
+      // rail thousands of pixels below the viewport instead of in the
+      // corner. Re-parent it to <body>, where nothing traps it.
+      if (rail.parentNode !== document.body) {
+        document.body.appendChild(rail);
+      }
+
       var sections = links.map(function (a) {
         return document.getElementById(a.dataset.bohYear);
       }).filter(Boolean);
 
       function headerOffset() {
+        // Only the fixed header needs clearing. The rail used to be a sticky
+        // strip above the content and its height was counted here too; it
+        // floats in the corner now, so counting it pushed every jump ~200px
+        // too far down the page.
         var h = document.querySelector('.boh-header');
-        var railH = window.matchMedia('(max-width: 1099px)').matches ? rail.offsetHeight : 0;
-        return (h ? h.offsetHeight : 0) + railH + 16;
+        return (h ? h.offsetHeight : 0) + 20;
       }
 
       function mark(id) {

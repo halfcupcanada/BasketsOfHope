@@ -6375,14 +6375,8 @@ html {
 .boh-hero-mark--auto { display: none; }
 /* min-height guard: on a short phone the badge pushed the hero copy down
    into the scroll cue. It only appears where there is room for it. */
-@media (max-width: 880px) and (min-height: 720px) {
+@media (max-width: 880px) and (min-height: 660px) {
   .boh-hero-mark--auto { display: block; margin: 0 auto; }
-  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
-    padding: 14px;
-  }
-  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto .boh-hero-mark__img {
-    width: min(26vw, 116px);
-  }
 }
 
 /* ── Header brand: wordmark always, mark once scrolled ───────────────
@@ -6605,13 +6599,19 @@ body:not(.boh-past-top) .boh-header__wordmark {
   flex-direction: column;
   align-items: center;
 }
-@media (min-height: 720px) {
+/* Shown from 600px of viewport height, not 720px. A phone's *screen* is
+   tall, but Safari's visible viewport is far shorter once its toolbars are
+   counted — an iPhone 15 Pro reports about 687px, and a 720px floor hid the
+   badge on exactly the devices it was added for. Instead of hiding it on
+   shorter screens, the badge is sized off viewport height so it always has
+   room. */
+@media (min-height: 660px) {
   .boh-hero-mark--auto { display: block; margin: 0 auto; }
   .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
-    padding: clamp(14px, 1.4vw, 20px);
+    padding: clamp(10px, 1.4vh, 20px);
   }
   .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto .boh-hero-mark__img {
-    width: clamp(96px, 9vw, 132px);
+    width: clamp(72px, 11vh, 132px);
   }
 }
 
@@ -6767,77 +6767,106 @@ body:not(.boh-past-top) .boh-header__wordmark {
   outline-offset: 2px;
 }
 
-/* Desktop: a true vertical timeline, pinned beside the photographs. */
-@media (min-width: 1100px) {
-  .boh-gallery-sections {
-    display: grid;
-    grid-template-columns: 104px minmax(0, 1fr);
-    gap: 0 28px;
-    align-items: start;
-  }
-  .boh-gallery-section { grid-column: 2; }
-  .boh-yearrail {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    position: sticky;
-    top: 140px;
-    align-self: start;
-  }
-  /* The connecting line the dots sit on. */
-  .boh-yearrail__list { position: relative; padding: 6px 0; }
-  .boh-yearrail__list::before {
-    content: '';
-    position: absolute;
-    left: 17.5px;
-    top: 14px;
-    bottom: 14px;
-    width: 2px;
-    background: linear-gradient(180deg, var(--boh-rule, #E5E5E5), rgba(208,20,130,0.35));
-    border-radius: 2px;
-  }
-  .boh-yearrail__item + .boh-yearrail__item { margin-top: 6px; }
-  .boh-yearrail__link { position: relative; }
-  .boh-yearrail__dot { box-shadow: 0 0 0 4px #fff; }   /* punch through the line */
+/* A floating vertical timeline in the bottom-right corner, the same control
+   on every screen — pinned rather than in the flow, so it stays reachable
+   however far down the gallery you are. */
+.boh-yearrail {
+  position: fixed;
+  right: clamp(12px, 1.6vw, 26px);
+  bottom: clamp(14px, 3vh, 34px);
+  z-index: 60;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(31,26,36,0.08);
+  box-shadow: 0 18px 44px -20px rgba(31,26,36,0.45);
 }
+.boh-yearrail__list { position: relative; }
+/* The line the dots sit on. */
+.boh-yearrail__list::before {
+  content: '';
+  position: absolute;
+  left: 17.5px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--boh-rule, #E5E5E5), rgba(208,20,130,0.45));
+  border-radius: 2px;
+}
+.boh-yearrail__item + .boh-yearrail__item { margin-top: 2px; }
+.boh-yearrail__link { position: relative; padding: 7px 12px; }
+.boh-yearrail__dot { box-shadow: 0 0 0 4px rgba(255,255,255,0.95); }
+.boh-yearrail__link.is-current { background: rgba(208,20,130,0.08); }
 
-/* Phones and tablets: a sticky strip that scrolls sideways. */
-@media (max-width: 1099px) {
+@media (max-width: 600px) {
   .boh-yearrail {
-    position: sticky;
-    top: 64px;
-    z-index: 20;
-    margin: 0 0 18px;
-    padding: 8px 0;
-    background: linear-gradient(180deg, var(--boh-paper, #fff) 72%, rgba(255,255,255,0));
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 9px;
+    border-radius: 15px;
   }
-  .boh-yearrail__list {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    padding: 2px 2px 4px;
-  }
-  .boh-yearrail__list::-webkit-scrollbar { display: none; }
-  .boh-yearrail__item { flex: 0 0 auto; }
-  .boh-yearrail__link {
-    border: 1px solid var(--boh-rule, #E5E5E5);
-    background: #fff;
-    padding: 7px 14px;
-    font-size: 13px;
-  }
-  .boh-yearrail__link.is-current {
-    background: var(--boh-magenta);
-    border-color: var(--boh-magenta);
-    color: #fff;
-  }
-  .boh-yearrail__link.is-current .boh-yearrail__dot {
-    background: #fff; border-color: #fff; transform: none;
-  }
-  .boh-yearrail__dot { width: 8px; height: 8px; }
+  .boh-yearrail__link { font-size: 12px; padding: 6px 9px; gap: 9px; }
+  .boh-yearrail__list::before { left: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .boh-yearrail__link,
   .boh-yearrail__dot { transition: none; }
+}
+
+/* Short viewports: the badge earns its place only if the hero copy still
+   clears the scroll cue beneath it, so it shrinks rather than crowding. */
+@media (max-height: 700px) {
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto {
+    padding: 8px;
+  }
+  .wp-block-cover.boh-hero .boh-hero-headrow .boh-hero-mark--auto .boh-hero-mark__img {
+    width: clamp(52px, 7.4vh, 74px);
+  }
+  .wp-block-cover.boh-hero .boh-hero-headrow { gap: 10px !important; }
+}
+
+/* ── Gallery section headings + separators ───────────────────────────
+   Each year now announces itself properly and the sections are divided by
+   a soft pink rule, so a long page reads as chapters rather than one
+   uninterrupted run of photographs. */
+.boh-gallery-section + .boh-gallery-section {
+  margin-top: clamp(48px, 6vh, 88px);
+  padding-top: clamp(36px, 5vh, 64px);
+  border-top: 1px solid rgba(208, 20, 130, 0.16);
+}
+.boh-gallery-section__title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 0 8px;
+}
+/* Hairlines either side of the year, meeting the heading. */
+.boh-gallery-section__title::before,
+.boh-gallery-section__title::after {
+  content: '';
+  height: 1px;
+  flex: 1 1 auto;
+  max-width: 120px;
+  background: linear-gradient(90deg, rgba(208,20,130,0), rgba(208,20,130,0.32));
+}
+.boh-gallery-section__title::after {
+  background: linear-gradient(90deg, rgba(208,20,130,0.32), rgba(208,20,130,0));
+}
+.boh-gallery-section__note {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(208, 20, 130, 0.07);
+  color: var(--boh-magenta);
+  border: 1px solid rgba(208, 20, 130, 0.16);
+}
+@media (max-width: 600px) {
+  .boh-gallery-section__title { gap: 10px; }
+  .boh-gallery-section__title::before,
+  .boh-gallery-section__title::after { max-width: 48px; }
 }
