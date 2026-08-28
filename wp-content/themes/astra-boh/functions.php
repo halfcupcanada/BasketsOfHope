@@ -2567,6 +2567,7 @@ function boh_hero_images_screen(): void
               sync();
             });
           }
+          frame.on('open', function () { frame.content.mode('browse'); });
           frame.open();
         });
 

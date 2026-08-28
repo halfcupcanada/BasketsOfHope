@@ -140,15 +140,29 @@ function boh_tv_render(): void {
   .stage { position: fixed; inset: 0; }
   .slide {
     position: absolute; inset: 0;
-    background-position: center; background-size: cover; background-repeat: no-repeat;
+    background-position: center;
+    /* contain, not cover: the whole photograph is shown rather than having
+       its edges cropped away to fill the screen. Portrait shots in
+       particular lost their top and bottom entirely at cover. */
+    background-size: contain;
+    background-repeat: no-repeat;
     opacity: 0;
     transition: opacity 1.4s ease;
     will-change: opacity;
   }
   .slide.is-on { opacity: 1; }
-  /* A slow drift keeps a still photograph from looking frozen on a screen. */
-  .slide.is-on { animation: drift 18s ease-out forwards; }
-  @keyframes drift { from { transform: scale(1.06); } to { transform: scale(1.14); } }
+  /* A blurred, over-scaled copy of the same photograph fills the letterbox
+     that `contain` leaves, so the screen never shows bare black bars. */
+  .slide::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: inherit;
+    background-position: center;
+    background-size: cover;
+    filter: blur(38px) saturate(1.1) brightness(0.55);
+    transform: scale(1.15);
+    z-index: -1;
+  }
 
   .veil {
     position: fixed; inset: 0;

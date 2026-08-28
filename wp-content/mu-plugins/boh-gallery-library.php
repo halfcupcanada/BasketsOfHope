@@ -389,6 +389,7 @@ function boh_gallery_select_screen(): void {
 					});
 					setIds(list);
 				});
+				frame.on('open', function () { frame.content.mode('browse'); });
 				frame.open();
 			});
 
@@ -414,6 +415,8 @@ function boh_gallery_select_screen(): void {
 					});
 					setIds(list);
 				});
+				// This button is explicitly for uploading, so it keeps the
+				// uploader tab; the 'ready' handler above selects it.
 				frame.open();
 			});
 
@@ -482,8 +485,15 @@ add_filter( 'ajax_query_attachments_args', function ( $args ) {
 	return $args;
 } );
 
-add_action( 'admin_enqueue_scripts', function () {
+add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	if ( ! function_exists( 'wp_enqueue_media' ) ) {
+		return;
+	}
+	// Only where a media browser is genuinely used. This replaces a core view,
+	// and loading it everywhere put it on screens that never asked for it.
+	$wanted = ( $hook === 'upload.php' )
+		|| ( isset( $_GET['page'] ) && strpos( (string) $_GET['page'], 'boh-gallery' ) !== false );
+	if ( ! $wanted ) {
 		return;
 	}
 	$terms = get_terms( [ 'taxonomy' => BOH_GALLERY_TAX, 'hide_empty' => false ] );

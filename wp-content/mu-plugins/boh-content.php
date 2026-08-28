@@ -399,6 +399,9 @@ function boh_content_render_screen(): void {
 				margin:0 0 8px; font-size:11px; color:#646970;
 				display:flex; align-items:center; gap:8px;
 			}
+			.boh-content-admin .boh-img-fit { margin:0 0 8px; font-size:11px; }
+			.boh-content-admin .boh-fit-ok { color:#1c7c3f; font-weight:600; }
+			.boh-content-admin .boh-fit-warn { color:#8a6d0b; }
 			.boh-content-admin .boh-img-spec strong {
 				background:#f0f0f1; border:1px solid #dcdcde; border-radius:999px;
 				padding:1px 8px; font-size:11px; color:#1d2327; letter-spacing:.02em;
@@ -527,8 +530,21 @@ function boh_content_image_control( string $name, string $value, string $ratio =
 		[ $w, $h ] = array_map( 'intval', explode( ':', $ratio, 2 ) );
 	}
 	?>
+	<?php
+	// Resolve the attachment behind an already-saved URL, so the crop link
+	// works for images chosen before now, not only ones picked this session.
+	$existing_id = $value ? (int) attachment_url_to_postid( $value ) : 0;
+	if ( ! $existing_id && $value ) {
+		$existing_id = (int) attachment_url_to_postid( preg_replace( '/-\d+x\d+(\.[A-Za-z]+)$/', '$1', $value ) );
+	}
+	$dims = $existing_id ? wp_get_attachment_metadata( $existing_id ) : null;
+	?>
 	<div class="boh-img-wrap boh-img" data-boh-image
-	     data-ratio-w="<?php echo (int) $w; ?>" data-ratio-h="<?php echo (int) $h; ?>">
+	     data-ratio-w="<?php echo (int) $w; ?>" data-ratio-h="<?php echo (int) $h; ?>"
+	     data-attachment-id="<?php echo (int) $existing_id; ?>"
+	     data-img-w="<?php echo (int) ( $dims['width'] ?? 0 ); ?>"
+	     data-img-h="<?php echo (int) ( $dims['height'] ?? 0 ); ?>"
+	     data-edit-base="<?php echo esc_attr( admin_url( 'post.php?post=__ID__&action=edit&image-editor=1' ) ); ?>">
 		<img class="boh-thumb" src="<?php echo esc_url( $value ); ?>" alt=""
 		     style="<?php echo $value ? '' : 'display:none'; ?><?php echo $w && $h ? ';aspect-ratio:' . (int) $w . '/' . (int) $h . ';height:auto' : ''; ?>">
 		<input type="hidden" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>">
@@ -538,6 +554,7 @@ function boh_content_image_control( string $name, string $value, string $ratio =
 				<?php if ( $px ) : ?><span><?php echo esc_html( $px ); ?>px</span><?php endif; ?>
 			</p>
 		<?php endif; ?>
+		<p class="boh-img-fit"></p>
 		<button type="button" class="button boh-pick">Choose image</button>
 		<button type="button" class="button-link boh-clear" style="margin-left:8px;color:#b32d2e">Remove</button>
 	</div>
@@ -705,10 +722,12 @@ function boh_content_admin_js(): void {
 			var rw = parseInt(wrap.dataset.ratioW, 10) || 0;
 			var rh = parseInt(wrap.dataset.ratioH, 10) || 0;
 
-			function apply(url) {
+			function apply(url, id, w, h) {
 				wrap.querySelector('input[type=hidden]').value = url;
 				var img = wrap.querySelector('img');
 				img.src = url; img.style.display = '';
+				if (id) { wrap.dataset.attachmentId = id; }
+				bohMarkFit(wrap, w, h);
 			}
 			// Prefer a sized copy: originals here can be many megabytes and
 			// every one of these boxes renders small.
@@ -721,71 +740,40 @@ function boh_content_admin_js(): void {
 			var frame = wp.media({ title: 'Choose an image', multiple: false, library: { type: 'image' } });
 			frame.on('select', function () {
 				var a = frame.state().get('selection').first().toJSON();
-
-				// No declared shape, or the image is already that shape: take it.
-				if (!rw || !rh || !a.width || !a.height) { apply(bestUrl(a)); return; }
-				var target = rw / rh;
-				var actual = a.width / a.height;
-				if (Math.abs(target - actual) < 0.02) { apply(bestUrl(a)); return; }
-
-				frame.close();
-				bohCrop(a, rw, rh, apply);
+				apply(bestUrl(a), a.id, a.width, a.height);
 			});
+			frame.on('open', function () { frame.content.mode('browse'); });
 			frame.open();
 		});
 
-		/* --- crop to the box's shape ---------------------------------------
-		   Uses WordPress's own crop-image endpoint, which needs only the
-		   image-editor nonce and edit_post on the attachment — no customizer
-		   involvement — and returns a new attachment, so the original is
-		   never altered. */
-		function bohCrop(attachment, rw, rh, done) {
-			var scale = Math.min(attachment.width / rw, attachment.height / rh);
-			var cw = Math.round(rw * scale), ch = Math.round(rh * scale);
-
-			var ctrl = {
-				id: 'boh-content-image',
-				params: {
-					width: cw, height: ch,
-					flex_width: false, flex_height: false
-				}
-			};
-			var cropper = new wp.media.controller.Cropper({
-				imgSelectOptions: function (att, controller) {
-					var real = controller.get('control').params;
-					var w = att.get('width'), h = att.get('height');
-					var ratio = 1, sel;
-					var realW = real.width, realH = real.height;
-					if (w / h > realW / realH) { ratio = h / realH; } else { ratio = w / realW; }
-					sel = { x1: 0, y1: 0, x2: Math.round(realW * ratio), y2: Math.round(realH * ratio) };
-					return {
-						handles: true, keys: true, instance: true, persistent: true,
-						imageWidth: w, imageHeight: h,
-						aspectRatio: realW + ':' + realH,
-						x1: sel.x1, y1: sel.y1, x2: sel.x2, y2: sel.y2
-					};
-				}
-			});
-			cropper.set('control', ctrl);
-
-			var frame = wp.media({
-				button: { text: 'Crop and use', close: true },
-				states: [ cropper ]
-			});
-			// Hand the chosen image straight to the cropper.
-			frame.on('open', function () {
-				var sel = new wp.media.model.Selection([ wp.media.attachment(attachment.id) ]);
-				frame.state('cropper').set('selection', sel);
-				frame.setState('cropper');
-			});
-			frame.on('cropped', function (croppedImage) {
-				done(croppedImage.url);
-			});
-			frame.on('skippedcrop', function (att) {
-				done(att.get('url'));
-			});
-			frame.open();
+		/* --- does the chosen image fit the box? ---------------------------
+		   Rather than a bespoke cropper — the one tried here opened blank,
+		   because core's Cropper state expects to be reached from a library
+		   selection and CustomizeImageCropper does not exist outside the
+		   customizer — the control says whether the image matches the shape
+		   and links to WordPress's own image editor, which crops reliably. */
+		function bohMarkFit(wrap, w, h) {
+			var note = wrap.querySelector('.boh-img-fit');
+			if (!note) return;
+			var rw = parseInt(wrap.dataset.ratioW, 10) || 0;
+			var rh = parseInt(wrap.dataset.ratioH, 10) || 0;
+			var id = wrap.dataset.attachmentId;
+			if (!rw || !rh || !w || !h) { note.innerHTML = ''; return; }
+			var fits = Math.abs((rw / rh) - (w / h)) < 0.02;
+			if (fits) {
+				note.innerHTML = '<span class="boh-fit-ok">Fits this box</span>';
+				return;
+			}
+			var href = wrap.dataset.editBase && id ? wrap.dataset.editBase.replace('__ID__', id) : '';
+			note.innerHTML = '<span class="boh-fit-warn">' + w + ' x ' + h +
+				' — will be cropped to fit</span>' +
+				(href ? ' <a href="' + href + '" target="_blank" rel="noopener">Crop it</a>' : '');
 		}
+
+		// Assess whatever is already saved, so the notice is right on arrival.
+		document.querySelectorAll('[data-boh-image]').forEach(function (wrap) {
+			bohMarkFit(wrap, parseInt(wrap.dataset.imgW, 10) || 0, parseInt(wrap.dataset.imgH, 10) || 0);
+		});
 
 		// --- repeater rows ------------------------------------------------
 		function reindex(table) {
