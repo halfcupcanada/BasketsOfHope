@@ -509,7 +509,26 @@ add_action('wp_footer', function () {
           if ($boh_privacy_id && get_post_status($boh_privacy_id) === 'publish') : ?>
             <a href="<?php echo esc_url(get_permalink($boh_privacy_id)); ?>">Privacy</a> &nbsp;|&nbsp;
           <?php endif; ?>
-          Developed by <a href="https://halfcup.ca" target="_blank" rel="noopener">HalfCup</a>
+          Developed by
+          <a class="boh-halfcup" href="https://halfcup.ca" target="_blank" rel="noopener" aria-label="HalfCup — opens in a new tab">
+            <svg class="boh-halfcup__mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" width="20" height="20" aria-hidden="true" focusable="false">
+              <defs>
+                <linearGradient id="bohHalfcupGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#2563EB"></stop>
+                  <stop offset="100%" stop-color="#F97316"></stop>
+                </linearGradient>
+                <clipPath id="bohHalfcupClip">
+                  <path d="M49 55 L49 140 Q49 166 75 166 L125 166 Q151 166 151 140 L151 55 Z"></path>
+                </clipPath>
+              </defs>
+              <path d="M45 55 L45 140 Q45 170 75 170 L125 170 Q155 170 155 140 L155 55" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M155 75 Q185 75 185 105 Q185 135 155 135" stroke="url(#bohHalfcupGrad)" stroke-width="8" fill="none" stroke-linecap="round"></path>
+              <g clip-path="url(#bohHalfcupClip)">
+                <rect x="49" y="112.5" width="102" height="57.5" fill="url(#bohHalfcupGrad)" opacity="0.15"></rect>
+              </g>
+              <line x1="49" y1="112.5" x2="151" y2="112.5" stroke="url(#bohHalfcupGrad)" stroke-width="3" stroke-dasharray="6 4" opacity="0.6"></line>
+            </svg><span class="boh-halfcup__label">HalfCup</span>
+          </a>
         </div>
       </div>
     </footer>
@@ -2574,3 +2593,100 @@ add_action('wp_footer', function () {
     </script>
     <?php
 }, 62);
+
+// --- In-page popup for the address and the WIN House link ----------------
+// Both used to open a new tab, which pushes a visitor off the site mid-read.
+// They now open in a dialog over the page. Every link keeps its real href and
+// target, so a middle-click, a long-press or a blocked script still behaves
+// exactly as before — the dialog is an enhancement, not the only route.
+add_action('wp_footer', function () {
+    ?>
+    <div class="boh-embed" hidden role="dialog" aria-modal="true" aria-labelledby="boh-embed-title">
+      <div class="boh-embed__panel">
+        <header class="boh-embed__bar">
+          <h2 class="boh-embed__title" id="boh-embed-title"></h2>
+          <div class="boh-embed__actions">
+            <a class="boh-embed__open" href="#" target="_blank" rel="noopener">Open in a new tab ↗</a>
+            <button type="button" class="boh-embed__close" aria-label="Close">&times;</button>
+          </div>
+        </header>
+        <div class="boh-embed__body">
+          <div class="boh-embed__spinner" aria-hidden="true"></div>
+          <iframe class="boh-embed__frame" title="" loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allow="fullscreen"></iframe>
+        </div>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var box = document.querySelector('.boh-embed');
+      if (!box) return;
+      var frame = box.querySelector('.boh-embed__frame');
+      var title = box.querySelector('.boh-embed__title');
+      var openA = box.querySelector('.boh-embed__open');
+      var closeB = box.querySelector('.boh-embed__close');
+      var spin  = box.querySelector('.boh-embed__spinner');
+      var opener = null;
+
+      function open(src, label, href) {
+        title.textContent = label;
+        frame.title = label;
+        openA.href = href;
+        spin.hidden = false;
+        frame.src = src;
+        box.hidden = false;
+        document.body.style.overflow = 'hidden';
+        closeB.focus();
+      }
+      function close() {
+        box.hidden = true;
+        frame.src = 'about:blank';      // stop whatever is playing inside
+        document.body.style.overflow = '';
+        if (opener) { opener.focus(); opener = null; }
+      }
+      frame.addEventListener('load', function () { spin.hidden = true; });
+      closeB.addEventListener('click', close);
+      box.addEventListener('click', function (e) { if (e.target === box) close(); });
+      document.addEventListener('keydown', function (e) {
+        if (!box.hidden && e.key === 'Escape') close();
+      });
+
+      // Google's own embed endpoint. Building it from the link's query keeps
+      // the pin on whatever address the link already pointed at.
+      function mapEmbed(href) {
+        var q = '';
+        try {
+          var u = new URL(href, location.href);
+          q = u.searchParams.get('q') || u.searchParams.get('query') || '';
+          if (!q) {
+            var m = u.pathname.match(/\/place\/([^\/]+)/);
+            if (m) q = decodeURIComponent(m[1]);
+          }
+        } catch (err) { return null; }
+        if (!q) return null;
+        return 'https://maps.google.com/maps?q=' + encodeURIComponent(q) + '&output=embed';
+      }
+
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('a[href]');
+        if (!a) return;
+        // Let people who deliberately ask for a new tab have one.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+        var href = a.getAttribute('href') || '';
+        var isMap = /(^|\.)google\.[a-z.]+\/maps|maps\.google\./i.test(href);
+        var isWin = /(^|\/\/|\.)winhouse\.org/i.test(href);
+        if (!isMap && !isWin) return;
+
+        var src = isMap ? mapEmbed(href) : href;
+        if (!src) return;                 // unparseable — leave the link alone
+
+        e.preventDefault();
+        opener = a;
+        open(src, isMap ? 'Rohit Group Office — map' : 'WIN House Edmonton', href);
+      });
+    })();
+    </script>
+    <?php
+}, 63);

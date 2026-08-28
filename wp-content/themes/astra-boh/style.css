@@ -6459,3 +6459,111 @@ body.home:not(.boh-past-top) .boh-header__wordmark {
     padding: 6px 12px !important;
   }
 }
+
+/* ── Footer credit mark ──────────────────────────────────────────────── */
+.boh-halfcup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  padding: 3px 9px 3px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(31,26,36,0.12);
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  vertical-align: middle;
+}
+.boh-halfcup:hover {
+  background: rgba(255,255,255,0.75);
+  border-color: rgba(31,26,36,0.22);
+  transform: translateY(-1px);
+}
+.boh-halfcup:focus-visible {
+  outline: 2px solid var(--boh-magenta);
+  outline-offset: 2px;
+}
+.boh-halfcup__mark { display: block; flex: 0 0 auto; }
+.boh-halfcup__label { text-decoration: underline; text-underline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .boh-halfcup { transition: none; }
+}
+
+/* ── In-page popup for the map and the WIN House site ───────────────── */
+.boh-embed {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(18,14,22,0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 3vw, 40px);
+}
+.boh-embed[hidden] { display: none; }
+.boh-embed__panel {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  width: min(1100px, 100%);
+  height: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 40px 90px -30px rgba(0,0,0,0.55);
+}
+.boh-embed__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px 12px 18px;
+  border-bottom: 1px solid var(--boh-rule, #E5E5E5);
+  flex: 0 0 auto;
+}
+.boh-embed__title {
+  margin: 0;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--boh-ink);
+}
+.boh-embed__actions { display: flex; align-items: center; gap: 14px; }
+.boh-embed__open {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--boh-magenta) !important;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+.boh-embed__open:hover { text-decoration: underline !important; }
+.boh-embed__close {
+  width: 34px; height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--boh-paper-2, #F7F5F0);
+  font-size: 24px;
+  line-height: 1;
+  color: var(--boh-ink);
+  cursor: pointer;
+}
+.boh-embed__close:hover { background: var(--boh-magenta); color: #fff; }
+.boh-embed__body { position: relative; flex: 1 1 auto; min-height: 0; }
+.boh-embed__frame { width: 100%; height: 100%; border: 0; display: block; }
+.boh-embed__spinner {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 30px; height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 3px solid rgba(31,26,36,0.12);
+  border-top-color: var(--boh-magenta);
+  border-radius: 50%;
+  animation: bohSpin .8s linear infinite;
+}
+.boh-embed__spinner[hidden] { display: none; }
+@keyframes bohSpin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) {
+  .boh-embed__panel { height: 100%; border-radius: 12px; }
+  .boh-embed__open { display: none; }   /* the bar gets tight on a phone */
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-embed__spinner { animation: none; }
+}
