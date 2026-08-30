@@ -228,6 +228,18 @@ function boh_content_schema(): array {
 					],
 				],
 				[
+					'key'   => 'agenda.shortcut_open',
+					'label' => 'Shortcut — closed',
+					'type'  => 'text',
+					'help'  => 'The line under the RSVP button that opens the running order.',
+				],
+				[
+					'key'   => 'agenda.shortcut_close',
+					'label' => 'Shortcut — open',
+					'type'  => 'text',
+					'help'  => 'What the same line says once the running order is showing.',
+				],
+				[
 					'key'   => 'agenda.note',
 					'label' => 'Closing note',
 					'type'  => 'text',

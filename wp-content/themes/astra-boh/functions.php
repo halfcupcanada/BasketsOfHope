@@ -170,6 +170,45 @@ add_shortcode('boh_countdown', function ($atts) {
 });
 
 // --- [boh_impact] — donation impact calculator ---------------------------
+// --- [boh_agenda_shortcut] -----------------------------------------------
+// A quiet line under the RSVP button that opens the running order in place.
+// It only exists when the agenda does, and only when JavaScript can actually
+// open anything — without it the agenda is simply on the page, so a link
+// promising to reveal something would be a lie.
+add_shortcode('boh_agenda_shortcut', function () {
+    if (! boh_agenda_is_showing()) {
+        return '';
+    }
+    $open  = boh_content('agenda.shortcut_open', 'See how the night unfolds');
+    $close = boh_content('agenda.shortcut_close', 'Hide the running order');
+    ob_start(); ?>
+    <p class="boh-agenda-shortcut">
+      <button type="button" class="boh-agenda-shortcut__btn"
+              aria-expanded="false" aria-controls="boh-agenda"
+              data-open="<?php echo esc_attr($open); ?>"
+              data-close="<?php echo esc_attr($close); ?>">
+        <span class="boh-agenda-shortcut__label"><?php echo esc_html($open); ?></span>
+        <span class="boh-agenda-shortcut__chev" aria-hidden="true"></span>
+      </button>
+    </p>
+    <?php
+    return (string) ob_get_clean();
+});
+
+/**
+ * Whether the agenda is on the page at all — switched on for everyone, or
+ * being previewed by somebody who can edit it. Both the section and its
+ * shortcut ask this, so the two can never disagree.
+ */
+function boh_agenda_is_showing(): bool
+{
+    if ((string) boh_content('agenda.enabled', '0') === '1') {
+        return true;
+    }
+    return isset($_GET['boh_agenda']) && $_GET['boh_agenda'] === 'preview'
+        && current_user_can('edit_pages');
+}
+
 // --- [boh_agenda] --------------------------------------------------------
 // The running order for this year's evening, under the date and countdown on
 // the home page. A visitor told us in Aug 2026 that the site never said what
@@ -199,9 +238,7 @@ add_shortcode('boh_agenda', function () {
     // judge a running order — in the page, under the countdown, at the width
     // it will actually be read at.
     $live    = (string) boh_content('agenda.enabled', '0') === '1';
-    $preview = ! $live
-        && isset($_GET['boh_agenda']) && $_GET['boh_agenda'] === 'preview'
-        && current_user_can('edit_pages');
+    $preview = ! $live && boh_agenda_is_showing();
     if (! $live && ! $preview) {
         return '';
     }
@@ -2465,10 +2502,56 @@ add_action('wp_footer', function () {
       // The guided tour used to reuse this scroller; keep the same surface.
       window.bohTiles = {
         glideTo: glideTo,
+        recollect: function () { collect(); update(); },
+        glideToElement: function (el) {
+          collect();
+          var i = panels.indexOf(el);
+          if (i < 0) return false;
+          glideTo(i);
+          return true;
+        },
         panelCount: function () { return panels.length; },
         setDuration: function (ms) { DURATION = ms; },
         isAnimating: function () { return animating; }
       };
+    })();
+    </script>
+
+    <script>
+    /* The agenda opens from a line under the RSVP button rather than sitting
+       open below it. Collapsing happens here rather than in the markup: with
+       no JavaScript the section stays on the page, which is the honest
+       fallback — a shortcut that cannot open anything is worse than a
+       section that is simply already open. */
+    (function () {
+      var btn = document.querySelector('.boh-agenda-shortcut__btn');
+      var sec = document.getElementById('boh-agenda');
+      if (!btn || !sec) return;
+
+      var label = btn.querySelector('.boh-agenda-shortcut__label');
+
+      function setOpen(open, move) {
+        sec.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        label.textContent = open ? btn.dataset.close : btn.dataset.open;
+        btn.classList.toggle('is-open', open);
+
+        // The tile scroller counts the panels it can see. Opening or closing a
+        // whole screen's worth of page changes that list, so it has to be told
+        // before anything tries to scroll.
+        if (window.bohTiles && window.bohTiles.recollect) window.bohTiles.recollect();
+        if (!move) return;
+
+        var target = open ? sec : btn.closest('.boh-when-band') || btn;
+        if (window.bohTiles && window.bohTiles.glideToElement
+            && window.bohTiles.glideToElement(target)) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      setOpen(false, false);
+      btn.addEventListener('click', function () {
+        setOpen(sec.hidden, true);
+      });
     })();
     </script>
     <?php

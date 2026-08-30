@@ -7172,3 +7172,49 @@ body.boh-past-top .boh-header__wordmark {
   font-size: 12px;
   letter-spacing: 0.02em;
 }
+
+/* The shortcut into the agenda, under the RSVP button. Deliberately quieter
+   than that button — it opens a section rather than committing anybody to
+   anything. */
+.boh-agenda-shortcut { margin: 18px 0 0; text-align: center; }
+html:not(.boh-js) .boh-agenda-shortcut { display: none; }
+.boh-agenda-shortcut__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 4px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--boh-ink-soft);
+  transition: color .2s ease;
+}
+.boh-agenda-shortcut__btn:hover { color: var(--boh-magenta); }
+.boh-agenda-shortcut__btn:focus-visible {
+  outline: 3px solid var(--boh-magenta);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+/* Chevron drawn in CSS; it points down to open and up once open. */
+.boh-agenda-shortcut__chev {
+  width: 8px; height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform .2s ease;
+}
+.boh-agenda-shortcut__btn.is-open .boh-agenda-shortcut__chev {
+  transform: translateY(1px) rotate(-135deg);
+}
+/* The home page gives every panel `display: flex`, which is a class selector
+   and so outranks the browser's own [hidden] rule — without this the closed
+   agenda would stay on the page. */
+.boh-agenda-band[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .boh-agenda-shortcut__btn,
+  .boh-agenda-shortcut__chev { transition: none; }
+}
