@@ -170,6 +170,100 @@ add_shortcode('boh_countdown', function ($atts) {
 });
 
 // --- [boh_impact] — donation impact calculator ---------------------------
+// --- [boh_agenda] --------------------------------------------------------
+// The running order for this year's evening, under the date and countdown on
+// the home page. A visitor told us in Aug 2026 that the site never said what
+// actually happens on the night — this is the answer to that.
+//
+// Every value is read before the on/off switch is examined, deliberately:
+// boh_content() records what the theme ships the first time it is asked, and
+// returning early would leave the admin fields empty on a site where the
+// section has never been switched on.
+add_shortcode('boh_agenda', function () {
+    $eyebrow = boh_content('agenda.eyebrow', 'The evening');
+    $heading = boh_content('agenda.heading', 'How the night unfolds');
+    $lede    = boh_content('agenda.lede', '<p>A short evening, and every part of it ends with a basket in somebody\'s hands.</p>');
+    $note    = boh_content('agenda.note', 'Times are approximate. Come when you can — the doors stay open all evening.');
+    $items   = boh_content('agenda.items', [
+        ['6:00 PM', 'Doors open',        'Arrive, find your name badge and meet the team over a drink.', '', ''],
+        ['6:30 PM', 'Welcome',           "A short welcome, and the story behind this year's baskets.", '', ''],
+        ['7:00 PM', 'Dinner is served',  'Dinner together, with the baskets waiting at the side of the room.', '', ''],
+        ['7:45 PM', 'Our partner speaks', 'What a basket means to the families the shelter supports.', '', ''],
+        ['8:15 PM', '50/50 draw',        'The winning ticket is drawn live. Tickets are on sale all evening.', '', ''],
+        ['8:30 PM', 'Fill the baskets',  'Everyone builds a basket together, delivered the following week.', '', ''],
+        ['9:00 PM', 'Goodnight',         '', '', ''],
+    ]);
+
+    // Off is off for visitors. Anyone who can edit the site can still see the
+    // draft in place with ?boh_agenda=preview, which is the only honest way to
+    // judge a running order — in the page, under the countdown, at the width
+    // it will actually be read at.
+    $live    = (string) boh_content('agenda.enabled', '0') === '1';
+    $preview = ! $live
+        && isset($_GET['boh_agenda']) && $_GET['boh_agenda'] === 'preview'
+        && current_user_can('edit_pages');
+    if (! $live && ! $preview) {
+        return '';
+    }
+    $items = array_values(array_filter((array) $items, function ($r) {
+        return trim(implode('', array_map('strval', (array) $r))) !== '';
+    }));
+    if (!$items) {
+        return '';
+    }
+
+    ob_start(); ?>
+    <section class="wp-block-group alignfull boh-agenda-band<?php echo $preview ? ' boh-agenda-band--preview' : ''; ?>" id="boh-agenda">
+      <div class="boh-agenda">
+        <?php if ($preview) : ?>
+          <p class="boh-agenda__preview">Preview — this section is switched off, so nobody else can see it.</p>
+        <?php endif; ?>
+        <?php if ($eyebrow) : ?>
+          <p class="boh-agenda__eyebrow"><span class="boh-eyebrow"><?php echo esc_html($eyebrow); ?></span></p>
+        <?php endif; ?>
+        <?php if ($heading) : ?>
+          <h2 class="boh-agenda__heading"><?php echo esc_html($heading); ?></h2>
+        <?php endif; ?>
+        <?php if ($lede) : ?>
+          <div class="boh-agenda__lede"><?php echo wp_kses_post(wpautop($lede)); ?></div>
+        <?php endif; ?>
+
+        <ol class="boh-agenda__list">
+          <?php foreach ($items as $row) :
+              $row   = array_pad((array) $row, 5, '');
+              $time  = trim((string) $row[0]);
+              $title = trim((string) $row[1]);
+              $note_ = trim((string) $row[2]);
+              $who   = trim((string) $row[3]);
+              $role  = trim((string) $row[4]);
+          ?>
+            <li class="boh-agenda__item">
+              <p class="boh-agenda__time"><?php echo esc_html($time); ?></p>
+              <div class="boh-agenda__body">
+                <h3 class="boh-agenda__title"><?php echo esc_html($title); ?></h3>
+                <?php if ($note_) : ?>
+                  <p class="boh-agenda__detail"><?php echo esc_html($note_); ?></p>
+                <?php endif; ?>
+                <?php if ($who || $role) : ?>
+                  <p class="boh-agenda__who">
+                    <?php if ($who) : ?><span class="boh-agenda__name"><?php echo esc_html($who); ?></span><?php endif; ?>
+                    <?php if ($role) : ?><span class="boh-agenda__role"><?php echo esc_html($role); ?></span><?php endif; ?>
+                  </p>
+                <?php endif; ?>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        </ol>
+
+        <?php if ($note) : ?>
+          <p class="boh-agenda__note"><?php echo esc_html($note); ?></p>
+        <?php endif; ?>
+      </div>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+});
+
 add_shortcode('boh_impact', function ($atts) {
     $a = shortcode_atts([
         'cta_url'  => '/donate',

@@ -187,6 +187,55 @@ function boh_content_schema(): array {
 			],
 		],
 
+		'agenda' => [
+			'title'  => 'Event agenda',
+			'help'   => "This year's running order, shown on the home page directly under the date and countdown. Somebody who came to the site last year said it never told them what actually happens on the night — this is that answer. The section stays hidden until you switch it on, so you can draft the evening here first and publish it when the times are settled.",
+			'fields' => [
+				[
+					'key'      => 'agenda.enabled',
+					'label'    => 'Show the agenda',
+					'type'     => 'toggle',
+					'on_label' => 'Show this section on the home page',
+					'help'     => 'Off until the running order is confirmed. Nothing below appears on the site while this is unticked.',
+				],
+				[
+					'key'   => 'agenda.eyebrow',
+					'label' => 'Small label above the heading',
+					'type'  => 'text',
+				],
+				[
+					'key'   => 'agenda.heading',
+					'label' => 'Heading',
+					'type'  => 'text',
+				],
+				[
+					'key'   => 'agenda.lede',
+					'label' => 'Intro',
+					'type'  => 'richtext',
+					'help'  => 'One or two sentences under the heading. Links are allowed.',
+				],
+				[
+					'key'   => 'agenda.items',
+					'label' => 'The running order',
+					'help'  => 'One row per moment in the evening, in order. Leave the speaker columns empty for anything that has no host — the line simply will not appear. Rows can be reordered with the arrows.',
+					'type'  => 'repeater',
+					'cols'  => [
+						[ 'label' => 'Time',         'type' => 'text',     'width' => '11%' ],
+						[ 'label' => 'What happens', 'type' => 'text',     'width' => '21%' ],
+						[ 'label' => 'Details',      'type' => 'textarea', 'width' => '32%' ],
+						[ 'label' => 'Speaker',      'type' => 'text',     'width' => '18%' ],
+						[ 'label' => 'Their role',   'type' => 'text',     'width' => '18%' ],
+					],
+				],
+				[
+					'key'   => 'agenda.note',
+					'label' => 'Closing note',
+					'type'  => 'text',
+					'help'  => 'A small line under the list — the place for "times are approximate".',
+				],
+			],
+		],
+
 		'brand' => [
 			'title'  => 'Brand & images',
 			'help'   => 'The images that are not part of any one page: the logo, the decorative flower artwork used across the sub-pages, and the card shown when a link is shared. Leave a field empty to keep the current image.',
@@ -399,6 +448,8 @@ function boh_content_render_screen(): void {
 				margin:0 0 8px; font-size:11px; color:#646970;
 				display:flex; align-items:center; gap:8px;
 			}
+			.boh-content-admin .boh-switch { display:inline-flex; align-items:center; gap:9px; font-size:14px; }
+			.boh-content-admin .boh-switch input { margin:0; }
 			.boh-content-admin .boh-img-fit { margin:0 0 8px; font-size:11px; }
 			.boh-content-admin .boh-fit-ok { color:#1c7c3f; font-weight:600; }
 			.boh-content-admin .boh-fit-warn { color:#8a6d0b; }
@@ -500,6 +551,21 @@ function boh_content_render_field( array $field, $value ): void {
 				'<input type="url" name="%s" value="%s" placeholder="https://">',
 				esc_attr( $name ),
 				esc_attr( (string) $value )
+			);
+			break;
+
+		case 'toggle':
+			// The hidden input is what makes "off" mean off. An unchecked box
+			// posts nothing at all, and a missing value would fall back to the
+			// shipped default — so switching the section off would silently
+			// switch it back on.
+			printf(
+				'<input type="hidden" name="%s" value="0">'
+				. '<label class="boh-switch"><input type="checkbox" name="%s" value="1" %s><span>%s</span></label>',
+				esc_attr( $name ),
+				esc_attr( $name ),
+				checked( (string) $value, '1', false ),
+				esc_html( $field['on_label'] ?? 'Show this section' )
 			);
 			break;
 
@@ -653,6 +719,9 @@ function boh_content_save( array $fields ): void {
 				break;
 			case 'textarea':
 				$stored[ $key ] = sanitize_textarea_field( $val );
+				break;
+			case 'toggle':
+				$stored[ $key ] = $val === '1' ? '1' : '0';
 				break;
 			default:
 				$stored[ $key ] = sanitize_text_field( $val );
