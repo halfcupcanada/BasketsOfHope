@@ -6822,17 +6822,23 @@ body.boh-past-top .boh-header__wordmark {
 /* Short viewports: the badge earns its place only if the hero copy still
    clears the scroll cue beneath it, so it shrinks rather than crowding. */
 .wp-block-cover.boh-hero .boh-hero-headrow:has(.boh-hero-mark--auto) {
-  gap: clamp(10px, 2vh, 22px);
+  gap: clamp(18px, 3.4vh, 36px);
 }
 /* On the shortest viewport the badge still appears on, the last line of the
-   lede met the scroll cue. The space between the headline and the lede is the
-   least load-bearing gap in the block, so it gives way rather than the mark. */
+   lede met the scroll cue. There is 113px of empty hero above the mark on such
+   a screen and none to spare below it, so the top padding gives way first —
+   the block moves up, and the copy clears the cue with room to spare. The
+   header is 61px tall, so 76px still clears it. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .wp-block-cover.boh-hero { padding-top: 76px !important; }
+}
+/* And the space between the headline and the lede tightens a little too. */
 @media (min-height: 660px) and (max-height: 700px) {
   /* Matching the specificity of the rules that set this margin elsewhere in
      the file — two of them, both !important, both a class deeper than a
      shorter selector here would be. */
   .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__lede,
-  .wp-block-cover.boh-hero .boh-hero-block .boh-hero-copy__lede { margin-top: 12px !important; }
+  .wp-block-cover.boh-hero .boh-hero-block .boh-hero-copy__lede { margin-top: 8px !important; }
 }
 
 /* ── Gallery section headings + separators ───────────────────────────
