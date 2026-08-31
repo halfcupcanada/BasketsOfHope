@@ -32,7 +32,15 @@ final class InternalIssuer implements TicketIssuer
      */
     public function isLicensed(): bool
     {
-        return trim($this->approvalReference) !== '';
+        $ref = trim($this->approvalReference);
+        if (strlen($ref) < 4) {
+            return false;
+        }
+        // A single repeated character - "a", "1111" - is somebody getting past
+        // a required field, not a regulator's approval. This is the last thing
+        // standing between a placeholder and real tickets sold under a licence
+        // number that does not exist, so it does not accept one.
+        return count(array_unique(str_split(preg_replace('/\s+/', '', $ref)))) > 1;
     }
 
     public function issue(int $raffleId, int $orderId, int $quantity): array

@@ -87,20 +87,72 @@ final class Menu
     public static function complianceGaps(array $r): array
     {
         $gaps = [];
-        if (trim((string) $r['licensee']) === '')        { $gaps[] = 'Legal licensee not set'; }
-        if (trim((string) $r['licence_number']) === '')  { $gaps[] = 'AGLC licence number not set'; }
-        if (trim((string) $r['rules_url']) === '')       { $gaps[] = 'Public rules URL not set'; }
+
+        // Emptiness was the only thing checked here, and every one of these
+        // fields passed with a placeholder: licensee "11", licence "11",
+        // approval reference "a", rules URL google.com/pp. The gate reported
+        // "ready to go live" on data that would have put a fabricated licence
+        // number on real tickets. A field that is filled in is not the same as
+        // a field that is filled in correctly.
+        $looksReal = static function (string $v, int $min): bool {
+            $v = trim($v);
+            if (strlen($v) < $min) { return false; }
+            // "11", "aaa", "----": one repeated character is somebody typing
+            // to get past a required field.
+            return count(array_unique(str_split(preg_replace('/\s+/', '', $v)))) > 1;
+        };
+
+        $licensee = trim((string) $r['licensee']);
+        if ($licensee === '') {
+            $gaps[] = 'Legal licensee not set';
+        } elseif (!$looksReal($licensee, 3) || ctype_digit($licensee)) {
+            $gaps[] = 'Legal licensee looks like a placeholder (' . $licensee . ')';
+        }
+
+        $licence = trim((string) $r['licence_number']);
+        if ($licence === '') {
+            $gaps[] = 'AGLC licence number not set';
+        } elseif (!$looksReal($licence, 4)) {
+            $gaps[] = 'AGLC licence number looks like a placeholder (' . $licence . ')';
+        }
+
+        $rules = trim((string) $r['rules_url']);
+        $host  = $rules === '' ? '' : strtolower((string) wp_parse_url($rules, PHP_URL_HOST));
+        $bogus = ['google.com', 'www.google.com', 'example.com', 'www.example.com',
+                  'example.org', 'localhost', 'test.com'];
+        if ($rules === '') {
+            $gaps[] = 'Public rules URL not set';
+        } elseif (wp_parse_url($rules, PHP_URL_SCHEME) !== 'https') {
+            $gaps[] = 'Public rules URL is not https';
+        } elseif (in_array($host, $bogus, true)) {
+            $gaps[] = 'Public rules URL points at ' . $host . ', not the rules';
+        }
         if (empty($r['sales_open_utc']) || empty($r['sales_close_utc'])) { $gaps[] = 'Sales window incomplete'; }
         if (empty($r['draw_utc']))                       { $gaps[] = 'Draw date/time not set'; }
         if ((int) $r['inventory_total'] <= 0)            { $gaps[] = 'Licensed ticket inventory not set'; }
         // Issuance is in-house (Option B), so the gate does not ask for a
         // third-party provider. It asks for the regulator's written approval
         // of THIS system, recorded before real money can be taken.
-        if (trim((string) $r['ers_provider']) === '') {
+        $approval = trim((string) $r['ers_provider']);
+        if ($approval === '') {
             $gaps[] = 'AGLC approval reference for this raffle system not recorded';
+        } elseif (!$looksReal($approval, 4)) {
+            $gaps[] = 'AGLC approval reference looks like a placeholder (' . $approval . ')';
         }
-        if (($r['stripe_mode'] ?? 'test') === 'live' && !defined('BOH_STRIPE_LIVE_SK')) {
-            $gaps[] = 'Live Stripe secret key not present in wp-config.php';
+
+        if (($r['stripe_mode'] ?? 'test') === 'live') {
+            if (!defined('BOH_STRIPE_LIVE_SK') || constant('BOH_STRIPE_LIVE_SK') === '') {
+                $gaps[] = 'Live Stripe secret key not present in wp-config.php';
+            }
+            if (!defined('BOH_STRIPE_LIVE_PK') || constant('BOH_STRIPE_LIVE_PK') === '') {
+                $gaps[] = 'Live Stripe publishable key not present in wp-config.php';
+            }
+            // Without this the webhook cannot be verified, and the success
+            // redirect is the only thing left saying a payment happened -
+            // which is exactly what must never be trusted.
+            if (!defined('BOH_5050_STRIPE_WEBHOOK_SECRET') || constant('BOH_5050_STRIPE_WEBHOOK_SECRET') === '') {
+                $gaps[] = 'Live Stripe webhook signing secret not present in wp-config.php';
+            }
         }
         global $wpdb;
         $pkgs = (int) $wpdb->get_var($wpdb->prepare(
