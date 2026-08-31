@@ -53,6 +53,14 @@ function boh_email_wrap( array $args ): array {
 		return $args;
 	}
 
+	// A subject line is plain text, not markup. The site title is stored with
+	// its apostrophe encoded, so anything built from it — Contact Form 7's
+	// [_site_title] among them — arrives in the inbox reading "Rohit&#039;s".
+	// Decoding here fixes it wherever it came from.
+	if ( isset( $args['subject'] ) ) {
+		$args['subject'] = html_entity_decode( (string) $args['subject'], ENT_QUOTES, 'UTF-8' );
+	}
+
 	$GLOBALS['boh_email_alt_body'] = $is_html
 		? trim( wp_strip_all_tags( $message ) )
 		: $message;
