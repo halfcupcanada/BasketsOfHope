@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: BoH Gallery Uploader
- * Description: Adds Media → Gallery Upload — a simple wp-admin page for
+ * Description: Adds Media → Gallery Upload - a simple wp-admin page for
  *              uploading photos/videos directly into the per-year
  *              gallery folders that the [boh_gallery] shortcode reads.
  *              Bypasses the default Media Library so files land in
@@ -38,7 +38,7 @@ function boh_gallery_uploader_render() {
 
 	// Handle POSTs.
 	// A batch larger than post_max_size makes PHP discard the whole request
-	// body, so $_POST and $_FILES arrive empty — including the nonce, which
+	// body, so $_POST and $_FILES arrive empty - including the nonce, which
 	// would otherwise fail as a misleading "Are you sure you want to do
 	// this?" screen. Detect that case first and say what actually happened.
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST'
@@ -47,7 +47,7 @@ function boh_gallery_uploader_render() {
 		$notices[] = [
 			'error',
 			sprintf(
-				'That batch was too large to accept in one request (server limit: %s per upload, %s per file). Nothing was saved — try uploading fewer files at a time.',
+				'That batch was too large to accept in one request (server limit: %s per upload, %s per file). Nothing was saved - try uploading fewer files at a time.',
 				esc_html( ini_get( 'post_max_size' ) ),
 				esc_html( ini_get( 'upload_max_filesize' ) )
 			),
@@ -231,7 +231,7 @@ function boh_gallery_uploader_render() {
 		</div>
 
 		<div class="card">
-			<h2><?php echo (int) $sel_year; ?> — <?php echo count( $existing ); ?> file(s)</h2>
+			<h2><?php echo (int) $sel_year; ?> - <?php echo count( $existing ); ?> file(s)</h2>
 			<?php if ( empty( $existing ) ) : ?>
 				<p style="color:#777">No files yet. Upload above.</p>
 			<?php else : ?>

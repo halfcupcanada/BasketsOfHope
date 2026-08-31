@@ -10,7 +10,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'BOH_SMTP_HOST' ) ) {
-	return; // not configured — let WP's default mailer run (or the dev mail logger).
+	return; // not configured - let WP's default mailer run (or the dev mail logger).
 }
 
 add_action( 'phpmailer_init', function ( $mailer ) {

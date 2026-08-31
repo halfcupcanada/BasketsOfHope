@@ -52,10 +52,10 @@ function boh_invitations_maybe_install() {
 	// Seed default templates
 	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
 		update_option( BOH_INV_OPT_TEMPLATES, [
-			'invitation_subject' => "You're invited — Rohit's Baskets of Hope 2026",
-			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 — an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 6:00 PM\nWhere: Rohit Group Office, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
-			'reminder_subject'   => "Save your seat — Baskets of Hope 2026",
-			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 6:00 PM. We haven't heard back from you yet — would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
+			'invitation_subject' => "You're invited - Rohit's Baskets of Hope 2026",
+			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 6:00 PM\nWhere: Rohit Group Office, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
+			'reminder_subject'   => "Save your seat - Baskets of Hope 2026",
+			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 6:00 PM. We haven't heard back from you yet - would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
 		] );
 	}
 	if ( ! get_option( BOH_INV_OPT_LIMITS ) ) {
@@ -147,7 +147,7 @@ function boh_invitations_render_email( $tpl_key, $invitee ) {
 	$subject   = $templates[ $tpl_key . '_subject' ] ?? '';
 	$body      = $templates[ $tpl_key . '_body' ] ?? '';
 	// URL params are prefixed with `boh_` so they don't collide with
-	// WordPress's reserved query vars — especially `name`, which WP
+	// WordPress's reserved query vars - especially `name`, which WP
 	// treats as a post-slug lookup and returns 404 when no match.
 	$vars = [
 		'{{name}}'       => $invitee->name ?: 'friend',
@@ -234,7 +234,7 @@ function boh_invitations_process_queue() {
 	// This "auto-remind after 7 days" behavior triggers only when the admin has enabled
 	// automatic reminders by setting invitees' reminder_sent_at to NULL AND clicking "Queue reminders".
 	// For simplicity in v1, reminders are only sent when manually queued via the admin action
-	// (see bulk action handler). So the cron won't auto-remind — leave this as-is.
+	// (see bulk action handler). So the cron won't auto-remind - leave this as-is.
 }
 
 // (List view + admin actions continue in a separate include for readability.)
@@ -298,7 +298,7 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
  * Guest-list export.
  *
  * "How many people are actually coming" could not be answered from the admin
- * screens: party size is stored as the form's own label ("1 — Just me", "2",
+ * screens: party size is stored as the form's own label ("1 - Just me", "2",
  * "10+"), so it needed interpreting, and walk-up RSVPs were not in the table
  * at all until the handler above started recording them.
  */
@@ -307,11 +307,11 @@ function boh_invitations_party_count( string $party ): int {
 	if ( $party === '' ) {
 		// Someone who replied but left the party field blank is still one
 		// person attending. Counting zero would understate the room. New
-		// RSVPs always carry a value — the field defaults to "1 — Just me" —
+		// RSVPs always carry a value - the field defaults to "1 - Just me" -
 		// so this only covers responses taken before that change.
 		return 1;
 	}
-	// Labels look like "1 — Just me", "4", or "10+"; the leading number is
+	// Labels look like "1 - Just me", "4", or "10+"; the leading number is
 	// the guest count in every case.
 	if ( preg_match( '/(\d+)/', $party, $m ) ) {
 		return max( 0, (int) $m[1] );

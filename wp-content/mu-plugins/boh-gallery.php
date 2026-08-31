@@ -2,10 +2,10 @@
 /**
  * Plugin Name: BoH gallery folder scanner
  * Description: Populates the [boh_gallery] shortcode from a filesystem
- *              layout — one folder per event year under
+ *              layout - one folder per event year under
  *              wp-content/uploads/gallery/YYYY/. Any .jpg/.jpeg/.png/
  *              .webp/.gif becomes a photo; .mp4/.webm becomes a video.
- *              Filename ordering (natural sort) drives display order —
+ *              Filename ordering (natural sort) drives display order -
  *              prefix `01_`, `02_` if you want a specific sequence.
  *              An optional companion `NAME.txt` next to a file becomes
  *              that item's caption.
@@ -57,7 +57,7 @@ add_filter( 'boh_gallery_items', function ( $items ) {
 			// Skip WordPress's own size variants. Registering these photos in
 			// the media library made WP write thumbnail/medium copies next to
 			// the originals, and this scan treated every one as another
-			// gallery photo — 138 tiles became 506. A name ending -WxH only
+			// gallery photo - 138 tiles became 506. A name ending -WxH only
 			// counts as a variant when the un-suffixed original sits beside
 			// it, so a real photo that happens to be named that way survives.
 			// -WxH is a thumbnail; -scaled is WordPress's downsized copy of a
@@ -133,7 +133,7 @@ function boh_gallery_read_caption( $dir, $file ) {
 }
 
 /**
- * Clear the gallery cache — hit /?boh_gallery_flush=1 while logged in
+ * Clear the gallery cache - hit /?boh_gallery_flush=1 while logged in
  * as an admin to refresh after adding photos.
  */
 add_action( 'template_redirect', function () {

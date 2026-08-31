@@ -1,6 +1,6 @@
 <?php
 /**
- * Generic fallback template — used when no more specific template exists
+ * Generic fallback template - used when no more specific template exists
  * (archives, search results, the blog index).
  *
  * @package BoH

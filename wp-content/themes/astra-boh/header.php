@@ -1,6 +1,6 @@
 <?php
 /**
- * Header template — minimal, transparent over the hero, becomes
+ * Header template - minimal, transparent over the hero, becomes
  * fixed/white-blur on scroll. Layout is handled entirely by CSS.
  *
  * @package BoH
@@ -24,14 +24,14 @@
       <?php
       // The mark and the name sit side by side. On the home page the mark is
       // hidden until the visitor scrolls off the hero, because the hero
-      // already carries a large logo — two of them at once read as a
+      // already carries a large logo - two of them at once read as a
       // duplicate rather than as branding.
-      $brand_label = sprintf( '%s — home', get_bloginfo( 'name' ) );
+      $brand_label = sprintf( '%s - home', get_bloginfo( 'name' ) );
       ?>
       <a class="boh-header__title" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $brand_label ); ?>">
         <img class="boh-header__logo" src="<?php echo esc_url( function_exists( 'boh_logo_url' ) ? boh_logo_url( 'icon' ) : home_url( '/wp-content/uploads/2026/06/boh-logo-150x150.png' ) ); ?>" alt="" aria-hidden="true" width="80" height="80" decoding="async">
         <?php
-        // Only the last word carries the accent colour — "Rohit's Baskets of
+        // Only the last word carries the accent colour - "Rohit's Baskets of
         // Hope" reads ink with "Hope" in magenta. Split on the final word
         // rather than the literal string, so renaming the site keeps working.
         $brand_name = get_bloginfo( 'name' );

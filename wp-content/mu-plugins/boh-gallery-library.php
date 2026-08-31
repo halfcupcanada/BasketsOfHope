@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: BoH gallery — media library backed
+ * Plugin Name: BoH gallery - media library backed
  * Description: Moves the gallery from "scan a folder" to "choose from the
  *              media library". Photos are grouped by event year using a
  *              taxonomy, which is how WordPress does folders, and the gallery
- *              stores attachment IDs rather than file paths — so one library
+ *              stores attachment IDs rather than file paths - so one library
  *              entry can appear in the gallery and anywhere else on the site
  *              without a second copy of the file.
  *
@@ -114,7 +114,7 @@ function boh_gallery_save_selection( int $year, array $ids ): void {
 		$sel[ $year ] = $ids;
 	} else {
 		// An empty year means "not curated", which falls back to the folder
-		// scan — rather than "show nothing", which would silently empty a
+		// scan - rather than "show nothing", which would silently empty a
 		// whole section of the public page.
 		unset( $sel[ $year ] );
 	}
@@ -132,8 +132,8 @@ function boh_gallery_save_selection( int $year, array $ids ): void {
  * Build the item shape the gallery templates expect.
  *
  * Prefers the WebP copies built for the folder-based gallery when the file
- * still lives there — they are far smaller than anything WordPress generates
- * — and falls back to the attachment's own registered sizes otherwise, so an
+ * still lives there - they are far smaller than anything WordPress generates
+ * - and falls back to the attachment's own registered sizes otherwise, so an
  * image chosen from anywhere in the library works.
  */
 function boh_gallery_item_from_attachment( int $id ): ?array {
@@ -259,7 +259,7 @@ function boh_gallery_select_screen(): void {
 		boh_gallery_save_selection( $year, $ids );
 		$notice = $ids
 			? sprintf( '%d image%s now shown for %d.', count( $ids ), count( $ids ) === 1 ? '' : 's', $year )
-			: sprintf( 'Selection cleared for %d — that year falls back to whatever is in its upload folder.', $year );
+			: sprintf( 'Selection cleared for %d - that year falls back to whatever is in its upload folder.', $year );
 	}
 
 	$selection = boh_gallery_selection();
@@ -271,7 +271,7 @@ function boh_gallery_select_screen(): void {
 	}
 	?>
 	<div class="wrap">
-		<h1>Gallery Images — <?php echo (int) $year; ?></h1>
+		<h1>Gallery Images - <?php echo (int) $year; ?></h1>
 		<p class="description" style="max-width:820px">
 			Choose which photographs appear in the <a href="<?php echo esc_url( home_url( '/gallery/' ) ); ?>" target="_blank">public gallery</a> for this year.
 			Images come from the media library, so the same file can be used here and elsewhere on the site without a second copy.
@@ -292,7 +292,7 @@ function boh_gallery_select_screen(): void {
 		<?php if ( ! $current && $scanned ) : ?>
 			<div class="notice notice-info" style="margin:16px 0"><p>
 				<?php printf(
-					'%d photo%s are currently shown for %d from its upload folder. Choose images below to curate the year instead — until you do, nothing changes.',
+					'%d photo%s are currently shown for %d from its upload folder. Choose images below to curate the year instead - until you do, nothing changes.',
 					(int) $scanned, $scanned === 1 ? '' : 's', (int) $year
 				); ?>
 			</p></div>
@@ -307,7 +307,7 @@ function boh_gallery_select_screen(): void {
 				<button type="button" class="button button-primary" id="boh-pick">Choose from media library</button>
 				<button type="button" class="button" id="boh-upload">Upload new images</button>
 				<button type="button" class="button" id="boh-clear" style="color:#b32d2e">Remove all</button>
-				<span class="description" style="margin-left:10px">Drag to reorder. Click ✕ on an image to remove it from the gallery — it stays in the media library.</span>
+				<span class="description" style="margin-left:10px">Drag to reorder. Click ✕ on an image to remove it from the gallery - it stays in the media library.</span>
 			</p>
 
 			<div id="boh-grid" class="boh-pick-grid"></div>
@@ -464,7 +464,7 @@ function boh_gallery_select_screen(): void {
 
 /**
  * The media modal only offers "All dates", so the event-year grouping was
- * invisible exactly where images get chosen — leaving the upload date as the
+ * invisible exactly where images get chosen - leaving the upload date as the
  * only way to find last year's photos. This adds an "All event years"
  * dropdown beside it, in both the picker and the grid view.
  *
@@ -544,7 +544,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp.media.view.AttachmentsBrowser = Browser.extend( {
 		createToolbar: function () {
 			Browser.prototype.createToolbar.call( this );
-			// Only where a filter bar exists at all — not, for example, in the
+			// Only where a filter bar exists at all - not, for example, in the
 			// single-image replace flow.
 			if ( ! this.toolbar || ! this.options.filters ) { return; }
 			this.toolbar.set( 'bohYearFilter', new wp.media.view.AttachmentFilters.BohYear( {

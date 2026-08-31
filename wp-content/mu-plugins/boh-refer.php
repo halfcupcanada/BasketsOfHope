@@ -9,7 +9,7 @@
  *
  *              This is a public endpoint that sends email, so it is treated
  *              as one: nonce, honeypot, per-IP throttles, a hard cap on
- *              recipients, and a fixed template — the sender supplies names
+ *              recipients, and a fixed template - the sender supplies names
  *              and an optional short note, never the body of the message.
  */
 
@@ -50,13 +50,13 @@ function boh_refer_message( string $from_name, string $note ): array {
 	$rsvp  = home_url( '/rsvp/' );
 
 	$subject = $from_name
-		? sprintf( '%s thought you would like this — Rohit\'s Baskets of Hope', $from_name )
-		: 'An invitation — Rohit\'s Baskets of Hope';
+		? sprintf( '%s thought you would like this - Rohit\'s Baskets of Hope', $from_name )
+		: 'An invitation - Rohit\'s Baskets of Hope';
 
 	$lines = [];
 	$lines[] = $from_name
-		? sprintf( 'Hi — %s has just RSVPed for Rohit\'s Baskets of Hope and thought you might like to come along.', $from_name )
-		: 'Hi — someone thought you might like to come along to Rohit\'s Baskets of Hope.';
+		? sprintf( 'Hi - %s has just RSVPed for Rohit\'s Baskets of Hope and thought you might like to come along.', $from_name )
+		: 'Hi - someone thought you might like to come along to Rohit\'s Baskets of Hope.';
 	$lines[] = '';
 	if ( $note !== '' ) {
 		$lines[] = '"' . $note . '"';
@@ -161,7 +161,7 @@ function boh_refer_handle( WP_REST_Request $req ) {
 		$referrer = $from_name && $from_email ? $from_name . ' <' . $from_email . '>' : ( $from_email ?: $from_name );
 		$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE email = %s", $to ) );
 		if ( $exists ) {
-			// Already known — record who referred them if nobody has yet,
+			// Already known - record who referred them if nobody has yet,
 			// but never overwrite an existing relationship or their reply.
 			$wpdb->query( $wpdb->prepare(
 				"UPDATE {$table} SET referred_by = %s, updated_at = %s WHERE id = %d AND referred_by = ''",
@@ -219,7 +219,7 @@ add_action( 'wp_footer', function () {
 	        </div>
 	      </details>
 
-	      <?php // Honeypot — hidden from people, tempting to bots. ?>
+	      <?php // Honeypot - hidden from people, tempting to bots. ?>
 	      <div class="boh-refer__hp" aria-hidden="true">
 	        <label>Website<input type="text" tabindex="-1" autocomplete="off" id="boh-refer-hp"></label>
 	      </div>
@@ -261,13 +261,13 @@ add_action( 'wp_footer', function () {
 	  function refreshDraft() {
 	    var r = referrer();
 	    var s = r.name
-	      ? r.name + ' thought you would like this — Rohit\'s Baskets of Hope'
+	      ? r.name + ' thought you would like this - Rohit\'s Baskets of Hope'
 	      : baseSubject;
 	    subjectEl.textContent = s;
 	    var b = baseBody;
 	    if (r.name) {
-	      b = b.replace('Hi — someone thought you might like to come along to Rohit\'s Baskets of Hope.',
-	                    'Hi — ' + r.name + ' has just RSVPed for Rohit\'s Baskets of Hope and thought you might like to come along.');
+	      b = b.replace('Hi - someone thought you might like to come along to Rohit\'s Baskets of Hope.',
+	                    'Hi - ' + r.name + ' has just RSVPed for Rohit\'s Baskets of Hope and thought you might like to come along.');
 	    }
 	    var n = note.value.trim();
 	    if (n) {

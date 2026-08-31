@@ -1,6 +1,6 @@
 <?php
 /**
- * Page template — used for all WP Pages (Home, Donate, RSVP, etc.).
+ * Page template - used for all WP Pages (Home, Donate, RSVP, etc.).
  * Renders the page content directly; sections handle their own layout
  * (cover blocks span full-width, content groups self-contain padding).
  *

@@ -47,15 +47,15 @@ function boh_email_wrap( array $args ): array {
 		$is_html = true;
 	}
 
-	// A message that already carries its own document — GiveWP's receipts, for
-	// one — is a finished email. Wrapping it would put a page inside a page.
+	// A message that already carries its own document - GiveWP's receipts, for
+	// one - is a finished email. Wrapping it would put a page inside a page.
 	if ( preg_match( '/<(!doctype|html|body)\b/i', $message ) ) {
 		return $args;
 	}
 
 	// A subject line is plain text, not markup. The site title is stored with
-	// its apostrophe encoded, so anything built from it — Contact Form 7's
-	// [_site_title] among them — arrives in the inbox reading "Rohit&#039;s".
+	// its apostrophe encoded, so anything built from it - Contact Form 7's
+	// [_site_title] among them - arrives in the inbox reading "Rohit&#039;s".
 	// Decoding here fixes it wherever it came from.
 	if ( isset( $args['subject'] ) ) {
 		$args['subject'] = html_entity_decode( (string) $args['subject'], ENT_QUOTES, 'UTF-8' );
@@ -95,7 +95,7 @@ add_action( 'phpmailer_init', function ( $mailer ) {
 
 /**
  * Plain text to HTML: escape it, keep the paragraph breaks the author put in,
- * and make the URLs clickable — a bare "RSVP here: https://…" is the one thing
+ * and make the URLs clickable - a bare "RSVP here: https://…" is the one thing
  * people actually need to tap.
  */
 function boh_email_textify( string $text ): string {
@@ -227,7 +227,7 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
 /* ─────────────────────────────────────────────────────────────────────
    The Emails screen's own tools: a preview of the finished message, and
    a test send. A template can only really be judged as mail that has
-   arrived in a real client — the preview shows the shape, the test send
+   arrived in a real client - the preview shows the shape, the test send
    shows the truth.
    ───────────────────────────────────────────────────────────────────── */
 
@@ -238,7 +238,7 @@ function boh_email_admin_tools(): void {
 	$demo = boh_email_document( boh_email_textify( boh_email_sample_text() ), 'A test from the website' );
 	?>
 	<h2 style="margin:34px 0 6px">Preview</h2>
-	<p class="description" style="margin:0 0 12px">A sample message inside the current header and footer. Save your changes first — this shows what is stored, not what is typed.</p>
+	<p class="description" style="margin:0 0 12px">A sample message inside the current header and footer. Save your changes first - this shows what is stored, not what is typed.</p>
 	<iframe title="Email preview" style="width:100%;max-width:1100px;height:640px;border:1px solid #dcdcde;border-radius:6px;background:#FDF2F8"
 	        srcdoc="<?php echo esc_attr( $demo ); ?>"></iframe>
 

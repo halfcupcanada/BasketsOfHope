@@ -4,7 +4,7 @@
  * Description: Builds small/medium/large copies of every gallery photo so the
  *              /gallery/ grid never ships a camera original. The gallery is a
  *              plain folder scan rather than the media library, so WordPress
- *              generates no sizes for these files at all — without this, a
+ *              generates no sizes for these files at all - without this, a
  *              350px tile was loading a 15MB JPEG.
  *
  *              Derivatives live in  uploads/gallery/<year>/_resized/  and are
@@ -106,7 +106,7 @@ function boh_gallery_build_one( string $abs_path, int $year, bool $force = false
 	}
 
 	// getimagesize reports stored pixels and ignores the EXIF orientation
-	// flag, but a browser honours it — so a phone photo tagged "rotate 90"
+	// flag, but a browser honours it - so a phone photo tagged "rotate 90"
 	// is landscape here and portrait on screen. Swap now, so the recorded
 	// aspect ratio is right even when the derivatives are already built and
 	// the resize loop below is skipped entirely.
@@ -155,7 +155,7 @@ function boh_gallery_build_one( string $abs_path, int $year, bool $force = false
 		}
 		// Only resize when there is something to shrink. Asking WordPress to
 		// "resize" an image to its own width fails with "Could not calculate
-		// resized image dimensions" — for those we just re-encode to WebP,
+		// resized image dimensions" - for those we just re-encode to WebP,
 		// which is still a big saving over a PNG or an unoptimised JPEG.
 		if ( $dims[0] > $target_w ) {
 			$resized = $editor->resize( $target_w, null, false );
@@ -177,7 +177,7 @@ function boh_gallery_build_one( string $abs_path, int $year, bool $force = false
 /**
  * Backfill a whole year (or every year when $year is 0).
  *
- * $limit caps how many originals are processed in one call — this box has
+ * $limit caps how many originals are processed in one call - this box has
  * under 200MB of RAM free and a 6000x4000 JPEG costs ~96MB to decode, so
  * large backfills are meant to be run in batches.
  */
@@ -236,7 +236,7 @@ function boh_gallery_build_derivatives( int $year = 0, int $limit = 0, bool $for
 				$index[ $file ] = $res['dims'];
 			}
 			// Free the decoded bitmap before the next file rather than at the
-			// end of the run — otherwise a long batch walks straight into the
+			// end of the run - otherwise a long batch walks straight into the
 			// memory ceiling.
 			gc_collect_cycles();
 		}

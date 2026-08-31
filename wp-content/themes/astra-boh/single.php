@@ -1,6 +1,6 @@
 <?php
 /**
- * Single post template — used for individual posts (blog, custom post types
+ * Single post template - used for individual posts (blog, custom post types
  * that don't have their own template, etc.).
  *
  * @package BoH

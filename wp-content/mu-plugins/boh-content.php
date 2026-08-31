@@ -33,7 +33,7 @@ function boh_content( string $key, $default = '' ) {
 	}
 
 	// Remember what the theme ships for this key. Without it the admin fields
-	// render empty on a site that has never been edited — the copy is real,
+	// render empty on a site that has never been edited - the copy is real,
 	// but it lives as a fallback in code rather than in the database, so there
 	// is nothing to put in the input. Capturing it here keeps one source of
 	// truth: the value the front end actually used.
@@ -44,7 +44,7 @@ function boh_content( string $key, $default = '' ) {
 	if ( $value === null || $value === '' ) {
 		return $default;
 	}
-	// An empty repeater means "nothing saved", not "show nothing" — a blank
+	// An empty repeater means "nothing saved", not "show nothing" - a blank
 	// list would silently delete a whole section from the page.
 	if ( is_array( $value ) && ! array_filter( $value, 'boh_content_row_has_value' ) ) {
 		return $default;
@@ -71,7 +71,7 @@ const BOH_CONTENT_DEFAULTS_OPTION = 'boh_content_defaults';
  * Record the theme's shipped value for a key, so the admin can pre-fill.
  *
  * Accumulates in memory and writes once on shutdown, and only when something
- * new has appeared — so this costs a write the first time a page renders a
+ * new has appeared - so this costs a write the first time a page renders a
  * given field and nothing thereafter.
  */
 function boh_content_note_default( string $key, $default ): void {
@@ -162,7 +162,7 @@ function boh_content_schema(): array {
 				],
 				[
 					'key'   => 'home.steps',
-					'label' => 'How it works — steps',
+					'label' => 'How it works - steps',
 					'help'  => 'Four steps on the home page. The image is used on both the home and About versions.',
 					'type'  => 'repeater',
 					'cols'  => [
@@ -175,21 +175,21 @@ function boh_content_schema(): array {
 				],
 				[
 					'key'   => 'home.steps_heading',
-					'label' => 'How it works — heading',
+					'label' => 'How it works - heading',
 					'type'  => 'text',
 				],
 				[
 					'key'   => 'home.steps_lede',
-					'label' => 'How it works — intro',
+					'label' => 'How it works - intro',
 					'type'  => 'richtext',
-					'help'  => 'Links are allowed here — use the link button to point at the Donate page.',
+					'help'  => 'Links are allowed here - use the link button to point at the Donate page.',
 				],
 			],
 		],
 
 		'agenda' => [
 			'title'  => 'Event agenda',
-			'help'   => "This year's running order, shown on the home page directly under the date and countdown. Somebody who came to the site last year said it never told them what actually happens on the night — this is that answer. The section stays hidden until you switch it on, so you can draft the evening here first and publish it when the times are settled.",
+			'help'   => "This year's running order, shown on the home page directly under the date and countdown. Somebody who came to the site last year said it never told them what actually happens on the night - this is that answer. The section stays hidden until you switch it on, so you can draft the evening here first and publish it when the times are settled.",
 			'fields' => [
 				[
 					'key'      => 'agenda.enabled',
@@ -217,7 +217,7 @@ function boh_content_schema(): array {
 				[
 					'key'   => 'agenda.items',
 					'label' => 'The running order',
-					'help'  => 'One row per moment in the evening, in order. Leave the speaker columns empty for anything that has no host — the line simply will not appear. Rows can be reordered with the arrows.',
+					'help'  => 'One row per moment in the evening, in order. Leave the speaker columns empty for anything that has no host - the line simply will not appear. Rows can be reordered with the arrows.',
 					'type'  => 'repeater',
 					'cols'  => [
 						[ 'label' => 'Time',         'type' => 'text',     'width' => '11%' ],
@@ -229,13 +229,13 @@ function boh_content_schema(): array {
 				],
 				[
 					'key'   => 'agenda.shortcut_open',
-					'label' => 'Shortcut — closed',
+					'label' => 'Shortcut - closed',
 					'type'  => 'text',
 					'help'  => 'The line under the RSVP button that opens the running order.',
 				],
 				[
 					'key'   => 'agenda.shortcut_close',
-					'label' => 'Shortcut — open',
+					'label' => 'Shortcut - open',
 					'type'  => 'text',
 					'help'  => 'What the same line says once the running order is showing.',
 				],
@@ -243,26 +243,26 @@ function boh_content_schema(): array {
 					'key'   => 'agenda.note',
 					'label' => 'Closing note',
 					'type'  => 'text',
-					'help'  => 'A small line under the list — the place for "times are approximate".',
+					'help'  => 'A small line under the list - the place for "times are approximate".',
 				],
 			],
 		],
 
 		'emails' => [
 			'title'  => 'Emails',
-			'help'   => 'The header and footer wrapped around every message the site sends — RSVP confirmations, invitations, reminders, forwarded invitations. The words in the middle come from the message itself; everything here is the frame around them. Send yourself a test at the bottom of this screen before trusting it to a guest list.',
+			'help'   => 'The header and footer wrapped around every message the site sends - RSVP confirmations, invitations, reminders, forwarded invitations. The words in the middle come from the message itself; everything here is the frame around them. Send yourself a test at the bottom of this screen before trusting it to a guest list.',
 			'fields' => [
 				[
 					'key'   => 'email.preheader',
 					'label' => 'Inbox preview line',
 					'type'  => 'text',
-					'help'  => 'The grey line inboxes show beside the subject. Left empty, the inbox shows the opening words of the message instead — which is usually fine.',
+					'help'  => 'The grey line inboxes show beside the subject. Left empty, the inbox shows the opening words of the message instead - which is usually fine.',
 				],
 				[
 					'key'   => 'email.header',
 					'label' => 'Header',
 					'type'  => 'richtext',
-					'help'  => 'Sits under the logo, above the message. Often best left empty — the logo alone is a clean opening.',
+					'help'  => 'Sits under the logo, above the message. Often best left empty - the logo alone is a clean opening.',
 				],
 				[
 					'key'   => 'email.footer',
@@ -274,7 +274,7 @@ function boh_content_schema(): array {
 					'key'   => 'email.smallprint',
 					'label' => 'Small print',
 					'type'  => 'text',
-					'help'  => 'Outside the card, in grey — why this message arrived.',
+					'help'  => 'Outside the card, in grey - why this message arrived.',
 				],
 			],
 		],
@@ -355,15 +355,15 @@ function boh_content_schema(): array {
 		'donate' => [
 			'title'  => 'Donate',
 			'fields' => [
-				[ 'key' => 'donate.card1_eyebrow', 'label' => 'Card 1 — eyebrow', 'type' => 'text' ],
-				[ 'key' => 'donate.card1_title',   'label' => 'Card 1 — title',   'type' => 'text' ],
-				[ 'key' => 'donate.card1_body',    'label' => 'Card 1 — body',    'type' => 'richtext' ],
-				[ 'key' => 'donate.card1_button',  'label' => 'Card 1 — button',  'type' => 'text' ],
-				[ 'key' => 'donate.card1_url',     'label' => 'Card 1 — button link', 'type' => 'url' ],
-				[ 'key' => 'donate.card2_eyebrow', 'label' => 'Card 2 — eyebrow', 'type' => 'text' ],
-				[ 'key' => 'donate.card2_title',   'label' => 'Card 2 — title',   'type' => 'text' ],
-				[ 'key' => 'donate.card2_body',    'label' => 'Card 2 — body',    'type' => 'richtext' ],
-				[ 'key' => 'donate.card2_button',  'label' => 'Card 2 — button',  'type' => 'text' ],
+				[ 'key' => 'donate.card1_eyebrow', 'label' => 'Card 1 - eyebrow', 'type' => 'text' ],
+				[ 'key' => 'donate.card1_title',   'label' => 'Card 1 - title',   'type' => 'text' ],
+				[ 'key' => 'donate.card1_body',    'label' => 'Card 1 - body',    'type' => 'richtext' ],
+				[ 'key' => 'donate.card1_button',  'label' => 'Card 1 - button',  'type' => 'text' ],
+				[ 'key' => 'donate.card1_url',     'label' => 'Card 1 - button link', 'type' => 'url' ],
+				[ 'key' => 'donate.card2_eyebrow', 'label' => 'Card 2 - eyebrow', 'type' => 'text' ],
+				[ 'key' => 'donate.card2_title',   'label' => 'Card 2 - title',   'type' => 'text' ],
+				[ 'key' => 'donate.card2_body',    'label' => 'Card 2 - body',    'type' => 'richtext' ],
+				[ 'key' => 'donate.card2_button',  'label' => 'Card 2 - button',  'type' => 'text' ],
 			],
 		],
 
@@ -387,15 +387,15 @@ function boh_content_schema(): array {
 			'title'  => 'RSVP & event details',
 			'fields' => [
 				[ 'key' => 'event.when',     'label' => 'When',        'type' => 'text' ],
-				[ 'key' => 'event.when_sub', 'label' => 'When — note',  'type' => 'text' ],
+				[ 'key' => 'event.when_sub', 'label' => 'When - note',  'type' => 'text' ],
 				[ 'key' => 'event.where',    'label' => 'Where',       'type' => 'text' ],
-				[ 'key' => 'event.where_sub','label' => 'Where — note', 'type' => 'text' ],
+				[ 'key' => 'event.where_sub','label' => 'Where - note', 'type' => 'text' ],
 				[ 'key' => 'event.benefits', 'label' => 'Benefits',    'type' => 'text' ],
-				[ 'key' => 'event.benefits_sub', 'label' => 'Benefits — note', 'type' => 'text' ],
+				[ 'key' => 'event.benefits_sub', 'label' => 'Benefits - note', 'type' => 'text' ],
 				[ 'key' => 'event.bring',    'label' => 'Bring',       'type' => 'text' ],
-				[ 'key' => 'event.bring_sub','label' => 'Bring — note', 'type' => 'text' ],
-				[ 'key' => 'rsvp.title',     'label' => 'RSVP form — heading', 'type' => 'text' ],
-				[ 'key' => 'rsvp.intro',     'label' => 'RSVP form — intro',   'type' => 'richtext' ],
+				[ 'key' => 'event.bring_sub','label' => 'Bring - note', 'type' => 'text' ],
+				[ 'key' => 'rsvp.title',     'label' => 'RSVP form - heading', 'type' => 'text' ],
+				[ 'key' => 'rsvp.intro',     'label' => 'RSVP form - intro',   'type' => 'richtext' ],
 			],
 		],
 	];
@@ -460,7 +460,7 @@ function boh_content_render_screen(): void {
 	$stored = is_array( $stored ) ? $stored : [];
 	?>
 	<div class="wrap boh-content-admin">
-		<h1>BoH Content — <?php echo esc_html( $group['title'] ); ?></h1>
+		<h1>BoH Content - <?php echo esc_html( $group['title'] ); ?></h1>
 
 		<?php if ( $saved ) : ?>
 			<div class="notice notice-success is-dismissible"><p>Saved. <a href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank">View the site</a>.</p></div>
@@ -536,7 +536,7 @@ function boh_content_render_screen(): void {
 
 /**
  * The tab strip, shared by every BoH Content screen and by the hero
- * slideshow page — which lives in the same menu and should not look like a
+ * slideshow page - which lives in the same menu and should not look like a
  * different part of the admin.
  *
  * $current is a schema key, or 'hero' for the slideshow screen.
@@ -610,7 +610,7 @@ function boh_content_render_field( array $field, $value ): void {
 		case 'toggle':
 			// The hidden input is what makes "off" mean off. An unchecked box
 			// posts nothing at all, and a missing value would fall back to the
-			// shipped default — so switching the section off would silently
+			// shipped default - so switching the section off would silently
 			// switch it back on.
 			printf(
 				'<input type="hidden" name="%s" value="0">'
@@ -869,10 +869,10 @@ function boh_content_admin_js(): void {
 		});
 
 		/* --- does the chosen image fit the box? ---------------------------
-		   Rather than a bespoke cropper — the one tried here opened blank,
+		   Rather than a bespoke cropper - the one tried here opened blank,
 		   because core's Cropper state expects to be reached from a library
 		   selection and CustomizeImageCropper does not exist outside the
-		   customizer — the control says whether the image matches the shape
+		   customizer - the control says whether the image matches the shape
 		   and links to WordPress's own image editor, which crops reliably. */
 		function bohMarkFit(wrap, w, h) {
 			var note = wrap.querySelector('.boh-img-fit');
@@ -888,7 +888,7 @@ function boh_content_admin_js(): void {
 			}
 			var href = wrap.dataset.editBase && id ? wrap.dataset.editBase.replace('__ID__', id) : '';
 			note.innerHTML = '<span class="boh-fit-warn">' + w + ' x ' + h +
-				' — will be cropped to fit</span>' +
+				' - will be cropped to fit</span>' +
 				(href ? ' <a href="' + href + '" target="_blank" rel="noopener">Crop it</a>' : '');
 		}
 

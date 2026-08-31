@@ -2,7 +2,7 @@
 Theme Name: Baskets of Hope
 Theme URI: https://rohitgroup.com/baskets-of-hope
 Author: Rohit's Baskets of Hope
-Description: Custom theme for Rohit's Baskets of Hope — magenta + yellow + black logo palette, Montserrat, one-page editorial layout. Standalone (no parent), block-editor first.
+Description: Custom theme for Rohit's Baskets of Hope - magenta + yellow + black logo palette, Montserrat, one-page editorial layout. Standalone (no parent), block-editor first.
 Version: 5.00
 Requires at least: 6.0
 Tested up to: 6.7
@@ -16,7 +16,7 @@ Tags: nonprofit, charity, one-page, block-editor, donation, custom-colors, custo
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,700&display=swap');
 
 /* ───────────────────────────────────────────────────────────────────
-   DESIGN TOKENS — pulled from the BoH logo (magenta + yellow + black)
+   DESIGN TOKENS - pulled from the BoH logo (magenta + yellow + black)
    ─────────────────────────────────────────────────────────────────── */
 :root {
   /* Palette */
@@ -27,14 +27,14 @@ Tags: nonprofit, charity, one-page, block-editor, donation, custom-colors, custo
   --boh-ink-mute:   #7A7A7A;   /* tertiary text */
   --boh-rule:       #E5E5E5;   /* hairline */
 
-  /* Magenta — logo's "HOPE" wordmark + bottom arc */
+  /* Magenta - logo's "HOPE" wordmark + bottom arc */
   /* Brand pink #d01482 (per BoH brand guidelines PDF). Deep/soft are
      derived hover + tint shades of the same hue. */
   --boh-magenta:      #d01482;
   --boh-magenta-deep: #a20e63;
   --boh-magenta-soft: #fbe4f0;
 
-  /* Yellow — logo's top arc + basket-weave tick marks */
+  /* Yellow - logo's top arc + basket-weave tick marks */
   /* Brand yellow #f9d135 (per BoH brand guidelines PDF). */
   --boh-yellow:      #f9d135;
   --boh-yellow-deep: #dcb31d;
@@ -51,7 +51,7 @@ Tags: nonprofit, charity, one-page, block-editor, donation, custom-colors, custo
   --boh-moss:       #5C7A4A;   /* trust / verified */
   --boh-rose:       #FF66A8;   /* lighter pink highlight */
 
-  /* Shadows — soft, warm */
+  /* Shadows - soft, warm */
   --boh-shadow-sm:  0 1px 2px rgba(31,26,36,0.04), 0 1px 3px rgba(31,26,36,0.06);
   --boh-shadow-md:  0 4px 6px rgba(31,26,36,0.04), 0 10px 24px rgba(31,26,36,0.08);
   --boh-shadow-lg:  0 12px 32px rgba(107,45,140,0.10), 0 4px 8px rgba(31,26,36,0.06);
@@ -62,7 +62,7 @@ Tags: nonprofit, charity, one-page, block-editor, donation, custom-colors, custo
   --boh-r-lg: 20px;
   --boh-r-xl: 28px;
 
-  /* Type scale — reduced ~30% from the original for a refined, tighter feel */
+  /* Type scale - reduced ~30% from the original for a refined, tighter feel */
   --boh-text-xs:   10px;
   --boh-text-sm:   12px;
   --boh-text-base: 14px;
@@ -86,9 +86,9 @@ body {
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   ANIMATIONS — scroll-reveal, hero pulse, stat counter, button micro
+   ANIMATIONS - scroll-reveal, hero pulse, stat counter, button micro
    ─────────────────────────────────────────────────────────────────── */
-/* Scroll-reveal — elements start hidden + offset, animate in via JS toggle */
+/* Scroll-reveal - elements start hidden + offset, animate in via JS toggle */
 .boh-js .boh-reveal {
   opacity: 0;
   transform: translateY(28px);
@@ -124,7 +124,7 @@ body {
   }
 }
 
-/* Hero — slow breathing pulse on the gradient orbs (subtle) */
+/* Hero - slow breathing pulse on the gradient orbs (subtle) */
 @keyframes boh-hero-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.85; transform: scale(1.08); }
@@ -141,7 +141,7 @@ body {
   z-index: 0;
 }
 
-/* Stat counter — gentle pop when revealing */
+/* Stat counter - gentle pop when revealing */
 @keyframes boh-stat-pop {
   0%   { transform: scale(.92); opacity: 0; }
   60%  { transform: scale(1.03); opacity: 1; }
@@ -215,7 +215,7 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.15;
 }
 
-/* Accent words inside headings — drop italic (Montserrat italic looks weak),
+/* Accent words inside headings - drop italic (Montserrat italic looks weak),
    use magenta + heavier weight to match the logo's "HOPE" treatment. */
 h1 em, h2 em, h3 em, h4 em,
 .wp-block-heading em,
@@ -243,7 +243,7 @@ h1 em, h2 em, h3 em, h4 em,
    - default blocks: 800px max, centered
    - .alignwide:    1240px max, centered
    - .alignfull:    100%, edge-to-edge without horizontal overflow
-   This is the standard WP block-theme pattern — defines how `align: wide`
+   This is the standard WP block-theme pattern - defines how `align: wide`
    and `align: full` actually behave when there's no theme.json. */
 .entry-content {
   color: var(--boh-ink-soft);
@@ -298,7 +298,7 @@ h1 em, h2 em, h3 em, h4 em,
 ::selection { background: var(--boh-plum); color: #fff; }
 
 /* ───────────────────────────────────────────────────────────────────
-   HEADER — standalone theme. Markup lives in header.php.
+   HEADER - standalone theme. Markup lives in header.php.
    Transparent over the hero, fixed white-blur once scrolled.
    ─────────────────────────────────────────────────────────────────── */
 
@@ -312,11 +312,11 @@ h1 em, h2 em, h3 em, h4 em,
   border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
-/* Header — floating glass pill. The bar itself is transparent; the
+/* Header - floating glass pill. The bar itself is transparent; the
    pill (.boh-header__inner) carries a frosted-glass ground whose
    opacity ramps with scroll (--boh-header-alpha: 0.10 at top → 1.00
    once the hero is ~80% scrolled away; set by inline-footer JS).
-   The oversized logo overhangs the pill's bottom edge — the mark
+   The oversized logo overhangs the pill's bottom edge - the mark
    deliberately breaks the frame to lead the composition. */
 #masthead.boh-header {
   position: fixed;
@@ -334,7 +334,7 @@ body.admin-bar #masthead.boh-header {
   to   { transform: translateY(0);     opacity: 1; }
 }
 
-/* Full-bleed glass bar — touches top, left, and right edges.
+/* Full-bleed glass bar - touches top, left, and right edges.
    The oversized logo straddles the bar's bottom edge: half on the
    banner, half hanging below it into the hero. */
 .boh-header__inner {
@@ -347,9 +347,11 @@ body.admin-bar #masthead.boh-header {
   padding: 10px 36px;
   overflow: visible;
   border-radius: 0;
-  background: rgba(255,255,255, calc(0.42 + var(--boh-header-alpha) * 0.58));
-  backdrop-filter: saturate(160%) blur(16px);
-  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  /* Solid white. The header used to fade from 42% to opaque as the page
+     scrolled, which let the hero photograph show through the navigation and
+     made the links hard to read against whatever happened to be behind
+     them. */
+  background: #ffffff;
   border-bottom: 1px solid rgba(10,10,10,0.07);
   box-shadow: 0 10px 32px -12px rgba(31,26,36, calc(0.08 + var(--boh-header-alpha) * 0.12));
 }
@@ -377,7 +379,7 @@ body.admin-bar #masthead.boh-header {
 }
 body.boh-scrolled .boh-header__title { color: var(--boh-ink); }
 
-/* Header logo — icon-only brand mark, no adjacent text label.
+/* Header logo - icon-only brand mark, no adjacent text label.
    At the top of the page it is double size and hangs below the bar into
    the hero; once scrolled past the hero it shrinks back inside the bar.
    The anchor reserves only bar-height space and the image is positioned
@@ -423,7 +425,7 @@ body.boh-scrolled .boh-header__logo {
 /* ───────────────────────────────────────────────────────────────────
    ANIMATED MARK (.boh-mark)
    Same geometry as the design draft. Paths use pathLength="100" so a
-   single stroke-dasharray:100 hides / dashoffset:0 draws — no matter
+   single stroke-dasharray:100 hides / dashoffset:0 draws - no matter
    what physical size the SVG is rendered at.
    Default state = FINISHED so the logo looks correct if JS never runs.
    The intro animation only plays when JS adds `.is-playing` on load
@@ -450,7 +452,7 @@ body.boh-scrolled .boh-header__logo {
 }
 .boh-mark .wm-hope { fill: var(--boh-magenta, #d01482); }
 
-/* Play state — hidden at start, animates in. Applied only when
+/* Play state - hidden at start, animates in. Applied only when
    .is-playing is on the SVG. Everything else uses the finished state. */
 .boh-mark.is-playing .arc     { stroke-dasharray: 100; stroke-dashoffset: 100; }
 .boh-mark.is-playing .tick    { opacity: 0; transform: translateX(10px); transform-box: fill-box; transform-origin: 100% 50%; }
@@ -547,7 +549,7 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
   filter: brightness(0) invert(1) drop-shadow(0 1px 4px rgba(0,0,0,0.3));
 }
 
-/* Nav UL — clean, single rule. The list is rendered by wp_nav_menu with
+/* Nav UL - clean, single rule. The list is rendered by wp_nav_menu with
    menu_class="boh-nav__list". */
 .boh-nav { flex: 1 1 auto; display: flex; justify-content: flex-end; }
 .boh-nav__list {
@@ -564,7 +566,7 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
 }
 .boh-nav__list li::before { display: none; }
 
-/* Nav links — soft pill hover inside the glass bar */
+/* Nav links - soft pill hover inside the glass bar */
 .boh-nav__list a {
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
@@ -588,7 +590,7 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
   outline-offset: 2px;
 }
 
-/* RSVP button — magenta pill (per July-2026 feedback: RSVP is now the CTA) */
+/* RSVP button - magenta pill (per July-2026 feedback: RSVP is now the CTA) */
 .boh-nav__list .boh-nav__rsvp-btn a {
   display: inline-flex;
   align-items: center;
@@ -629,7 +631,7 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
 
 @media (max-width: 880px) {
   .boh-nav { display: none; }
-  /* Mobile menu — rounded white card floating under the pill */
+  /* Mobile menu - rounded white card floating under the pill */
   .boh-nav.is-open {
     display: flex;
     position: absolute;
@@ -667,11 +669,11 @@ body:not(.boh-scrolled) .boh-header__brand img.custom-logo {
   margin-top: 0 !important;
 }
 /* Non-hero pages: leave room for the fixed header. Pages opening with a
-   full-bleed banner — a cover block or [boh_page_hero] — are excluded so
+   full-bleed banner - a cover block or [boh_page_hero] - are excluded so
    the photo runs to the top and sits under the menu. */
 /* `:first-child` was too literal. The block editor leaves an empty <p>
    wrapping each section comment, and once one of those became the first
-   child this stopped matching on the home page — so a page that opens with
+   child this stopped matching on the home page - so a page that opens with
    a full-bleed hero got 96px of header padding anyway, showing as a band of
    white between the menu and the photo. Matching on the banner being a
    direct child at all is what was actually meant. */
@@ -710,7 +712,7 @@ input[type="submit"],
   box-shadow: var(--boh-shadow-lg);
 }
 
-/* Ember variant (legacy class name) — now magenta from the logo */
+/* Ember variant (legacy class name) - now magenta from the logo */
 .wp-block-button.is-style-ember .wp-block-button__link,
 .boh-btn-ember {
   background: var(--boh-magenta) !important;
@@ -723,7 +725,7 @@ input[type="submit"],
   color: #fff !important;
 }
 
-/* Yellow variant — bold sunshine CTA, black text */
+/* Yellow variant - bold sunshine CTA, black text */
 .wp-block-button.is-style-yellow .wp-block-button__link,
 .boh-btn-yellow {
   background: var(--boh-yellow) !important;
@@ -770,7 +772,7 @@ input[type="submit"],
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   HERO — editorial, generous, textured
+   HERO - editorial, generous, textured
    ─────────────────────────────────────────────────────────────────── */
 .wp-block-cover.alignfull,
 .wp-block-cover.boh-hero {
@@ -814,7 +816,7 @@ input[type="submit"],
   flex: 1 1 auto;
   align-self: stretch;
 }
-/* Banner variant — used on the home page: image-only hero with a
+/* Banner variant - used on the home page: image-only hero with a
    flower panel at top, and the copy/CTAs live in the next section
    below on a clean pink band. No text overlays on the flower. */
 .wp-block-cover.boh-hero.boh-hero--banner {
@@ -835,7 +837,7 @@ input[type="submit"],
   transform: none !important;
   flex-direction: row !important;
 }
-/* Admin bar shrinks viewport by 32px — subtract so hero fits without a
+/* Admin bar shrinks viewport by 32px - subtract so hero fits without a
    scrollbar just for that bar. */
 body.admin-bar .wp-block-cover.boh-hero {
   min-height: calc(100vh - 32px) !important;
@@ -862,7 +864,7 @@ body.admin-bar .wp-block-cover.boh-hero {
 }
 
 /* Each slide is a background image, `cover` so no pink stripes appear.
-   The hero itself is short (640–720px) so the crop is minimal — subjects
+   The hero itself is short (640–720px) so the crop is minimal - subjects
    still fit. Position bias keeps faces near the top-third of the frame. */
 .wp-block-cover.boh-hero .boh-hero-slide {
   opacity: 0;
@@ -890,7 +892,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   }
 }
 
-/* Pagination dots — right side, vertically stacked. */
+/* Pagination dots - right side, vertically stacked. */
 .wp-block-cover.boh-hero .boh-hero-dots {
   position: absolute !important;
   right: 24px !important;
@@ -995,7 +997,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   color: var(--boh-plum) !important;
   border-color: rgba(107,45,140,0.35) !important;
 }
-/* Kill the dim overlay span — we don't need WordPress's default dark
+/* Kill the dim overlay span - we don't need WordPress's default dark
    overlay on top of our own light pink wash. */
 .wp-block-cover.boh-hero > .wp-block-cover__background {
   display: none !important;
@@ -1057,7 +1059,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   padding: 80px 24px !important;
 }
 
-/* Hero heading — high specificity to beat Astra's default heading color */
+/* Hero heading - high specificity to beat Astra's default heading color */
 .entry-content .wp-block-cover h1,
 .entry-content .wp-block-cover h1.wp-block-heading,
 .entry-content .wp-block-cover .wp-block-heading,
@@ -1178,7 +1180,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   color: var(--boh-yellow) !important;
 }
 
-/* Eyebrow tag — small uppercase tag, magenta on light, yellow on dark hero */
+/* Eyebrow tag - small uppercase tag, magenta on light, yellow on dark hero */
 .boh-eyebrow {
   display: inline-block;
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
@@ -1203,7 +1205,7 @@ body.admin-bar .wp-block-cover.boh-hero {
    STATS BAR
    ─────────────────────────────────────────────────────────────────── */
 /* Stats lives INSIDE the hero cover block, pinned to the very bottom,
-   full viewport width — like a hero footer strip. */
+   full viewport width - like a hero footer strip. */
 .wp-block-cover.boh-hero .boh-stats {
   position: absolute !important;
   bottom: -1px !important;   /* tuck flush to avoid sub-pixel gap */
@@ -1235,7 +1237,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   padding: 0 !important;
   display: block !important;
 }
-/* The inner columns — full-width strip with translucent dark band, no rounded corners */
+/* The inner columns - full-width strip with translucent dark band, no rounded corners */
 .wp-block-cover.boh-hero .boh-stats > .wp-block-columns,
 .wp-block-cover.boh-hero .boh-stats > .wp-block-group__inner-container > .wp-block-columns {
   width: 100% !important;
@@ -1297,12 +1299,12 @@ body.admin-bar .wp-block-cover.boh-hero {
   padding: 32px 16px !important;
   box-shadow: 0 24px 60px -12px rgba(0,0,0,0.55);
 }
-/* Stats overlaps the dark hero — text must be light */
+/* Stats overlaps the dark hero - text must be light */
 .boh-stats h2 { color: #fff !important; }
 .boh-stats p {
   color: rgba(255,255,255,0.78) !important;
 }
-/* Hairline dividers between stat columns — light on dark */
+/* Hairline dividers between stat columns - light on dark */
 .boh-stats .wp-block-column:not(:last-child)::after {
   background: rgba(255,255,255,0.12) !important;
 }
@@ -1323,7 +1325,7 @@ body.admin-bar .wp-block-cover.boh-hero {
   letter-spacing: -0.03em !important;
 }
 
-/* [boh_stats] shortcode output — 4-cell grid, centered inside a dark
+/* [boh_stats] shortcode output - 4-cell grid, centered inside a dark
    full-bleed group. Replaces the older column-based markup. */
 .boh-stats {
   max-width: 1160px;
@@ -1453,7 +1455,7 @@ h2.has-text-align-center + p,
 .entry-content .wp-block-heading em { color: var(--boh-plum); font-weight: 500; }
 
 /* ───────────────────────────────────────────────────────────────────
-   CARDS — column-as-card
+   CARDS - column-as-card
    ─────────────────────────────────────────────────────────────────── */
 .entry-content .wp-block-columns:not(.has-primary-background-color):not(.boh-stats):not(.boh-bare) {
   gap: 24px;
@@ -1496,7 +1498,7 @@ h2.has-text-align-center + p,
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   STEP CARDS — numbered serif markers
+   STEP CARDS - numbered serif markers
    ─────────────────────────────────────────────────────────────────── */
 .boh-steps .wp-block-column {
   position: relative;
@@ -1546,7 +1548,7 @@ h2.has-text-align-center + p,
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   BLOCKQUOTES — editorial pull quotes
+   BLOCKQUOTES - editorial pull quotes
    ─────────────────────────────────────────────────────────────────── */
 .wp-block-quote {
   background: #fff !important;
@@ -1594,7 +1596,7 @@ h2.has-text-align-center + p,
   text-align: center;
 }
 .wp-block-quote cite::before {
-  content: '— ';
+  content: '- ';
 }
 
 /* ───────────────────────────────────────────────────────────────────
@@ -1620,7 +1622,7 @@ h2.has-text-align-center + p,
   border-radius: 50%;
 }
 
-/* Numbered (ordered) — editorial serif numerals */
+/* Numbered (ordered) - editorial serif numerals */
 .entry-content ol:not(.boh-agenda__list) { counter-reset: boh-ol; list-style: none; padding-left: 0; }
 .entry-content ol:not(.boh-agenda__list) li {
   counter-increment: boh-ol;
@@ -1687,7 +1689,7 @@ h2.has-text-align-center + p,
 /* ───────────────────────────────────────────────────────────────────
    GROUPS (light sections)
    ─────────────────────────────────────────────────────────────────── */
-/* Light-backgrounded groups get a card radius — but full-bleed bands stay
+/* Light-backgrounded groups get a card radius - but full-bleed bands stay
    edge-to-edge so they look like flush sections, not floating cards. */
 .wp-block-group.has-background {
   border-radius: var(--boh-r-lg);
@@ -1713,7 +1715,7 @@ h2.has-text-align-center + p,
    BoH-specific components (rendered via shortcodes)
    ─────────────────────────────────────────────────────────────────── */
 
-/* — Countdown — */
+/* - Countdown - */
 .boh-countdown {
   display: flex;
   justify-content: center;
@@ -1781,7 +1783,7 @@ h2.has-text-align-center + p,
   color: rgba(255,255,255,0.62);
 }
 
-/* — Impact calculator — */
+/* - Impact calculator - */
 .boh-impact {
   background: #fff;
   border: 1px solid var(--boh-rule);
@@ -1903,7 +1905,7 @@ h2.has-text-align-center + p,
   box-shadow: var(--boh-shadow-md);
 }
 
-/* — Payment transparency bar — */
+/* - Payment transparency bar - */
 .boh-transparency {
   background: transparent;
   padding: 0;
@@ -2003,7 +2005,7 @@ h2.has-text-align-center + p,
   flex-shrink: 0;
 }
 
-/* — RSVP form — */
+/* - RSVP form - */
 /* Same board treatment as the Donate and Sponsor forms (Aug-2026
    feedback: the RSVP form should be framed like the others). */
 .boh-rsvp {
@@ -2071,7 +2073,7 @@ h2.has-text-align-center + p,
 }
 .boh-rsvp label .req { color: var(--boh-ember); margin-left: 2px; }
 
-/* — Sticky give bar — */
+/* - Sticky give bar - */
 .boh-sticky {
   position: fixed;
   left: 50%;
@@ -2132,7 +2134,7 @@ h2.has-text-align-center + p,
   .boh-sticky__text { white-space: normal; font-size: 13px; }
 }
 
-/* — Calendar buttons — */
+/* - Calendar buttons - */
 .boh-cal {
   display: inline-flex;
   gap: 10px;
@@ -2161,7 +2163,7 @@ h2.has-text-align-center + p,
   box-shadow: var(--boh-shadow-sm);
 }
 
-/* — Event meta tiles — */
+/* - Event meta tiles - */
 .boh-event-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -2205,7 +2207,7 @@ h2.has-text-align-center + p,
   .boh-event-meta__cell:last-child { border-bottom: none; }
 }
 
-/* — Sponsor tier grid — */
+/* - Sponsor tier grid - */
 .boh-tier-card {
   background: #fff;
   border: 1px solid var(--boh-rule);
@@ -2406,7 +2408,7 @@ h2.has-text-align-center + p,
   margin: 0 0 22px !important;
 }
 /* Section header above the amount input (the real <label> stays
-   screen-reader-only — this avoids messing with the $-symbol flex row). */
+   screen-reader-only - this avoids messing with the $-symbol flex row). */
 .give-form-wrap .give-total-wrap::before {
   content: "Donation Amount" !important;
   display: block !important;
@@ -2699,7 +2701,7 @@ input[type="submit"]:hover,
    FOOTER
    ─────────────────────────────────────────────────────────────────── */
 #colophon,
-/* Hide Astra's default small footer copyright line — we render our own footer */
+/* Hide Astra's default small footer copyright line - we render our own footer */
 .ast-small-footer { display: none !important; }
 
 .site-footer,
@@ -2768,7 +2770,7 @@ input[type="submit"]:hover,
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   IMAGES — content photos
+   IMAGES - content photos
    ─────────────────────────────────────────────────────────────────── */
 
 /* Generic block-editor image polish */
@@ -2787,7 +2789,7 @@ input[type="submit"]:hover,
   transform: scale(1.01);
 }
 
-/* About section — full-width team photo, taller crop */
+/* About section - full-width team photo, taller crop */
 .boh-about-image {
   margin: 40px auto 48px !important;
   max-width: 1100px;
@@ -2805,7 +2807,7 @@ figure.boh-about-image ~ p {
   object-position: center 30%;
 }
 
-/* How it works — small square image at top of each step card */
+/* How it works - small square image at top of each step card */
 .boh-steps .wp-block-column .boh-step-image {
   margin: 0 0 18px !important;
   max-width: 220px;
@@ -2818,7 +2820,7 @@ figure.boh-about-image ~ p {
   box-shadow: 0 6px 18px rgba(0,0,0,0.10);
 }
 
-/* Stories — emotional anchor image, wider crop */
+/* Stories - emotional anchor image, wider crop */
 .boh-stories-image {
   margin: 40px auto 56px !important;
   max-width: 960px;
@@ -2830,7 +2832,7 @@ figure.boh-about-image ~ p {
   object-position: center 35%;
 }
 
-/* RSVP — past event photo, mood-setting */
+/* RSVP - past event photo, mood-setting */
 .boh-rsvp-image {
   margin: 40px auto 48px !important;
   max-width: 980px;
@@ -2841,7 +2843,7 @@ figure.boh-about-image ~ p {
   object-fit: cover;
 }
 
-/* Sponsor — community group photo */
+/* Sponsor - community group photo */
 .boh-sponsor-image {
   margin: 40px auto 48px !important;
   max-width: 980px;
@@ -3023,7 +3025,7 @@ figure.boh-about-image ~ p {
 /* Spacer overrides */
 .wp-block-spacer { height: 32px; }
 
-/* Tighten entry-content child gaps — sections shouldn't double-stack
+/* Tighten entry-content child gaps - sections shouldn't double-stack
    padding (group padding + sibling margin). Set margin to 0 between
    adjacent groups so the group's own padding governs spacing.
    EXCEPTION: the stats bar deliberately uses negative margin-top to
@@ -3378,7 +3380,7 @@ figure.boh-about-image ~ p {
   max-width: 760px;
   margin: 0 auto;
 }
-/* Suppress CF7's automatic <br> — they break the grid on split rows */
+/* Suppress CF7's automatic <br> - they break the grid on split rows */
 #sponsorship-form .boh-form-row br {
   display: none !important;
 }
@@ -3449,7 +3451,7 @@ figure.boh-about-image ~ p {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   MODERN EVENT HOME (July 2026 rebuild) — hero, essentials, about
+   MODERN EVENT HOME (July 2026 rebuild) - hero, essentials, about
    split, sponsors band, closing CTA
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -4007,7 +4009,7 @@ figure.boh-about-image ~ p {
   max-width: 640px;
 }
 
-/* Corner flourish for section transitions on other pages — used by
+/* Corner flourish for section transitions on other pages - used by
    applying .boh-section--flourish to any full-width group. Adds a
    subtle flower motif to the top-right corner. */
 .boh-section--flourish { position: relative; overflow: hidden; }
@@ -4144,7 +4146,7 @@ a.boh-rohit-brand,
   transform: translateY(-1px);
 }
 
-/* ── How it works — 4-step module ───────────────────────────────── */
+/* ── How it works - 4-step module ───────────────────────────────── */
 .boh-how-it-works {
   max-width: 1160px;
   margin: 56px auto 64px;
@@ -4476,7 +4478,7 @@ a.boh-rohit-brand,
   background: linear-gradient(180deg, transparent, rgba(0,0,0,0.6));
 }
 
-/* ── About page — module rows (alternating image/copy) ─────────── */
+/* ── About page - module rows (alternating image/copy) ─────────── */
 .boh-about-modules { max-width: 1120px; margin: 40px auto 32px; padding: 0 24px; }
 .boh-about-module {
   display: grid;
@@ -4531,7 +4533,7 @@ a.boh-rohit-brand,
 .boh-about-module__cta:hover { background: var(--boh-magenta-deep, #C2005F); }
 
 /* ═══════════════════════════════════════════════════════════════════
-   HOME PAGE — SUMMARY/ORIENTATION SECTIONS
+   HOME PAGE - SUMMARY/ORIENTATION SECTIONS
    Shared pill-eyebrow + heading + subtext pattern across What/Why/How/
    When/Explore. Tight, scannable copy; each section links to its own
    dedicated page rather than duplicating the full copy.
@@ -4595,7 +4597,7 @@ a.boh-rohit-brand,
 .boh-home-section__link span { margin-left: 4px; display: inline-block; transition: transform .2s ease; }
 .boh-home-section__link:hover span { transform: translateX(3px); }
 
-/* Section on the dark WHEN band — invert link color for contrast */
+/* Section on the dark WHEN band - invert link color for contrast */
 .boh-home-section--when .boh-home-section__link {
   color: var(--boh-yellow);
   border-color: rgba(249,209,53,0.35);
@@ -4605,7 +4607,7 @@ a.boh-rohit-brand,
   border-color: var(--boh-yellow);
 }
 
-/* Mini stats row on WHY — three quick numbers, no dark card treatment */
+/* Mini stats row on WHY - three quick numbers, no dark card treatment */
 .boh-home-mini-stats {
   display: flex;
   justify-content: center;
@@ -4745,11 +4747,11 @@ a.boh-rohit-brand,
 
 /* ── Polish pass: classy/sharp/intuitive ─────────────────────────── */
 
-/* Scroll cue — quiet chevron line at the hero's bottom center.
+/* Scroll cue - quiet chevron line at the hero's bottom center.
    Invites the first scroll without shouting. */
 .boh-scroll-cue {
   /* !important beats `.boh-hero > :not(...)` (4-class specificity) which
-     forces position:relative on direct cover children — that turned our
+     forces position:relative on direct cover children - that turned our
      left:50% into a relative shift and shoved the cue to the far right. */
   position: absolute !important;
   left: 50% !important;
@@ -4802,7 +4804,7 @@ a.boh-rohit-brand,
   .boh-scroll-cue { display: none; }
 }
 
-/* Labelled variant — the "See how it works" copy lives inside the scroll
+/* Labelled variant - the "See how it works" copy lives inside the scroll
    button rather than sitting loose above it, so the hero ends on a single
    call to action. Frosted pill with the chevron in a brand-magenta disc;
    the whole button bobs gently to read as "there is more below". */
@@ -4901,7 +4903,7 @@ a.boh-rohit-brand,
   .boh-scroll-cue__arrow { width: 30px !important; height: 30px !important; }
 }
 
-/* Mini-stats — hairline separators for a sharper, more deliberate row */
+/* Mini-stats - hairline separators for a sharper, more deliberate row */
 .boh-home-mini-stat + .boh-home-mini-stat {
   border-left: 1px solid rgba(10,10,10,0.12);
   padding-left: clamp(24px, 4vw, 56px);
@@ -4912,7 +4914,7 @@ a.boh-rohit-brand,
   font-variant-numeric: tabular-nums;
 }
 
-/* WHEN band — countdown restyled for the dark ground: translucent cells,
+/* WHEN band - countdown restyled for the dark ground: translucent cells,
    yellow digits, muted uppercase labels. The default white cards are for
    light sections only. */
 .boh-when-band .boh-countdown__unit {
@@ -4940,7 +4942,7 @@ a.boh-rohit-brand,
   border-color: #fff !important;
 }
 
-/* Light WHEN band — since Aug-2026 this section leads the page directly
+/* Light WHEN band - since Aug-2026 this section leads the page directly
    under the hero, on white rather than ink. Undo the dark-band treatment
    above so the base (light) countdown styling shows through. Must stay
    after those rules: same specificity, so source order decides. */
@@ -5031,7 +5033,7 @@ a.boh-rohit-brand,
   transform: translateY(20px);
   transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1);
 }
-/* MUST come after the hide rule above (equal specificity — document
+/* MUST come after the hide rule above (equal specificity - document
    order decides), otherwise the cards stay invisible after .is-in. */
 .boh-how-it-works--compact .boh-how-it-works__grid.boh-reveal-stagger.is-in > *,
 .boh-quick-links.boh-reveal-stagger.is-in > * {
@@ -5040,7 +5042,7 @@ a.boh-rohit-brand,
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   HERO GRID — asymmetric two-column composition.
+   HERO GRID - asymmetric two-column composition.
    Copy block left (eyebrow → h1 → lede → CTA → meta), animated brand
    mark right on a frosted disc. Kept at the end of the sheet so it
    wins the cascade against the older centered-cover rules.
@@ -5057,7 +5059,7 @@ a.boh-rohit-brand,
   box-sizing: border-box;
 }
 
-/* Copy column — left-aligned editorial stack */
+/* Copy column - left-aligned editorial stack */
 .wp-block-cover.boh-hero .boh-hero-copy {
   text-align: center;
 }
@@ -5066,7 +5068,7 @@ a.boh-rohit-brand,
   margin: 0 0 10px !important;
   max-width: none !important;
 }
-/* Eyebrow pill stays on one line — the base pill is inline-flex with
+/* Eyebrow pill stays on one line - the base pill is inline-flex with
    flex-wrap:wrap, so nowrap must be forced at the flex level too */
 .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
   white-space: nowrap;
@@ -5133,7 +5135,7 @@ a.boh-rohit-brand,
   align-items: stretch;
 }
 /* Copy is a full-height column with the entire stack (block + CTAs +
-   meta) centered — equal space above and below. */
+   meta) centered - equal space above and below. */
 .wp-block-cover.boh-hero .boh-hero-grid--stack .boh-hero-copy {
   display: flex;
   flex-direction: column;
@@ -5141,7 +5143,7 @@ a.boh-rohit-brand,
   height: 100%;
 }
 
-/* Head row — the two-line headline on the left, logo disc on the right */
+/* Head row - the two-line headline on the left, logo disc on the right */
 .wp-block-cover.boh-hero .boh-hero-headrow {
   display: flex;
   align-items: center;
@@ -5177,7 +5179,7 @@ a.boh-rohit-brand,
   max-width: 100%;
   margin: 0 auto;
 }
-/* Centred as one column — the block was originally left-aligned beside the
+/* Centred as one column - the block was originally left-aligned beside the
    hero logo disc, which no longer exists. */
 .wp-block-cover.boh-hero .boh-hero-block .boh-hero-headrow {
   justify-content: center;
@@ -5207,7 +5209,7 @@ a.boh-rohit-brand,
   height: auto;
 }
 
-/* Slideshow pause/play toggle — frosted disc, bottom-right corner.
+/* Slideshow pause/play toggle - frosted disc, bottom-right corner.
    !importants beat the `.boh-hero > :not(...)` position:relative rule. */
 .wp-block-cover.boh-hero .boh-hero-pause {
   position: absolute !important;
@@ -5329,7 +5331,7 @@ a.boh-rohit-brand,
 /* The hero slides deliberately scale past 100% for the drift effect, which
    adds a few px of horizontal scroll. Clip it at the hero rather than on
    html/body: overflow on body turns body into a scroll container, and the
-   front-page scroll snapping is declared on html — the snap then has no
+   front-page scroll snapping is declared on html - the snap then has no
    effect at all. Fix the overflow where it originates. */
 .wp-block-cover.boh-hero {
   overflow: hidden;
@@ -5394,7 +5396,7 @@ a.boh-rohit-brand,
     /* Proximity rather than mandatory: the JS below animates the actual
        panel-to-panel movement, and mandatory would fight it mid-flight. */
     /* No snapping. Scrolling is the browser's, and the up/down controls
-       handle panel-to-panel movement — snap fought both. */
+       handle panel-to-panel movement - snap fought both. */
     scroll-snap-type: none;
     /* The 100px anchor offset above exists so #links clear the sticky
        header. Applied to a full-viewport panel it lands the panel 100px
@@ -5412,7 +5414,7 @@ a.boh-rohit-brand,
      you to the next one.
 
      The earlier complaint that views "took too much height" was not caused
-     by the 100vh itself — it was that the sections' own 72–88px of padding
+     by the 100vh itself - it was that the sections' own 72–88px of padding
      sat OUTSIDE that height, so a panel measured 100vh + 176px and no view
      ever fit the window. `box-sizing: border-box` puts the padding inside
      the 100vh, so a panel is exactly one screen; it only grows past that
@@ -5612,17 +5614,17 @@ a.boh-rohit-brand,
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   MOBILE PASS — Aug 2026
+   MOBILE PASS - Aug 2026
    Faults found by rendering every page at 390 x 844 (iPhone 14/15) and
    measuring the DOM rather than eyeballing a desktop window scaled down.
    Each block below fixes one measured problem; the comment says which.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* 1. Hero eyebrow pill — the pill is inline-flex and an earlier rule
+/* 1. Hero eyebrow pill - the pill is inline-flex and an earlier rule
       forces `flex-wrap: nowrap !important`, so on a phone the words ran
       straight out of the rounded background: "INITIATIVE" rendered on
       bare photo, outside the white pill. Let it wrap and the box grows
-      to contain it. Wrapping also buys back a readable font size —
+      to contain it. Wrapping also buys back a readable font size -
       it had been squeezed to 8px trying to stay on one line. */
 @media (max-width: 880px) {
   .wp-block-cover.boh-hero .boh-hero-copy .boh-eyebrow {
@@ -5663,7 +5665,7 @@ a.boh-rohit-brand,
   .boh-tour-start__icon { width: 14px; height: 14px; }
 }
 
-/* 3. Hero bottom chrome — four overlays (dots, tour, scroll cue, pause)
+/* 3. Hero bottom chrome - four overlays (dots, tour, scroll cue, pause)
       were competing for the same corner on a 390px screen: the dots ran
       down the right edge through the middle of the photo, and the pause
       disc sat a hair from the scroll-cue pill. Give each one its own
@@ -5700,7 +5702,7 @@ a.boh-rohit-brand,
   .boh-hero-tour { bottom: 112px !important; }
 }
 
-/* 4. WHY-section mini stats — the row is flex-wrap, so on a phone the
+/* 4. WHY-section mini stats - the row is flex-wrap, so on a phone the
       three stats stacked, but the `border-left` divider meant for a
       horizontal row came with them. Each stat then sat further right
       than the one above it: a staircase with stray vertical rules.
@@ -5725,7 +5727,7 @@ a.boh-rohit-brand,
   }
 }
 
-/* 5. Sponsor logo wall — the track floor of 180px meant exactly one
+/* 5. Sponsor logo wall - the track floor of 180px meant exactly one
       logo per row on a phone, stretching the page to 10,300px. Two
       columns halve the scroll and the marks are still legible. */
 @media (max-width: 600px) {
@@ -5738,7 +5740,7 @@ a.boh-rohit-brand,
   .boh-sponsor-logos.wp-block-gallery img { max-height: 52px !important; }
 }
 
-/* 6. Gallery — same problem: a 260px track floor gave one photo per
+/* 6. Gallery - same problem: a 260px track floor gave one photo per
       row, 35 photos deep. Two columns on a phone. */
 @media (max-width: 600px) {
   .boh-gallery__grid {
@@ -5747,7 +5749,7 @@ a.boh-rohit-brand,
   }
 }
 
-/* 7. Menu button was a 38 x 32 hit area — under the 44px minimum, and
+/* 7. Menu button was a 38 x 32 hit area - under the 44px minimum, and
       the hardest control on the site to hit one-handed. */
 .boh-nav__toggle {
   min-width: 44px;
@@ -5764,7 +5766,7 @@ a.boh-rohit-brand,
   .boh-home-section__heading { font-size: clamp(26px, 8vw, 34px) !important; }
 }
 
-/* 9. Impact band — dropping to a single column below 480px turned four
+/* 9. Impact band - dropping to a single column below 480px turned four
       short numbers into a ~1,000px column of dead space on a phone.
       They are short enough to sit two-up all the way down. */
 @media (max-width: 480px) {
@@ -5777,7 +5779,7 @@ a.boh-rohit-brand,
 /* Short desktop windows (roughly a 13" laptop once browser chrome is
    taken off): the four-steps panel carries 56px + 64px of margin around
    the card grid on top of the panel's own padding, which pushed it past
-   one screen — the only view that still did not fit. Tighten the spacing
+   one screen - the only view that still did not fit. Tighten the spacing
    there alone, so a normal-height display is unchanged. */
 @media (min-width: 901px) and (min-height: 700px) and (max-height: 840px) {
   body.home .entry-content > .wp-block-group {
@@ -5852,7 +5854,7 @@ a.boh-rohit-brand,
    incoming panel sat at opacity 0 and translateY(28px) while the glide
    was already carrying it into view, then faded in and slid up 28px
    against a page scrolling down. Two opposed motions plus a fade,
-   mid-scroll — which read as a flicker on arrival.
+   mid-scroll - which read as a flicker on arrival.
 
    A tile is arrived at deliberately and fills the window, so it should
    simply be there. Reveals stay on for every other page. */
@@ -5892,11 +5894,11 @@ a.boh-rohit-brand,
   grid-row: span 2;
 }
 /* A repeating 1-6 rhythm: one big feature, one wide, one tall, the rest
-   standard. Deliberately not random — it stays stable across reloads. */
+   standard. Deliberately not random - it stays stable across reloads. */
 .boh-gallery__cell:nth-child(6n + 1) { grid-column: span 2; grid-row: span 3; }
 .boh-gallery__cell:nth-child(6n + 4) { grid-column: span 2; grid-row: span 2; }
 .boh-gallery__cell:nth-child(6n + 6) { grid-row: span 3; }
-/* Video tiles are always given a generous frame — the play badge needs it. */
+/* Video tiles are always given a generous frame - the play badge needs it. */
 .boh-gallery__cell--video { grid-column: span 2; grid-row: span 2; }
 
 @media (max-width: 1000px) {
@@ -5949,7 +5951,7 @@ a.boh-rohit-brand,
    The span-based mosaic left real gaps: a 4-column grid cannot be tiled
    evenly by a 6-item pattern of 2x3 / 2x2 / 1x3 / 1x2 blocks, and
    `dense` can only backfill a hole with an item small enough to fit.
-   Measured 5-6 empty tracks per section — roughly 4-7% of the grid, each
+   Measured 5-6 empty tracks per section - roughly 4-7% of the grid, each
    one a ~280x180px patch of white.
 
    Multi-column layout cannot leave holes by construction: each column is
@@ -5993,7 +5995,7 @@ a.boh-rohit-brand,
    basket" panel. The panel height is deliberate, so the fix is to let the
    composition grow into it rather than to shrink the panel.
 
-   Sizes below are keyed to viewport HEIGHT as well as width — a taller
+   Sizes below are keyed to viewport HEIGHT as well as width - a taller
    window is exactly where the hollowness showed worst. */
 @media (min-width: 901px) and (min-height: 700px) {
   body.home .boh-home-section__heading {
@@ -6118,7 +6120,7 @@ a.boh-rohit-brand,
 
 /* ── Tile content: one step down ─────────────────────────────────────
    The earlier pass grew this type to fill the full-screen panels, and it
-   overshot — headings in particular read as oversized. These replace the
+   overshot - headings in particular read as oversized. These replace the
    sizes set in "Front-page tiles: give sparse panels presence"; the panels
    still fill, just less loudly. */
 @media (min-width: 901px) and (min-height: 700px) {
@@ -6203,7 +6205,7 @@ a.boh-rohit-brand,
    brand colours it used to carry are kept out of the stylesheet rather than
    left as dead rules. */
 /* Notices: informational, not alarming. The test-mode notice in particular
-   is telling the truth about a correctly configured sandbox — it should not
+   is telling the truth about a correctly configured sandbox - it should not
    look like the page has fallen over. */
 .entry-content #give-form .give_error,
 .entry-content #give-form .give_warning,
@@ -6224,7 +6226,7 @@ a.boh-rohit-brand,
 
 /* ── Donate form: same shell as the sponsorship form ─────────────────
    Both forms sit on the cream board, but GiveWP's wrapper added a second
-   white card inside it — border, 20px radius and its own shadow — so the
+   white card inside it - border, 20px radius and its own shadow - so the
    donate form read as a box within a box while the sponsorship fields sit
    directly on the board. Strip the inner card and match the labels. */
 .entry-content #give-form .give-form-wrap {
@@ -6236,7 +6238,7 @@ a.boh-rohit-brand,
   margin-top: 0 !important;
 }
 /* Labels: 13px semibold ink, stacked above the field, as on #sponsorship-form. */
-/* :not(.give-hidden) — GiveWP hides some labels for screen readers only, and
+/* :not(.give-hidden) - GiveWP hides some labels for screen readers only, and
    a blanket display:block put "Choose Your Sponsorship Amount" back on the
    page. */
 .entry-content #give-form label:not(.give-hidden):not(.screen-reader-text),
@@ -6247,7 +6249,7 @@ a.boh-rohit-brand,
   color: var(--boh-ink) !important;
   margin-bottom: 6px !important;
 }
-/* Checkbox and radio labels stay inline — stacking those would break the
+/* Checkbox and radio labels stay inline - stacking those would break the
    control away from its own text. */
 .entry-content #give-form label:has(> input[type="checkbox"]),
 .entry-content #give-form label:has(> input[type="radio"]),
@@ -6326,7 +6328,7 @@ a.boh-rohit-brand,
 }
 
 /* ── Donate form: even, roomier row rhythm ───────────────────────────
-   Row spacing was uneven — 14px, 15px, 18px and 20px between successive
+   Row spacing was uneven - 14px, 15px, 18px and 20px between successive
    blocks, depending on which plugin default happened to win. The
    sponsorship form runs a consistent 18px; this sets a slightly roomier 22px
    and, more importantly, makes every gap the same. */
@@ -6350,7 +6352,7 @@ a.boh-rohit-brand,
   margin-top: 8px !important;
   margin-bottom: 0 !important;
 }
-/* Stacked cards on narrow screens are rows too — give them the same air. */
+/* Stacked cards on narrow screens are rows too - give them the same air. */
 @media (max-width: 720px) {
   .boh-donate-cards { gap: 28px; }
 }
@@ -6358,7 +6360,7 @@ a.boh-rohit-brand,
 /* ── No horizontal scroll from full-bleed sections ───────────────────
    The hero and the sub-page banners are full-bleed via the standard
    `width: 100vw; margin-inline: calc(50% - 50vw)` pattern. 100vw counts the
-   vertical scrollbar, but the content area does not — so on any desktop
+   vertical scrollbar, but the content area does not - so on any desktop
    browser showing a classic scrollbar those sections land ~15px wider than
    the page and produce a horizontal scrollbar at 100% zoom. It does not
    reproduce in a headless browser, which draws no scrollbars.
@@ -6436,7 +6438,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* No glow behind the name. It was added to hold legibility over the hero
-   photograph before the header fills in, but it reads as a smudge — the
+   photograph before the header fills in, but it reads as a smudge - the
    header's own backdrop already does that job. */
 .boh-header__wordmark { text-shadow: none; }
 @media (max-width: 600px) {
@@ -6593,7 +6595,7 @@ body.boh-past-top .boh-header__wordmark {
 @media (max-width: 600px) { .boh-header__logo { --boh-logo-size: 40px; } }
 
 /* Hero logo badge on every screen, stacked above the headline exactly as it
-   is on a phone — the headrow becomes a column wherever the badge is
+   is on a phone - the headrow becomes a column wherever the badge is
    present, instead of putting the mark beside the text on wide screens. */
 .wp-block-cover.boh-hero .boh-hero-headrow:has(.boh-hero-mark--auto) {
   flex-direction: column;
@@ -6601,7 +6603,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 /* Shown from 600px of viewport height, not 720px. A phone's *screen* is
    tall, but Safari's visible viewport is far shorter once its toolbars are
-   counted — an iPhone 15 Pro reports about 687px, and a 720px floor hid the
+   counted - an iPhone 15 Pro reports about 687px, and a 720px floor hid the
    badge on exactly the devices it was added for. Instead of hiding it on
    shorter screens, the badge is sized off viewport height so it always has
    room. */
@@ -6619,7 +6621,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* ── Desktop hero: logo beside the headline, lede underneath ─────────
-   This restores the composition the hero markup was built for — the
+   This restores the composition the hero markup was built for - the
    comment on .boh-hero-block describes it exactly: one rectangle holding
    [logo | eyebrow over headline] with the lede beneath, the whole thing
    centred on screen. It had been flattened to a single centred column
@@ -6657,7 +6659,7 @@ body.boh-past-top .boh-header__wordmark {
        long paragraph would otherwise decide how wide the rectangle is and
        overshoot the headline. Contributing zero to the intrinsic width lets
        the logo-plus-headline row set the width, and min-width then fills it
-       — so the lede runs exactly from the logo's left edge to the headline's
+       - so the lede runs exactly from the logo's left edge to the headline's
        right edge. */
     width: 0 !important;
     min-width: 100% !important;
@@ -6674,7 +6676,7 @@ body.boh-past-top .boh-header__wordmark {
 
 /* ── HalfCup mark animation ──────────────────────────────────────────
    The cup draws itself, fills, then steams. Held until the footer is
-   actually on screen — the alternative is a loop running the whole time
+   actually on screen - the alternative is a loop running the whole time
    someone reads the page, several screens above where it can be seen. */
 .boh-halfcup__mark .hc-cup-outline { stroke-dasharray: 600; stroke-dashoffset: 600; }
 .boh-halfcup__mark .hc-cup-handle  { stroke-dasharray: 200; stroke-dashoffset: 200; }
@@ -6726,7 +6728,7 @@ body.boh-past-top .boh-header__wordmark {
 
 /* ── Gallery year rail ───────────────────────────────────────────────
    A timeline down the side of the gallery on desktop, and a sticky strip
-   across the top on phones — the same control, in the shape each screen
+   across the top on phones - the same control, in the shape each screen
    can actually spare the room for. */
 .boh-gallery-sections { position: relative; }
 
@@ -6771,7 +6773,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* A floating vertical timeline in the bottom-right corner, the same control
-   on every screen — pinned rather than in the flow, so it stays reachable
+   on every screen - pinned rather than in the flow, so it stays reachable
    however far down the gallery you are. */
 .boh-yearrail {
   position: fixed;
@@ -6826,7 +6828,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 /* On the shortest viewport the badge still appears on, the last line of the
    lede met the scroll cue. There is 113px of empty hero above the mark on such
-   a screen and none to spare below it, so the top padding gives way first —
+   a screen and none to spare below it, so the top padding gives way first -
    the block moves up, and the copy clears the cue with room to spare. The
    header is 61px tall, so 76px still clears it. */
 @media (max-width: 640px) and (max-height: 700px) {
@@ -6835,7 +6837,7 @@ body.boh-past-top .boh-header__wordmark {
 /* And the space between the headline and the lede tightens a little too. */
 @media (min-height: 660px) and (max-height: 700px) {
   /* Matching the specificity of the rules that set this margin elsewhere in
-     the file — two of them, both !important, both a class deeper than a
+     the file - two of them, both !important, both a class deeper than a
      shorter selector here would be. */
   .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__lede,
   .wp-block-cover.boh-hero .boh-hero-block .boh-hero-copy__lede { margin-top: 8px !important; }
@@ -7022,7 +7024,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   EVENT AGENDA — the running order, under the date and countdown
+   EVENT AGENDA - the running order, under the date and countdown
    A timeline rather than a table: the time in magenta on its own column,
    a rule threading the rows together, and each moment beside it. The same
    shape on a phone, with the time above the moment instead of beside it.
@@ -7187,7 +7189,7 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* The shortcut into the agenda, under the RSVP button. Deliberately quieter
-   than that button — it opens a section rather than committing anybody to
+   than that button - it opens a section rather than committing anybody to
    anything. */
 .boh-agenda-shortcut { margin: 18px 0 0; text-align: center; }
 html:not(.boh-js) .boh-agenda-shortcut { display: none; }
@@ -7224,10 +7226,18 @@ html:not(.boh-js) .boh-agenda-shortcut { display: none; }
   transform: translateY(1px) rotate(-135deg);
 }
 /* The home page gives every panel `display: flex`, which is a class selector
-   and so outranks the browser's own [hidden] rule — without this the closed
+   and so outranks the browser's own [hidden] rule - without this the closed
    agenda would stay on the page. */
 .boh-agenda-band[hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .boh-agenda-shortcut__btn,
   .boh-agenda-shortcut__chev { transition: none; }
 }
+
+/* Alternating grounds for the home page's full-screen views. !important
+   because several of these panels carry a colour the block editor set
+   inline, and the point of the rotation is that no two views in a row look
+   the same - including when the agenda opens and shifts every view below it
+   to the other colour. */
+body.home .entry-content > .boh-band--pink { background-color: #FDF2F8 !important; }
+body.home .entry-content > .boh-band--white { background-color: #ffffff !important; }

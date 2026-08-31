@@ -203,22 +203,22 @@ function boh_invitations_render_list() {
 					<?php foreach ( $rows as $r ) : ?>
 					<tr>
 						<th class="check-column"><input type="checkbox" name="ids[]" value="<?php echo (int) $r->id; ?>"></th>
-						<td><strong><?php echo esc_html( $r->name ?: '—' ); ?></strong></td>
+						<td><strong><?php echo esc_html( $r->name ?: '-' ); ?></strong></td>
 						<td><?php echo esc_html( $r->email ); ?></td>
 						<td><?php echo esc_html( $r->company ); ?></td>
-						<td><?php echo $r->invitation_sent_at ? esc_html( mysql2date( 'M j', $r->invitation_sent_at ) ) : '<span style="color:#999">—</span>'; ?></td>
-						<td><?php echo $r->reminder_sent_at ? esc_html( mysql2date( 'M j', $r->reminder_sent_at ) ) : '<span style="color:#999">—</span>'; ?></td>
+						<td><?php echo $r->invitation_sent_at ? esc_html( mysql2date( 'M j', $r->invitation_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
+						<td><?php echo $r->reminder_sent_at ? esc_html( mysql2date( 'M j', $r->reminder_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
 						<td>
 							<?php if ( $r->responded_at ) : ?>
 								<strong style="color:#0a7d0a">✓ <?php echo esc_html( mysql2date( 'M j', $r->responded_at ) ); ?></strong>
 							<?php else : ?>
-								<span style="color:#999">—</span>
+								<span style="color:#999">-</span>
 							<?php endif; ?>
 						</td>
-						<td><?php echo esc_html( $r->party_size ?: '—' ); ?></td>
+						<td><?php echo esc_html( $r->party_size ?: '-' ); ?></td>
 						<?php
-						// The form stores the RSVP's own wording ("1 — Just me",
-						// "6+"), so the headcount is derived from it — and stays
+						// The form stores the RSVP's own wording ("1 - Just me",
+						// "6+"), so the headcount is derived from it - and stays
 						// editable, because a reply by email or at the door will
 						// not match whatever the dropdown offered.
 						$boh_guests = function_exists( 'boh_invitations_party_count' ) && $r->responded_at
@@ -313,7 +313,7 @@ function boh_invitations_render_import() {
 						$notices[] = [ 'warning', "Added <code>" . esc_html( $email ) . "</code> but invitation email failed to send. Try Bulk Actions from the list." ];
 					}
 				} else {
-					$notices[] = [ 'success', "Added <code>" . esc_html( $email ) . "</code> — will send on next cron tick, or send manually from All Invitees." ];
+					$notices[] = [ 'success', "Added <code>" . esc_html( $email ) . "</code> - will send on next cron tick, or send manually from All Invitees." ];
 				}
 			}
 		}
@@ -415,7 +415,7 @@ function boh_invitations_render_import() {
 			<?php wp_nonce_field( 'boh_invitations_add_one' ); ?>
 			<input type="hidden" name="boh_invitations_action" value="add_one">
 			<h2 style="margin-top:0">Add one invitee</h2>
-			<p style="color:#666;margin:0 0 8px">Quickest way to add someone — name, email, company. Optional: notes and send invitation immediately.</p>
+			<p style="color:#666;margin:0 0 8px">Quickest way to add someone - name, email, company. Optional: notes and send invitation immediately.</p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th style="width:160px"><label for="boh_inv_name">Name</label></th>
@@ -586,7 +586,7 @@ function boh_invitations_render_flamingo() {
 					?>
 					<tr>
 						<th class="check-column"><input type="checkbox" name="contact_ids[]" value="<?php echo (int) $c->ID; ?>" <?php disabled( $already ); ?>></th>
-						<td><strong><?php echo esc_html( $name ?: '—' ); ?></strong></td>
+						<td><strong><?php echo esc_html( $name ?: '-' ); ?></strong></td>
 						<td><?php echo esc_html( $email ); ?></td>
 						<td>
 							<?php if ( $already ) : ?>
@@ -698,7 +698,7 @@ function boh_invitations_render_templates() {
 								<select name="preview_id" onchange="this.form.submit()">
 									<?php foreach ( $candidates as $c ) : ?>
 										<option value="<?php echo (int) $c->id; ?>" <?php selected( $sample->id, $c->id ); ?>>
-											<?php echo esc_html( ( $c->name ?: '—' ) . ' <' . $c->email . '>' ); ?>
+											<?php echo esc_html( ( $c->name ?: '-' ) . ' <' . $c->email . '>' ); ?>
 										</option>
 									<?php endforeach; ?>
 								</select>

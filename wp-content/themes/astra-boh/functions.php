@@ -1,6 +1,6 @@
 <?php
 /**
- * Baskets of Hope — theme bootstrap + shortcodes + custom footer + animations.
+ * Baskets of Hope - theme bootstrap + shortcodes + custom footer + animations.
  * Standalone theme (no parent). All design lives in style.css + this file.
  *
  * @package BoH
@@ -94,16 +94,16 @@ if (!defined('BOH_EVENT_ISO')) {
 if (!defined('BOH_EVENT_END')) {
     define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 21:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
 }
-if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope — A Night of Giving");
+if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope - A Night of Giving");
 if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4");
-// RSVP form ID — auto-discover by title so the theme works regardless of
+// RSVP form ID - auto-discover by title so the theme works regardless of
 // install order. Cached for an hour to avoid repeating the lookup. Override
 // by defining BOH_RSVP_FORM_ID in wp-config.php if you want a specific form.
 if (!defined('BOH_RSVP_FORM_ID')) {
     $boh_rsvp_id = get_transient('boh_rsvp_form_id');
     if (false === $boh_rsvp_id) {
         $boh_rsvp_id = 0;
-        foreach (['RSVP — Baskets of Hope 2026', 'RSVP — Baskets of Hope 2025'] as $boh_title) {
+        foreach (['RSVP - Baskets of Hope 2026', 'RSVP - Baskets of Hope 2025'] as $boh_title) {
             $boh_match = get_posts([
                 'post_type'      => 'wpcf7_contact_form',
                 'title'          => $boh_title,
@@ -169,11 +169,11 @@ add_shortcode('boh_countdown', function ($atts) {
     return ob_get_clean();
 });
 
-// --- [boh_impact] — donation impact calculator ---------------------------
+// --- [boh_impact] - donation impact calculator ---------------------------
 // --- [boh_agenda_shortcut] -----------------------------------------------
 // A quiet line under the RSVP button that opens the running order in place.
 // It only exists when the agenda does, and only when JavaScript can actually
-// open anything — without it the agenda is simply on the page, so a link
+// open anything - without it the agenda is simply on the page, so a link
 // promising to reveal something would be a lie.
 add_shortcode('boh_agenda_shortcut', function () {
     if (! boh_agenda_is_showing()) {
@@ -196,7 +196,7 @@ add_shortcode('boh_agenda_shortcut', function () {
 });
 
 /**
- * Whether the agenda is on the page at all — switched on for everyone, or
+ * Whether the agenda is on the page at all - switched on for everyone, or
  * being previewed by somebody who can edit it. Both the section and its
  * shortcut ask this, so the two can never disagree.
  */
@@ -212,7 +212,7 @@ function boh_agenda_is_showing(): bool
 // --- [boh_agenda] --------------------------------------------------------
 // The running order for this year's evening, under the date and countdown on
 // the home page. A visitor told us in Aug 2026 that the site never said what
-// actually happens on the night — this is the answer to that.
+// actually happens on the night - this is the answer to that.
 //
 // Every value is read before the on/off switch is examined, deliberately:
 // boh_content() records what the theme ships the first time it is asked, and
@@ -222,7 +222,7 @@ add_shortcode('boh_agenda', function () {
     $eyebrow = boh_content('agenda.eyebrow', 'The evening');
     $heading = boh_content('agenda.heading', 'How the night unfolds');
     $lede    = boh_content('agenda.lede', '<p>A short evening, and every part of it ends with a basket in somebody\'s hands.</p>');
-    $note    = boh_content('agenda.note', 'Times are approximate. Come when you can — the doors stay open all evening.');
+    $note    = boh_content('agenda.note', 'Times are approximate. Come when you can - the doors stay open all evening.');
     $items   = boh_content('agenda.items', [
         ['6:00 PM', 'Doors open',        'Arrive, find your name badge and meet the team over a drink.', '', ''],
         ['6:30 PM', 'Welcome',           "A short welcome, and the story behind this year's baskets.", '', ''],
@@ -235,7 +235,7 @@ add_shortcode('boh_agenda', function () {
 
     // Off is off for visitors. Anyone who can edit the site can still see the
     // draft in place with ?boh_agenda=preview, which is the only honest way to
-    // judge a running order — in the page, under the countdown, at the width
+    // judge a running order - in the page, under the countdown, at the width
     // it will actually be read at.
     $live    = (string) boh_content('agenda.enabled', '0') === '1';
     $preview = ! $live && boh_agenda_is_showing();
@@ -253,7 +253,7 @@ add_shortcode('boh_agenda', function () {
     <section class="wp-block-group alignfull boh-agenda-band<?php echo $preview ? ' boh-agenda-band--preview' : ''; ?>" id="boh-agenda">
       <div class="boh-agenda">
         <?php if ($preview) : ?>
-          <p class="boh-agenda__preview">Preview — this section is switched off, so nobody else can see it.</p>
+          <p class="boh-agenda__preview">Preview - this section is switched off, so nobody else can see it.</p>
         <?php endif; ?>
         <?php if ($eyebrow) : ?>
           <p class="boh-agenda__eyebrow"><span class="boh-eyebrow"><?php echo esc_html($eyebrow); ?></span></p>
@@ -342,7 +342,7 @@ add_shortcode('boh_impact', function ($atts) {
       const txt  = root.querySelector('[data-out="text"]');
       const items= root.querySelector('[data-out="items"]');
       const cta  = root.querySelector('.boh-impact__cta');
-      // CTA is just a scroll-anchor — passing ?give-amount auto-opens the
+      // CTA is just a scroll-anchor - passing ?give-amount auto-opens the
       // GiveWP form (defeating reveal mode), so don't append params.
       function render(amt){
         const t = tiers[amt];
@@ -450,7 +450,7 @@ add_shortcode('boh_event_meta', function () {
     return ob_get_clean();
 });
 
-// --- [boh_calendar] — Google/iCal "add to calendar" ---------------------
+// --- [boh_calendar] - Google/iCal "add to calendar" ---------------------
 add_shortcode('boh_calendar', function () {
     $start_gcal = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO));
     $end_gcal   = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END));
@@ -498,7 +498,7 @@ add_action('init', function () {
     exit;
 });
 
-// --- [boh_rsvp] — embedded RSVP form ------------------------------------
+// --- [boh_rsvp] - embedded RSVP form ------------------------------------
 add_shortcode('boh_rsvp', function ($atts) {
     $a = shortcode_atts(['form_id' => BOH_RSVP_FORM_ID], $atts);
 
@@ -534,7 +534,7 @@ add_shortcode('boh_rsvp', function ($atts) {
     return ob_get_clean();
 });
 
-// --- [boh_sticky] — sticky bottom CTA bar -------------------------------
+// --- [boh_sticky] - sticky bottom CTA bar -------------------------------
 add_shortcode('boh_sticky', function ($atts) {
     $a = shortcode_atts([
         'text'      => 'Be part of the next basket.',
@@ -576,7 +576,7 @@ add_shortcode('boh_sticky', function ($atts) {
 // shortcode still exists if it's ever wanted on a specific page.
 
 /**
- * Custom site footer — 4 columns: brand, quick links, contact, event CTA.
+ * Custom site footer - 4 columns: brand, quick links, contact, event CTA.
  * Replaces Astra's minimal "Powered by" small footer (which we hide in CSS).
  */
 add_action('wp_footer', function () {
@@ -592,7 +592,7 @@ add_action('wp_footer', function () {
           <p class="boh-footer__initiative">
             A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand">Rohit Group</a> initiative.
           </p>
-          <p>Since 2010, delivering dignity and care to women and families escaping violence — one basket at a time, in partnership with WIN House Edmonton.</p>
+          <p>Since 2010, delivering dignity and care to women and families escaping violence - one basket at a time, in partnership with WIN House Edmonton.</p>
           <div class="boh-footer__social" aria-label="Follow Rohit's Baskets of Hope">
             <a href="<?php echo esc_url( $linkedin_url ); ?>" target="_blank" rel="noopener" aria-label="LinkedIn">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h4v4H4zM4 10h4v10H4zM10 10h4v1.5c.7-1 1.9-1.8 3.5-1.8 2.8 0 4.5 1.7 4.5 5V20h-4v-4.5c0-1.5-.5-2.5-2-2.5s-2 1-2 2.5V20h-4V10z"/></svg>
@@ -633,7 +633,7 @@ add_action('wp_footer', function () {
         <div>&copy; <?php echo esc_html($year); ?> Rohit Group. All rights reserved.</div>
         <div>
           <?php
-          // Only link the privacy policy once it is actually published —
+          // Only link the privacy policy once it is actually published -
           // the draft is still WordPress's boilerplate, and linking it
           // 404'd on every page of the site.
           $boh_privacy_id = (int) get_option('wp_page_for_privacy_policy');
@@ -641,7 +641,7 @@ add_action('wp_footer', function () {
             <a href="<?php echo esc_url(get_permalink($boh_privacy_id)); ?>">Privacy</a> &nbsp;|&nbsp;
           <?php endif; ?>
           Developed by
-          <a class="boh-halfcup" href="https://halfcup.ca" target="_blank" rel="noopener" aria-label="HalfCup — opens in a new tab">
+          <a class="boh-halfcup" href="https://halfcup.ca" target="_blank" rel="noopener" aria-label="HalfCup - opens in a new tab">
             <svg class="boh-halfcup__mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" width="24" height="24" aria-hidden="true" focusable="false">
               <defs>
                 <linearGradient id="bohHalfcupGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -692,7 +692,7 @@ add_action('wp_footer', function () {
 /**
  * Social sharing metadata (Open Graph + Twitter Card) and the site icon.
  *
- * No SEO plugin is active — Yoast is installed but switched off — so nothing
+ * No SEO plugin is active - Yoast is installed but switched off - so nothing
  * was emitting og: tags at all. Pasting a link into WhatsApp, iMessage,
  * Slack, Facebook or LinkedIn produced a bare URL with no image.
  *
@@ -724,7 +724,7 @@ function boh_share_description(): string
 add_action('wp_head', function () {
     $card  = boh_content('brand.share_card', get_stylesheet_directory_uri() . '/assets/share-card.png');
     $title = is_front_page()
-        ? get_bloginfo('name') . ' — ' . get_bloginfo('description')
+        ? get_bloginfo('name') . ' - ' . get_bloginfo('description')
         : wp_get_document_title();
     $url   = is_singular() ? get_permalink() : home_url(add_query_arg([], $GLOBALS['wp']->request ?? ''));
     $desc  = boh_share_description();
@@ -772,7 +772,7 @@ add_action('wp_head', function () {
  * Mark the document as JS-capable before anything paints.
  *
  * The scroll-reveal hides content until JS reveals it. If the script never
- * runs — an error earlier on the page, a blocked file — that content stays
+ * runs - an error earlier on the page, a blocked file - that content stays
  * invisible for good. Gating the hidden state on this class means the
  * no-JS path renders everything instead of nothing.
  */
@@ -783,7 +783,7 @@ add_action('wp_head', function () {
 /**
  * Decorative artwork lives in CSS backgrounds, so a chosen image is handed to
  * the stylesheet as a custom property rather than by rewriting the CSS file.
- * Nothing is printed unless something was actually chosen — the stylesheet
+ * Nothing is printed unless something was actually chosen - the stylesheet
  * keeps its own url() as the fallback inside each var().
  */
 add_action('wp_head', function () {
@@ -857,7 +857,7 @@ add_action('wp_footer', function () {
         // threshold 0, NOT a ratio. A ratio threshold is unreachable for any
         // element taller than the viewport: the gallery page wraps every year
         // in one 8600px group, whose maximum possible intersectionRatio in a
-        // 900px window is 0.105 — under the old 0.12 it never fired, so the
+        // 900px window is 0.105 - under the old 0.12 it never fired, so the
         // whole gallery stayed at opacity 0 and looked like a white screen.
         // Firing on first pixel, with the root shortened from the bottom,
         // behaves identically for small blocks and correctly for huge ones.
@@ -887,7 +887,7 @@ add_action('wp_footer', function () {
         revealAll();
       }
 
-      // ── 3. Stat counter — count up from 0 to target ─────────────
+      // ── 3. Stat counter - count up from 0 to target ─────────────
       function animateCount(el, target) {
         if (reduced) { el.textContent = target.toLocaleString(); return; }
         const duration = 1400;
@@ -926,7 +926,7 @@ add_action('wp_footer', function () {
         statObs.observe(statsSection);
       }
 
-      // ── 4. Header background — proportional to scroll ─────────
+      // ── 4. Header background - proportional to scroll ─────────
       // Starts at 10% white over the hero; ramps up to fully white as the
       // hero scrolls out of view. Body still gets `.boh-scrolled` past the
       // hero so nav-link colors / other components can flip in a step.
@@ -951,7 +951,7 @@ add_action('wp_footer', function () {
         }
 
         // Separate, earlier trigger for the header mark. `boh-scrolled` only
-        // flips at 80% of the hero, which is most of a screen — too late for
+        // flips at 80% of the hero, which is most of a screen - too late for
         // the logo to feel like it belongs to the scroll.
         document.body.classList.toggle('boh-past-top', y > window.innerHeight * 0.22);
       }
@@ -974,7 +974,7 @@ add_action('wp_footer', function () {
         }));
       }
 
-      // ── 5. Scroll-spy — highlight current section in nav ───────
+      // ── 5. Scroll-spy - highlight current section in nav ───────
       const navLinks = Array.from(document.querySelectorAll('.boh-nav__list a[href*="#"]'));
       const navMap = {};
       navLinks.forEach(a => {
@@ -1007,7 +1007,7 @@ add_shortcode('boh_eyebrow', function ($atts, $content = '') {
     return '<span class="boh-eyebrow">' . esc_html($a['text']) . '</span>';
 });
 
-// --- [boh_sponsor_tiers] — 8-tier sponsorship cards (per PDF) -----------
+// --- [boh_sponsor_tiers] - 8-tier sponsorship cards (per PDF) -----------
 add_shortcode('boh_sponsor_tiers', function () {
     $tiers = [
         [
@@ -1025,7 +1025,7 @@ add_shortcode('boh_sponsor_tiers', function () {
         [
             'level' => 'Gold Basket', 'price' => '$1,000 – $1,500', 'tone' => 'gold',
             'title' => 'Wine & beverage sponsor',
-            'copy'  => 'Celebrate generosity with a toast — your gift keeps the evening flowing.',
+            'copy'  => 'Celebrate generosity with a toast - your gift keeps the evening flowing.',
             'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
         ],
         [
@@ -1043,7 +1043,7 @@ add_shortcode('boh_sponsor_tiers', function () {
         [
             'level' => 'Supporting Basket', 'price' => '$500', 'tone' => 'support',
             'title' => 'Candy sponsor',
-            'copy'  => 'End the evening on a sweet note — a candy bar display that leaves a lasting impression.',
+            'copy'  => 'End the evening on a sweet note - a candy bar display that leaves a lasting impression.',
             'benefits' => ['Logo on table signage', 'Logo on sponsors board', 'Recognition on social media'],
         ],
         [
@@ -1080,7 +1080,7 @@ add_shortcode('boh_sponsor_tiers', function () {
     return ob_get_clean();
 });
 
-// --- [boh_page_hero] — reusable sub-page header banner --------------
+// --- [boh_page_hero] - reusable sub-page header banner --------------
 // Used at the top of About / Donate / Sponsor / FAQs / Gallery / RSVP.
 // Image sits at top with a soft magenta wash; a floral flourish
 // peeks in from the top-right corner; centered eyebrow + heading
@@ -1131,7 +1131,7 @@ add_shortcode('boh_page_hero', function ($atts) {
     return ob_get_clean();
 });
 
-// --- [boh_hero_slideshow] — rotating background images + pagination dots -
+// --- [boh_hero_slideshow] - rotating background images + pagination dots -
 // Renders the slideshow markup (slides + dot controls) inside the cover
 // block. Auto-rotates every 6s; dots let visitors jump. Pauses on hover.
 add_shortcode('boh_hero_slideshow', function () {
@@ -1141,7 +1141,7 @@ add_shortcode('boh_hero_slideshow', function () {
     // Media library as exactly these filenames (or update paths here).
     // Lead with edge-to-edge event photos so the hero fills the viewport with
     // no pink margin bleed. The brand-flower artwork has soft pink borders
-    // baked in and reads as empty space at the sides — use it later in the
+    // baked in and reads as empty space at the sides - use it later in the
     // rotation, not as the first frame.
     // Slides are managed in Appearance → Hero Images. The hardcoded list
     // below is only the fallback for a site that has never set them, so the
@@ -1246,9 +1246,9 @@ add_shortcode('boh_hero_slideshow', function () {
     return ob_get_clean();
 });
 
-// --- [boh_donate_cards] — two-card layout on /donate/ --------------------
+// --- [boh_donate_cards] - two-card layout on /donate/ --------------------
 // Left card = external donation to WIN House (new tab). Right card = the
-// on-site GiveWP flow ("sponsor a basket") — scrolls to #give-form.
+// on-site GiveWP flow ("sponsor a basket") - scrolls to #give-form.
 add_shortcode('boh_donate_cards', function () {
     // WIN House's DonorPerfect form dedicated to this event, so gifts made
     // here are attributed to Baskets of Hope rather than the general fund.
@@ -1284,8 +1284,8 @@ add_shortcode('boh_donate_cards', function () {
 });
 
 // --- [boh_how_it_works variant="compact|full"] 4-step process module ---
-// full    — full body text (About page)
-// compact — number + title only, for the home summary page
+// full    - full body text (About page)
+// compact - number + title only, for the home summary page
 add_shortcode('boh_how_it_works', function ($atts) {
     $atts = shortcode_atts([
         'variant' => 'full',
@@ -1296,7 +1296,7 @@ add_shortcode('boh_how_it_works', function ($atts) {
     // detail, so the compact home-page version says something concrete
     // rather than showing four bare headings.
     $up = '/wp-content/uploads/2026/06/';
-    // Editable in BoH Content -> Home ("How it works — steps"). Columns are
+    // Editable in BoH Content -> Home ("How it works - steps"). Columns are
     // number / title / full text / short text / image; the alt text below is
     // kept in code because it is accessibility copy tied to each photograph.
     $alts = [
@@ -1309,7 +1309,7 @@ add_shortcode('boh_how_it_works', function ($atts) {
         [
             '01', 'Choose items',
             'Guests select and purchase 12 new comfort items that recipients can use and enjoy.',
-            'Cozy socks, journals, body care, a small blanket — comfort, not necessities.',
+            'Cozy socks, journals, body care, a small blanket - comfort, not necessities.',
             $up . 'get-involved3-768x539.jpg',
             'Volunteers selecting toiletries and self-care items from organized donation bins',
         ],
@@ -1343,7 +1343,7 @@ add_shortcode('boh_how_it_works', function ($atts) {
         <span class="boh-eyebrow">How it works</span>
         <h2><?php echo wp_kses_post(boh_content('home.steps_heading', 'From your hands to a family in <em>need</em>.')); ?></h2>
         <?php
-        // Rich text, so the team can link words in this paragraph — the
+        // Rich text, so the team can link words in this paragraph - the
         // Donate link below is the default rather than something that has to
         // be re-added by hand after every edit.
         echo wp_kses_post(boh_content('home.steps_lede',
@@ -1378,7 +1378,7 @@ add_shortcode('boh_how_it_works', function ($atts) {
     return ob_get_clean();
 });
 
-// --- [boh_quick_links] — grid of section-nav cards for the home page ---
+// --- [boh_quick_links] - grid of section-nav cards for the home page ---
 add_shortcode('boh_quick_links', function () {
     $links = boh_content('home.quick_links', [
         ['/about/',   'About',    'Learn how Baskets of Hope began and read about the history of the event.'],
@@ -1401,7 +1401,7 @@ add_shortcode('boh_quick_links', function () {
     return ob_get_clean();
 });
 
-// --- [boh_stats] — moved from home to about ----------------------------
+// --- [boh_stats] - moved from home to about ----------------------------
 add_shortcode('boh_stats', function () {
     // Editable in BoH Content -> Home. The figures below are only the
     // fallback shown before anyone has saved real numbers.
@@ -1424,7 +1424,7 @@ add_shortcode('boh_stats', function () {
     return ob_get_clean();
 });
 
-// --- [boh_faqs] — accordion-style FAQ list -----------------------------
+// --- [boh_faqs] - accordion-style FAQ list -----------------------------
 add_shortcode('boh_faqs', function () {
     // Editable in BoH Content -> FAQs. Add, reorder or delete questions there.
     $faqs = boh_content('faqs.items', [
@@ -1466,7 +1466,7 @@ add_shortcode('boh_faqs', function () {
     return ob_get_clean();
 });
 
-// --- [boh_gallery year="2025"] — event photo/video gallery -------------
+// --- [boh_gallery year="2025"] - event photo/video gallery -------------
 // Reads from a filter so image URLs live outside code. Empty state shows
 // a friendly "coming soon" until albums are populated.
 /**
@@ -1509,7 +1509,7 @@ function boh_gallery_block(array $items, string $label): string
           <?php foreach ($items as $i => $item) : ?>
             <?php
             // Real aspect ratio drives the tile's shape, so the masonry is made
-            // of the photographs themselves rather than arbitrary spans — and
+            // of the photographs themselves rather than arbitrary spans - and
             // nothing is cropped. Falls back to 4:3 when dimensions are unknown.
             $g_ar = (!empty($item['w']) && !empty($item['h']))
                 ? (int) $item['w'] . ' / ' . (int) $item['h']
@@ -1633,7 +1633,7 @@ function boh_gallery_block(array $items, string $label): string
             opener = trigger || null;
             // The viewer is position:fixed, but an ancestor of the gallery
             // carries a transform (the scroll-reveal), and a transformed
-            // ancestor becomes the containing block for fixed descendants —
+            // ancestor becomes the containing block for fixed descendants -
             // so the viewer was positioning itself against that element and
             // opening thousands of pixels down the page instead of over the
             // screen. Re-parent it to <body> once, where nothing traps it.
@@ -1780,7 +1780,7 @@ add_shortcode('boh_gallery', function ($atts) {
 });
 
 // --- Relabel GiveWP's built-in "Donation" / "Donate" strings to
-//     "Sponsorship" / "Sponsor" — the BoH team frames every gift as
+//     "Sponsorship" / "Sponsor" - the BoH team frames every gift as
 //     sponsoring a basket, so the checkout should read consistently.
 add_filter('gettext', function ($translated, $original, $domain) {
     if ($domain !== 'give') return $translated;
@@ -1807,7 +1807,7 @@ add_action( 'wp_footer', function () {
     ?>
     <script>
     (function () {
-        // Compact confetti — no dependencies. Bursts brand-colored bits
+        // Compact confetti - no dependencies. Bursts brand-colored bits
         // from the top-center of the viewport for ~2.5s.
         function boh_confetti(duration) {
             duration = duration || 2500;
@@ -1893,7 +1893,7 @@ add_action( 'wp_footer', function () {
               +     '</div>'
               +     '<div class="boh-rsvp-success__cell">'
               +       '<div class="boh-rsvp-success__label">Party of</div>'
-              +       '<div class="boh-rsvp-success__val">' + (party.replace(/[<>&]/g, '') || '—') + '</div>'
+              +       '<div class="boh-rsvp-success__val">' + (party.replace(/[<>&]/g, '') || '-') + '</div>'
               +     '</div>'
               +     '<div class="boh-rsvp-success__cell">'
               +       '<div class="boh-rsvp-success__label">Bring</div>'
@@ -2060,7 +2060,7 @@ add_action( 'wp_footer', function () {
 // Pre-fill the RSVP CF7 form + show a welcome banner when someone lands
 // on /rsvp/ from an invitation email (URL contains ?boh_n / ?boh_e).
 // The banner tells them their invite is recognised and their info is
-// pre-filled — replaces the previous silent pre-fill.
+// pre-filled - replaces the previous silent pre-fill.
 add_action( 'wp_footer', function () {
     if ( ! is_page( 'rsvp' ) ) return;
     ?>
@@ -2275,7 +2275,7 @@ add_action('wp_footer', function () {
 }, 80);
 
 /**
- * [boh_hero_mark] — big animated brand mark, dropped into the home hero
+ * [boh_hero_mark] - big animated brand mark, dropped into the home hero
  * above the "Since 2010 · Edmonton…" tagline. Reuses the .boh-mark CSS
  * (see style.css) so it stays in sync with the header logo animation.
  * Attributes: size (px, default 260), class (extra classes).
@@ -2309,7 +2309,7 @@ add_shortcode('boh_hero_mark', function ($atts) {
 });
 
 /**
- * Animated brand mark — play the intro once per session for every mark
+ * Animated brand mark - play the intro once per session for every mark
  * carrying the `data-play-intro` attribute (header logo + any hero marks).
  * The finished mark is the CSS default; adding .is-playing triggers the
  * draw-in animation. The header mark also replays on hover.
@@ -2334,9 +2334,9 @@ add_action('wp_footer', function () {
           intros.forEach(play);
           sessionStorage.setItem(KEY, '1');
         }
-      } catch (e) { /* privacy mode — just skip */ }
+      } catch (e) { /* privacy mode - just skip */ }
 
-      // Every intro-marked mark replays on hover — hover the SVG itself
+      // Every intro-marked mark replays on hover - hover the SVG itself
       // OR the wrapper (so the header link's whole hit area triggers).
       // Debounced 2.6s so mousing across mid-animation doesn't restart it.
       intros.forEach(function(mark){
@@ -2471,7 +2471,7 @@ add_action('wp_footer', function () {
         var y = window.scrollY || root.scrollTop;
         var maxScroll = Math.max(0, root.scrollHeight - window.innerHeight);
         var atTop = y < 8;
-        // The last panel is the footer, which is shorter than the viewport —
+        // The last panel is the footer, which is shorter than the viewport -
         // its top sits past the furthest the page can scroll, so it never
         // becomes "current". Being at the bottom of the document is the
         // honest end condition.
@@ -2521,7 +2521,7 @@ add_action('wp_footer', function () {
     /* The agenda opens from a line under the RSVP button rather than sitting
        open below it. Collapsing happens here rather than in the markup: with
        no JavaScript the section stays on the page, which is the honest
-       fallback — a shortcut that cannot open anything is worse than a
+       fallback - a shortcut that cannot open anything is worse than a
        section that is simply already open. */
     (function () {
       var btn = document.querySelector('.boh-agenda-shortcut__btn');
@@ -2551,7 +2551,47 @@ add_action('wp_footer', function () {
       setOpen(false, false);
       btn.addEventListener('click', function () {
         setOpen(sec.hidden, true);
+        if (window.bohBands) window.bohBands.paint();
       });
+    })();
+    </script>
+
+    <script>
+    /* Alternating grounds, pink and white, so no two views in a row share a
+       background. Painted in JavaScript rather than written into the page
+       because the sequence is not fixed: opening the agenda inserts a whole
+       view and everything below it has to change hands. The one deliberately
+       dark panel keeps its own colour and sits out of the rotation - it is a
+       break in the rhythm on purpose. */
+    (function () {
+      var content = document.querySelector('.entry-content');
+      if (!content) return;
+
+      function isDark(el) {
+        var m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);
+        if (!m || m.length < 3 || (m[3] !== undefined && parseFloat(m[3]) < 0.5)) return false;
+        return (0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]) < 128;
+      }
+
+      function paint() {
+        var pink = true;
+        Array.prototype.slice.call(content.children).forEach(function (el) {
+          if (el.classList.contains('boh-hero')) return;          // the photograph
+          if (el.hasAttribute('hidden')) {                        // the closed agenda
+            el.classList.remove('boh-band--pink', 'boh-band--white');
+            return;
+          }
+          if (el.getBoundingClientRect().height < 200) return;    // editor markers
+          if (isDark(el)) return;                                 // keeps its own ground
+          el.classList.remove('boh-band--pink', 'boh-band--white');
+          el.classList.add(pink ? 'boh-band--pink' : 'boh-band--white');
+          pink = !pink;
+        });
+      }
+
+      window.bohBands = { paint: paint };
+      paint();
+      window.addEventListener('load', paint);
     })();
     </script>
     <?php
@@ -2571,7 +2611,7 @@ function boh_hero_slide_fallback(): array
 {
     return [
         '/wp-content/uploads/2026/06/RC_BoH_112722_181108_LR-13-1024x683.jpg',
-        // 1395x2048 (250KB) rather than the 5.8MB original — this is a
+        // 1395x2048 (250KB) rather than the 5.8MB original - this is a
         // background image, not a print asset.
         '/wp-content/uploads/2026/07/boh-flower-main-1395x2048.jpg',
     ];
@@ -2613,7 +2653,7 @@ add_action('admin_menu', function () {
             'boh-content', 'Hero slideshow', 'Hero slideshow', 'edit_theme_options',
             'boh-hero-images', 'boh_hero_images_screen'
         );
-        // Registered last, so lift it to the top of the list afterwards —
+        // Registered last, so lift it to the top of the list afterwards -
         // the hero is the first thing anyone edits.
         add_action('admin_menu', function () {
             global $submenu;
@@ -2662,7 +2702,7 @@ function boh_hero_images_screen(): void
     $ids = boh_hero_slide_ids();
     ?>
     <div class="wrap">
-      <h1>BoH Content — Hero slideshow</h1>
+      <h1>BoH Content - Hero slideshow</h1>
       <?php if ( function_exists( 'boh_content_tabs' ) ) { boh_content_tabs( 'hero' ); } ?>
       <p>These images rotate behind the headline on the home page. Add as many
          as you like, drag to reorder, and remove any you no longer want.
@@ -2784,7 +2824,7 @@ function boh_hero_images_screen(): void
     <?php
 }
 
-// --- [boh_about_modules] — the About page's alternating image/copy blocks
+// --- [boh_about_modules] - the About page's alternating image/copy blocks
 // Was raw HTML inside the page, which meant the team could not touch it
 // without editing markup. Renders from BoH Content -> About instead; the
 // stored rows carry image, heading, body (rich text) and alt text.
@@ -2837,7 +2877,7 @@ add_action('wp_footer', function () {
       if (!rail) return;
       // The rail is position:fixed, but the gallery sits inside an element
       // carrying the scroll-reveal transform, and a transformed ancestor
-      // becomes the containing block for fixed descendants — which put the
+      // becomes the containing block for fixed descendants - which put the
       // rail thousands of pixels below the viewport instead of in the
       // corner. Re-parent it to <body>, where nothing traps it. This has to
       // happen before the year-link guard below: the rail carries the play
@@ -2916,7 +2956,7 @@ add_action('wp_footer', function () {
 // Rendered server-side, into the content itself, rather than injected with
 // JavaScript. An injected badge disappears for anyone served a cached copy
 // of the page from before the script existed, or whenever the script does
-// not run — which is exactly how it came to be missing on a real phone
+// not run - which is exactly how it came to be missing on a real phone
 // while every headless check showed it present.
 add_filter('the_content', function ($content) {
     if (!is_front_page() || is_admin() || strpos($content, 'boh-hero-headrow') === false) {
@@ -2945,7 +2985,7 @@ add_filter('the_content', function ($content) {
 // Both used to open a new tab, which pushes a visitor off the site mid-read.
 // They now open in a dialog over the page. Every link keeps its real href and
 // target, so a middle-click, a long-press or a blocked script still behaves
-// exactly as before — the dialog is an enhancement, not the only route.
+// exactly as before - the dialog is an enhancement, not the only route.
 add_action('wp_footer', function () {
     ?>
     <div class="boh-embed" hidden role="dialog" aria-modal="true" aria-labelledby="boh-embed-title">
@@ -3027,11 +3067,11 @@ add_action('wp_footer', function () {
         if (!isMap && !isWin) return;
 
         var src = isMap ? mapEmbed(href) : href;
-        if (!src) return;                 // unparseable — leave the link alone
+        if (!src) return;                 // unparseable - leave the link alone
 
         e.preventDefault();
         opener = a;
-        open(src, isMap ? 'Rohit Group Office — map' : 'WIN House Edmonton', href);
+        open(src, isMap ? 'Rohit Group Office - map' : 'WIN House Edmonton', href);
       });
     })();
     </script>

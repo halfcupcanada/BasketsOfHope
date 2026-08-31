@@ -3,7 +3,7 @@
  * Plugin Name: BoH event display (/tv/)
  * Description: A full-screen slideshow of the gallery with the 50/50 draw
  *              countdown, for running on a screen at the event. Deliberately
- *              not in the menu and not indexed — it is reached by typing the
+ *              not in the menu and not indexed - it is reached by typing the
  *              URL on the display machine.
  *
  *              Renders a standalone page rather than a theme template: the
@@ -93,7 +93,7 @@ function boh_tv_draw_time(): array {
 	$ts   = $draw ? strtotime( $draw . ' UTC' ) : false;
 
 	if ( ! $ts && defined( 'BOH_EVENT_ISO' ) ) {
-		// No raffle configured yet — count down to the event instead, which is
+		// No raffle configured yet - count down to the event instead, which is
 		// still the right thing for a screen in the room.
 		$ts = strtotime( BOH_EVENT_ISO );
 		return [ 'ts' => $ts, 'label' => 'Doors open in', 'is_draw' => false ];
@@ -118,7 +118,7 @@ function boh_tv_render(): void {
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title><?php echo esc_html( $name ); ?> — event display</title>
+<title><?php echo esc_html( $name ); ?> - event display</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
@@ -135,7 +135,7 @@ function boh_tv_render(): void {
     font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   }
   /* The cursor is a distraction on a screen nobody touches. It comes back
-     for anyone who moves a mouse — a visitor who arrived from the gallery
+     for anyone who moves a mouse - a visitor who arrived from the gallery
      needs to see where they are and how to leave. */
   body { cursor: none; }
   body.is-awake { cursor: default; }
@@ -163,7 +163,7 @@ function boh_tv_render(): void {
   .slide.is-on { opacity: 1; }
   /* Two real elements rather than a pseudo-element behind the slide: the
      slide sets will-change, which makes it a stacking context, and a
-     z-index:-1 pseudo-element cannot escape that — it painted the blurred
+     z-index:-1 pseudo-element cannot escape that - it painted the blurred
      copy on top of the photograph and made everything look soft. */
   .slide__fill,
   .slide__img {
@@ -255,7 +255,7 @@ function boh_tv_render(): void {
 
   <header class="top">
     <?php // Mark only. The name is already on the wall, on the banners and in
-          // the room — a screen this size does not need to repeat it. ?>
+          // the room - a screen this size does not need to repeat it. ?>
     <?php if ( $logo ) : ?><img src="<?php echo esc_url( $logo ); ?>" alt="<?php echo esc_attr( $name ); ?>"><?php endif; ?>
   </header>
 
@@ -287,7 +287,7 @@ function boh_tv_render(): void {
   var bar = document.getElementById('progress');
 
   /* ── Slideshow ───────────────────────────────────────────────────
-     Two layers that cross-fade, so only ever two images are decoded —
+     Two layers that cross-fade, so only ever two images are decoded -
      a hundred-plus <img> tags would exhaust a cheap display stick. */
   var layers = [makeLayer(), makeLayer()];
   function makeLayer() {
