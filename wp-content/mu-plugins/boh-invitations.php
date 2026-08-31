@@ -251,14 +251,27 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 	$submission = WPCF7_Submission::get_instance();
 	if ( ! $submission ) return;
 	$posted = $submission->get_posted_data();
+
+	/**
+	 * Contact Form 7 hands select and checkbox values back as arrays, even
+	 * when the field takes a single answer: party-size comes through as
+	 * array( 0 => '4' ), not '4'. sanitize_text_field() returns an empty
+	 * string for an array, so every RSVP since this form went up recorded a
+	 * blank party size and the guest count fell back to 1. Flatten first.
+	 */
+	$field = function ( string $key ) use ( $posted ): string {
+		$v = $posted[ $key ] ?? '';
+		if ( is_array( $v ) ) { $v = reset( $v ); }
+		return sanitize_text_field( (string) $v );
+	};
 	// Simplified RSVP form uses your-email; older form used the same key.
-	$email  = sanitize_email( $posted['your-email'] ?? '' );
+	$email  = sanitize_email( $field( 'your-email' ) );
 	if ( ! $email ) return;
 
 	global $wpdb;
 	$t = boh_invitations_table();
 	$inv   = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE email = %s", $email ) );
-	$party = sanitize_text_field( $posted['party-size'] ?? '' );
+	$party = $field( 'party-size' );
 	$now   = current_time( 'mysql', true );
 
 	// Somebody who was never on the invite list can still RSVP from the site.
@@ -266,10 +279,7 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 	// Flamingo, so the guest list was quietly incomplete. Record them as a
 	// walk-up so one screen shows every RSVP.
 	if ( ! $inv ) {
-		$name = trim(
-			sanitize_text_field( $posted['first-name'] ?? '' ) . ' ' .
-			sanitize_text_field( $posted['last-name'] ?? '' )
-		);
+		$name = trim( $field( 'first-name' ) . ' ' . $field( 'last-name' ) );
 		$wpdb->insert( $t, [
 			'name'         => $name,
 			'email'        => $email,
