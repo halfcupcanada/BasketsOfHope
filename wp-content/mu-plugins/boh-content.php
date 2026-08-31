@@ -248,6 +248,37 @@ function boh_content_schema(): array {
 			],
 		],
 
+		'emails' => [
+			'title'  => 'Emails',
+			'help'   => 'The header and footer wrapped around every message the site sends — RSVP confirmations, invitations, reminders, forwarded invitations. The words in the middle come from the message itself; everything here is the frame around them. Send yourself a test at the bottom of this screen before trusting it to a guest list.',
+			'fields' => [
+				[
+					'key'   => 'email.preheader',
+					'label' => 'Inbox preview line',
+					'type'  => 'text',
+					'help'  => 'The grey line inboxes show beside the subject. Left empty, the inbox shows the opening words of the message instead — which is usually fine.',
+				],
+				[
+					'key'   => 'email.header',
+					'label' => 'Header',
+					'type'  => 'richtext',
+					'help'  => 'Sits under the logo, above the message. Often best left empty — the logo alone is a clean opening.',
+				],
+				[
+					'key'   => 'email.footer',
+					'label' => 'Footer',
+					'type'  => 'richtext',
+					'help'  => 'Under a hairline at the foot of the card. The date, the address and a link back to the site belong here.',
+				],
+				[
+					'key'   => 'email.smallprint',
+					'label' => 'Small print',
+					'type'  => 'text',
+					'help'  => 'Outside the card, in grey — why this message arrived.',
+				],
+			],
+		],
+
 		'brand' => [
 			'title'  => 'Brand & images',
 			'help'   => 'The images that are not part of any one page: the logo, the decorative flower artwork used across the sub-pages, and the card shown when a link is shared. Leave a field empty to keep the current image.',
@@ -488,6 +519,16 @@ function boh_content_render_screen(): void {
 				        onclick="return confirm('Reset every field on this screen back to the original site content? Anything you have saved here will be replaced.');">Restore original content</button>
 			</p>
 		</form>
+
+		<?php
+		/**
+		 * Anything a particular screen needs beyond its fields. The Emails
+		 * screen hangs a preview and a test send here: a template can only
+		 * really be judged as a message that has arrived.
+		 */
+		do_action( 'boh_content_after_screen', $current );
+		do_action( 'boh_content_after_screen_' . $current );
+		?>
 	</div>
 	<?php
 	boh_content_admin_js();
