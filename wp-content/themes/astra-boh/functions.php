@@ -2787,11 +2787,9 @@ add_action('wp_footer', function () {
     }
     ?>
     <div class="boh-tilenav" hidden>
-      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--prev" aria-label="Previous section">
-        <span aria-hidden="true"></span>
-      </button>
-      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--next" aria-label="Next section">
-        <span aria-hidden="true"></span>
+      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--play"
+              aria-label="Play through the page" aria-pressed="false">
+        <span class="boh-tilenav__glyph" aria-hidden="true"></span>
       </button>
     </div>
     <script>
@@ -2875,13 +2873,47 @@ add_action('wp_footer', function () {
         return best;
       }
 
-      var prev = nav.querySelector('.boh-tilenav__btn--prev');
-      var next = nav.querySelector('.boh-tilenav__btn--next');
+      var playBtn = nav.querySelector('.boh-tilenav__btn--play');
+
+      // One control instead of two arrows: it walks the page from wherever
+      // you are, a section at a time, and stops when you press it again -
+      // or the moment you take the scroll back yourself.
+      var HOLD = 5200;   // time to read a section before moving on
+      var playing = false;
+      var hold = null;
+
+      function setPlaying(on) {
+        playing = on;
+        nav.classList.toggle('is-playing', on);
+        playBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        playBtn.setAttribute('aria-label', on ? 'Stop' : 'Play through the page');
+        clearTimeout(hold);
+        if (on) { step(); }
+      }
+
+      function step() {
+        if (!playing) return;
+        var i = currentIndex();
+        if (i >= panels.length - 1) { setPlaying(false); return; }
+        glideTo(i + 1);
+        hold = setTimeout(step, HOLD);
+      }
+
+      playBtn.addEventListener('click', function () { setPlaying(!playing); });
+
+      // Any scrolling of their own means they have taken over.
+      var lastY = window.scrollY;
+      window.addEventListener('wheel', function () { if (playing) setPlaying(false); }, { passive: true });
+      window.addEventListener('touchmove', function () { if (playing) setPlaying(false); }, { passive: true });
+      window.addEventListener('keydown', function (e) {
+        if (playing && ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].indexOf(e.key) > -1) {
+          setPlaying(false);
+        }
+      });
 
       function update() {
         if (!mq.matches || panels.length < 2) { nav.hidden = true; return; }
         nav.hidden = false;
-        var i = currentIndex();
         var y = window.scrollY || root.scrollTop;
         var maxScroll = Math.max(0, root.scrollHeight - window.innerHeight);
         var atTop = y < 8;
@@ -2889,15 +2921,11 @@ add_action('wp_footer', function () {
         // its top sits past the furthest the page can scroll, so it never
         // becomes "current". Being at the bottom of the document is the
         // honest end condition.
-        var atEnd = i >= panels.length - 1 || y >= maxScroll - 8;
-        prev.disabled = atTop;
-        next.disabled = atEnd;
+        // At the very bottom there is nothing left to play through.
+        var atEnd = y >= maxScroll - 8;
+        playBtn.disabled = atEnd && !playing;
+        if (atEnd && playing) { setPlaying(false); }
       }
-
-      prev.addEventListener('click', function () { if (!animating) glideTo(currentIndex() - 1); });
-      next.addEventListener('click', function () {
-        if (!animating) glideTo(currentIndex() + 1);
-      });
 
       var ticking = false;
       window.addEventListener('scroll', function () {

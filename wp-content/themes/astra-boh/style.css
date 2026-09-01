@@ -6121,16 +6121,33 @@ a.boh-rohit-brand,
   cursor: default;
   box-shadow: none;
 }
-/* Chevron drawn in CSS so the control needs no icon asset. */
-.boh-tilenav__btn span {
+/* One control now, not two arrows: it plays through the page a section at a
+   time. Triangle at rest, two bars while it is running - the glyph says what
+   pressing it will do next. Drawn in CSS, so no icon asset. */
+.boh-tilenav__btn--play { background: rgba(255,255,255,0.94); }
+.boh-tilenav__glyph {
   display: block;
-  width: 11px;
-  height: 11px;
-  border-right: 2.5px solid var(--boh-ink, #1F1A24);
-  border-bottom: 2.5px solid var(--boh-ink, #1F1A24);
+  width: 0;
+  height: 0;
+  margin-left: 3px;
+  border-left: 13px solid var(--boh-ink, #1F1A24);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
 }
-.boh-tilenav__btn--next span { transform: translateY(-2px) rotate(45deg); }
-.boh-tilenav__btn--prev span { transform: translateY(2px) rotate(-135deg); }
+.boh-tilenav.is-playing .boh-tilenav__btn--play {
+  background: var(--boh-magenta);
+  border-color: var(--boh-magenta);
+  box-shadow: 0 12px 28px -12px rgba(208,20,130,0.7);
+}
+.boh-tilenav.is-playing .boh-tilenav__glyph {
+  width: 12px;
+  height: 14px;
+  margin-left: 0;
+  border: 0;
+  border-left: 4px solid #fff;
+  border-right: 4px solid #fff;
+  box-sizing: border-box;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .boh-tilenav__btn { transition: none; }
