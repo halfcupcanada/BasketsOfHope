@@ -1312,9 +1312,10 @@ add_shortcode('boh_page_hero', function ($atts) {
         <?php if ( $a['sub'] ) : ?>
           <p class="boh-page-hero__sub"><?php echo wp_kses_post( $a['sub'] ); ?></p>
         <?php endif; ?>
-        <?php if ( $a['cta'] && $a['cta_url'] ) : ?>
+        <?php if ( $a['cta'] ) : ?>
           <p class="boh-page-hero__ctarow">
-            <a class="boh-page-hero__cta" href="<?php echo esc_url( $a['cta_url'] ); ?>">
+            <a class="boh-page-hero__cta<?php echo $a['cta_url'] ? '' : ' boh-page-hero__cta--next'; ?>"
+               href="<?php echo $a['cta_url'] ? esc_url( $a['cta_url'] ) : '#'; ?>">
               <span class="boh-page-hero__cta-label"><?php echo esc_html( $a['cta'] ); ?></span>
               <span class="boh-page-hero__cta-arrow" aria-hidden="true"></span>
             </a>
@@ -1616,6 +1617,35 @@ add_action('wp_footer', function () {
     </script>
     <?php
 }, 5);
+
+// A hero button with no destination means "whatever comes next".
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function () {
+      var btn = document.querySelector('.boh-page-hero__cta--next');
+      if (!btn) return;
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var hero = btn.closest('.boh-page-hero');
+        // From the hero itself, not its parent: the parent is .entry-content,
+        // whose next sibling is outside the article altogether - so the first
+        // version of this scrolled nowhere.
+        var next = hero ? hero.nextElementSibling : null;
+        // The editor leaves marker paragraphs between sections; skip anything
+        // too short to be one.
+        while (next && next.getBoundingClientRect().height < 80) { next = next.nextElementSibling; }
+        var target = next || hero;
+        var head = document.querySelector('.boh-header');
+        var y = target.getBoundingClientRect().top + window.scrollY - (head ? head.getBoundingClientRect().height : 0);
+        try { window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
+        catch (err) { window.scrollTo(0, Math.max(0, y)); }
+      });
+    })();
+    </script>
+
+    <?php
+}, 7);
 
 // Back to top. Bottom centre on every page: the corners are taken - the home
 // page's section arrows and the gallery's year rail both sit bottom-right.
@@ -3445,12 +3475,20 @@ add_action('wp_footer', function () {
       document.addEventListener('click', function (e) {
         var a = e.target.closest('a[href]');
         if (!a) return;
+        // The dialog's own "Open in a new tab" points at the same address the
+        // dialog is showing, so this handler was catching it and re-opening
+        // the dialog instead of letting the link through. Nothing inside the
+        // dialog is ours to intercept.
+        if (a.closest('.boh-embed')) return;
         // Let people who deliberately ask for a new tab have one.
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
 
         var href = a.getAttribute('href') || '';
         var isMap = /(^|\.)google\.[a-z.]+\/maps|maps\.google\./i.test(href);
-        var isWin = /(^|\/\/|\.)winhouse\.org/i.test(href);
+        // WIN House take donations through DonorPerfect, so the button that
+        // matters most did not match the one host this knew about.
+        var isWin = /(^|\/\/|\.)winhouse\.org/i.test(href)
+                 || /donorperfect\.io|donorperfect\.net|donorperfect\.com/i.test(href);
         if (!isMap && !isWin) return;
 
         var src = isMap ? mapEmbed(href) : href;
