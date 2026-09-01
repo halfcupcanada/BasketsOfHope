@@ -7241,3 +7241,20 @@ html:not(.boh-js) .boh-agenda-shortcut { display: none; }
    to the other colour. */
 body.home .entry-content > .boh-band--pink { background-color: #FDF2F8 !important; }
 body.home .entry-content > .boh-band--white { background-color: #ffffff !important; }
+
+/* The header photograph is an <img> now rather than a background, so the
+   browser can choose a file that suits the screen. Positioning matches what
+   background-size/position used to do. */
+.boh-page-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Group photos: anything past ~30% starts cropping faces. */
+  object-position: center 22%;
+  display: block;
+}
+@media (max-width: 780px) {
+  .boh-page-hero__img { object-position: center 18%; }
+}

@@ -1080,6 +1080,128 @@ add_shortcode('boh_sponsor_tiers', function () {
     return ob_get_clean();
 });
 
+/**
+ * Resolve a stored image URL back to its attachment.
+ *
+ * The media picker hands back whatever size the modal had selected, which
+ * defaults to "Large" - so every page header was storing the 1024px
+ * derivative and then stretching it across a full-width banner. Stripping the
+ * -WxH suffix finds the original, and from there the right size can be asked
+ * for instead of the one that happened to be picked.
+ */
+// Page-header sizes. 3:1 to match the banner and the shape the admin screen
+// asks editors to crop to, at the three densities a header actually needs.
+add_action('after_setup_theme', function () {
+    add_image_size('boh-hero-1200', 1200, 400, true);
+    add_image_size('boh-hero-1800', 1800, 600, true);
+    add_image_size('boh-hero-2400', 2400, 800, true);
+});
+
+function boh_attachment_id_from_url(string $url): int
+{
+    if ($url === '') { return 0; }
+    // A picker sometimes stores "/wp-content/..." rather than a full URL, and
+    // attachment_url_to_postid needs an absolute one.
+    if (str_starts_with($url, '/')) { $url = home_url($url); }
+    $id = attachment_url_to_postid($url);
+    if ($id) { return (int) $id; }
+    // "photo-1024x529.jpg" -> "photo.jpg", and again for an edit suffix:
+    // WordPress stamps "-e1788210804120" onto a file the image editor has
+    // rewritten, so a cropped header is two suffixes away from its original.
+    $try = $url;
+    for ($i = 0; $i < 3; $i++) {
+        $next = preg_replace('~-(\d+x\d+|e\d{9,})(\.[A-Za-z0-9]+)$~', '$2', $try);
+        if (! $next || $next === $try) { break; }
+        $try = $next;
+        $id  = attachment_url_to_postid($try);
+        if ($id) { return (int) $id; }
+    }
+
+    // Last resort: find it by filename. An attachment moved between uploads
+    // folders, or one whose URL was stored before a migration, still resolves.
+    global $wpdb;
+    $base = basename(parse_url($url, PHP_URL_PATH) ?: '');
+    if ($base !== '') {
+        $found = $wpdb->get_var($wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta}
+              WHERE meta_key = '_wp_attached_file' AND meta_value LIKE %s
+              ORDER BY post_id DESC LIMIT 1",
+            '%' . $wpdb->esc_like($base)
+        ));
+        if ($found) { return (int) $found; }
+
+        // Match on the stem instead. WordPress records a large upload as
+        // "photo-scaled.jpg", so a URL for "photo.jpg" - or for any of its
+        // derivatives - never matches the stored path exactly.
+        $stem = preg_replace('~(-\d+x\d+|-e\d{9,}|-scaled)*(\.[A-Za-z0-9]+)$~', '', $base);
+        if ($stem !== '' && strlen($stem) > 3) {
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT post_id, meta_value FROM {$wpdb->postmeta}
+                  WHERE meta_key = '_wp_attached_file' AND meta_value LIKE %s
+                  ORDER BY post_id ASC LIMIT 20",
+                '%' . $wpdb->esc_like($stem) . '%'
+            ), ARRAY_A);
+            if ($rows) {
+                // Several imports can leave duplicates of the same photograph.
+                // Prefer the one sitting in the folder the stored URL names.
+                $dir = trim((string) dirname(parse_url($url, PHP_URL_PATH) ?: ''), '/');
+                foreach ($rows as $r) {
+                    if ($dir !== '' && str_contains($dir, trim(dirname($r['meta_value']), '/'))) {
+                        return (int) $r['post_id'];
+                    }
+                }
+                return (int) $rows[0]['post_id'];
+            }
+        }
+    }
+    return 0;
+}
+
+/**
+ * A page header served at the size it is actually displayed at.
+ *
+ * Returns [src, srcset] - srcset empty when the URL is not a library item we
+ * can resolve, in which case the stored URL is used as-is rather than the
+ * header disappearing.
+ */
+function boh_hero_sources(string $url): array
+{
+    $id = boh_attachment_id_from_url($url);
+    if (! $id) { return [$url, '']; }
+
+    $meta = wp_get_attachment_metadata($id);
+    $sizes = array_keys((array) ($meta['sizes'] ?? []));
+    $sizes[] = 'full';
+    $candidates = [];
+    foreach ($sizes as $size) {
+        $src = wp_get_attachment_image_src($id, $size);
+        if (! $src || empty($src[0]) || empty($src[1])) { continue; }
+        $w = (int) $src[1];
+        // A header spans the full width of the page; anything under 900px only
+        // gets picked on a phone, and the thumbnails are noise in the srcset.
+        if ($w < 900) { continue; }
+        $candidates[$w] = $src[0];
+    }
+    if (! $candidates) { return [$url, '']; }
+    ksort($candidates);
+
+    // Never hand a phone the 6000px original: one header was doing exactly
+    // that. Cap the srcset at 2400 and let the browser choose below it.
+    $set = [];
+    foreach ($candidates as $w => $src) {
+        if ($w > 2600) { continue; }
+        $set[] = $src . ' ' . $w . 'w';
+    }
+    if (! $set) { $set[] = end($candidates) . ' ' . array_key_last($candidates) . 'w'; }
+
+    $widths = array_keys($candidates);
+    $pick   = 0;
+    foreach ($widths as $w) { if ($w <= 2600) { $pick = $w; } }
+    $src = $pick ? $candidates[$pick] : reset($candidates);
+
+    return [$src, implode(', ', $set)];
+}
+
 // --- [boh_page_hero] - reusable sub-page header banner --------------
 // Used at the top of About / Donate / Sponsor / FAQs / Gallery / RSVP.
 // Image sits at top with a soft magenta wash; a floral flourish
@@ -1110,9 +1232,21 @@ add_shortcode('boh_page_hero', function ($atts) {
     }
     ob_start(); ?>
     <section class="boh-page-hero boh-page-hero--<?php echo esc_attr( $a['align'] ); ?>">
-      <?php if ( $image ) : ?>
-        <div class="boh-page-hero__image" role="img" aria-label="<?php echo esc_attr( wp_strip_all_tags( $a['title'] ) ); ?>"
-             style="background-image:url('<?php echo esc_url( $image ); ?>')"></div>
+      <?php if ( $image ) :
+          // An <img> rather than a background, so the browser can pick a size
+          // from srcset. As a background it always loaded whichever single
+          // file the picker had stored - 1024px wide on five of the six pages,
+          // upscaled to fill a 1440px-plus banner, which is why they looked
+          // soft.
+          [ $hero_src, $hero_srcset ] = boh_hero_sources( $image );
+      ?>
+        <div class="boh-page-hero__image">
+          <img class="boh-page-hero__img"
+               src="<?php echo esc_url( $hero_src ); ?>"
+               <?php if ( $hero_srcset ) : ?>srcset="<?php echo esc_attr( $hero_srcset ); ?>" sizes="100vw"<?php endif; ?>
+               alt="<?php echo esc_attr( wp_strip_all_tags( $a['title'] ) ); ?>"
+               decoding="async" fetchpriority="high">
+        </div>
       <?php endif; ?>
       <div class="boh-page-hero__flourish" aria-hidden="true"></div>
       <div class="boh-page-hero__body">
