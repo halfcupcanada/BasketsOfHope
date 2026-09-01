@@ -2958,6 +2958,7 @@ add_action('wp_footer', function () {
 
       function paint() {
         var pink = true;
+        var left = true;
         Array.prototype.slice.call(content.children).forEach(function (el) {
           if (el.classList.contains('boh-hero')) return;          // the photograph
           if (el.hasAttribute('hidden')) {                        // the closed agenda
@@ -2965,6 +2966,16 @@ add_action('wp_footer', function () {
             return;
           }
           if (el.getBoundingClientRect().height < 200) return;    // editor markers
+
+          // Sections with a block of copy alternate left and right down the
+          // page. Decided before the colour, because a band that keeps its
+          // own ground returns early below and would otherwise never be
+          // aligned. A band with no copy - the stats row - takes no turn.
+          if (el.querySelector('.boh-home-section')) {
+            el.classList.remove('boh-band--left', 'boh-band--right');
+            el.classList.add(left ? 'boh-band--left' : 'boh-band--right');
+            left = !left;
+          }
           // Two kinds of band keep their own ground. A dark one reads as
           // neither pink nor white, so it sits out of the rotation entirely -
           // it is a break in the rhythm on purpose. A pale photograph reads
