@@ -3930,9 +3930,14 @@ figure.boh-about-image ~ p {
 .boh-page-hero__image {
   position: relative;
   width: 100%;
-  /* +88px vs the old below-header height so the visible area is unchanged
-     now that the photo also fills the strip behind the header */
-  height: clamp(308px, calc(34vw + 88px), 508px);
+  /* The photograph starts below the header rather than running up behind it.
+     While the header was translucent, filling that strip was the point and
+     the height carried +88px to keep the visible area the same. The header is
+     opaque white now, so those pixels were simply hidden - 73 of them on
+     desktop, 61 on a phone. --boh-header-h is measured in the page; the
+     fallbacks are today's real heights. */
+  margin-top: var(--boh-header-h, 73px);
+  height: clamp(220px, 34vw, 420px);
   background-size: cover;
   /* Bias toward the top of the frame: these are group photos and anything
      past ~30% starts cropping faces (Aug-2026 feedback). */
@@ -3943,18 +3948,20 @@ figure.boh-about-image ~ p {
    even closer to the top of the image. */
 @media (max-width: 900px) {
   .boh-page-hero__image {
-    height: clamp(300px, 52vw, 420px);
+    margin-top: var(--boh-header-h, 61px);
+    height: clamp(240px, 46vw, 360px);
     background-position: center 18%;
   }
 }
-/* Bottom vignette so the transition into the body is soft, plus a light
-   wash at the very top so the nav stays readable over the photo */
+/* Bottom vignette so the transition into the body is soft. The light wash
+   that used to sit across the top went with the header: it was there to keep
+   the navigation readable over the photograph, and the navigation no longer
+   sits on it. */
 .boh-page-hero__image::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(253,242,248,0.55) 100%),
-              linear-gradient(180deg, rgba(253,242,248,0.72) 0%, rgba(253,242,248,0.25) 14%, rgba(208,20,130,0.10) 30%, transparent 55%);
+  background: linear-gradient(180deg, rgba(0,0,0,0) 62%, rgba(253,242,248,0.55) 100%);
   pointer-events: none;
 }
 /* Flower flourish peeking in from the top-right corner */

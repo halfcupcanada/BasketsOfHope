@@ -1535,6 +1535,27 @@ add_shortcode('boh_quick_links', function () {
     return ob_get_clean();
 });
 
+// The page-header photograph starts below the site header, so the CSS needs
+// that height. Measured rather than hardcoded - 73px on a desktop, 61px on a
+// phone, and a wrapped navigation would change both.
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function () {
+      var head = document.querySelector('.boh-header');
+      if (!head) return;
+      function measure() {
+        document.documentElement.style.setProperty(
+          '--boh-header-h', Math.round(head.getBoundingClientRect().height) + 'px');
+      }
+      measure();
+      window.addEventListener('load', measure);
+      window.addEventListener('resize', measure);
+    })();
+    </script>
+    <?php
+}, 5);
+
 // --- [boh_band_photo] - a photograph behind any full-width band ---------
 // Drop it inside a group block and that group gets the picture behind its
 // contents, with a wash over it so the existing type keeps its contrast.
