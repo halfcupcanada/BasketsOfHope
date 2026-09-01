@@ -7443,3 +7443,52 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 @media (prefers-reduced-motion: reduce) {
   .boh-totop { transition: opacity .01s linear; }
 }
+
+/* ── Editable copy blocks ────────────────────────────────────────────
+   [boh_copy] renders the prose that used to be typed into the page. These
+   rules carry the styling those blocks had inline, so the page reads
+   exactly as before while the words become editable. */
+.boh-copy { margin: 0; }
+.boh-copy p { margin: 0 0 14px; }
+.boh-copy p:last-child { margin-bottom: 0; }
+.boh-copy--eyebrow { text-align: center; margin-bottom: 0; }
+.boh-copy--eyebrow p { margin: 0; }
+.boh-copy--h2 {
+  text-align: center;
+  font-size: clamp(30px, 3.4vw, 44px);
+  letter-spacing: -0.02em;
+  margin-top: 8px;
+}
+.boh-copy--left, .boh-copy--h2.boh-copy--left { text-align: left; }
+.boh-copy--lede {
+  text-align: center;
+  max-width: 680px;
+  margin: 8px auto 24px;
+  color: var(--boh-ink-soft);
+}
+.boh-copy--intro { font-size: 17px; max-width: 760px; }
+.boh-copy--left { font-size: 17px; max-width: 760px; color: var(--boh-ink); }
+.boh-copy--small { font-size: 14px; }
+.boh-copy--lede.boh-copy--small { max-width: 560px; margin-bottom: 32px; }
+
+/* ── Sponsorship form: centre the consent line ───────────────────────
+   The checkbox and its sentence sat hard left under a centred form. */
+#sponsorship-form .wpcf7-acceptance,
+.boh-form-row--terms {
+  display: block;
+  text-align: center;
+}
+#sponsorship-form .wpcf7-acceptance .wpcf7-list-item,
+.boh-form-row--terms .wpcf7-list-item {
+  margin: 0 auto;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  max-width: 520px;
+}
+#sponsorship-form .wpcf7-acceptance input[type="checkbox"],
+.boh-form-row--terms input[type="checkbox"] {
+  margin-top: 3px;
+  flex: 0 0 auto;
+}

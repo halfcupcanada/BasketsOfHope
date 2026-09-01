@@ -1007,8 +1007,45 @@ add_shortcode('boh_eyebrow', function ($atts, $content = '') {
     return '<span class="boh-eyebrow">' . esc_html($a['text']) . '</span>';
 });
 
+// --- [boh_copy] - any editable block of copy, by key --------------------
+// One shortcode for every piece of prose that used to be typed straight into
+// a page. The default is the wording the page shipped with, so an untouched
+// site reads exactly as before and the admin field starts pre-filled.
+add_shortcode('boh_copy', function ($atts, $content = '') {
+    $a = shortcode_atts([ 'key' => '', 'class' => '', 'tag' => 'div' ], $atts);
+    if ($a['key'] === '') { return ''; }
+    $html = (string) boh_content($a['key'], (string) $content);
+    if (trim($html) === '') { return ''; }
+    $tag = preg_match('/^[a-z0-9]+$/i', $a['tag']) ? $a['tag'] : 'div';
+    return sprintf(
+        '<%1$s class="boh-copy %2$s">%3$s</%1$s>',
+        $tag,
+        esc_attr($a['class']),
+        wp_kses_post(wpautop($html))
+    );
+});
+
 // --- [boh_sponsor_tiers] - 8-tier sponsorship cards (per PDF) -----------
 add_shortcode('boh_sponsor_tiers', function () {
+    // Editable in BoH Content -> Sponsorship. Columns: level, title, price,
+    // description, benefits (one per line), tone.
+    $rows = boh_content('sponsor.tiers', []);
+    if (is_array($rows) && $rows) {
+        $tiers = [];
+        foreach ($rows as $r) {
+            $r = array_pad((array) $r, 6, '');
+            $tiers[] = [
+                'level'    => (string) $r[0],
+                'title'    => (string) $r[1],
+                'price'    => (string) $r[2],
+                'copy'     => (string) $r[3],
+                'benefits' => array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $r[4])), 'strlen')),
+                'tone'     => (string) ($r[5] ?: 'support'),
+            ];
+        }
+        return boh_sponsor_tiers_html($tiers);
+    }
+
     $tiers = [
         [
             'level' => 'Platinum Basket 1', 'price' => '$2,000', 'tone' => 'platinum',
@@ -1059,6 +1096,17 @@ add_shortcode('boh_sponsor_tiers', function () {
             'benefits' => ['Benefits tailored to your commitment'],
         ],
     ];
+    // Record the shipped set so the admin repeater starts pre-filled.
+    boh_content('sponsor.tiers', array_map(function ($t) {
+        return [ $t['level'], $t['title'], $t['price'], $t['copy'],
+                 implode("\n", $t['benefits']), $t['tone'] ];
+    }, $tiers));
+
+    return boh_sponsor_tiers_html($tiers);
+});
+
+function boh_sponsor_tiers_html(array $tiers): string
+{
     ob_start(); ?>
     <div class="boh-sponsor-tiers">
       <?php foreach ($tiers as $t) : ?>
@@ -1077,8 +1125,8 @@ add_shortcode('boh_sponsor_tiers', function () {
       <?php endforeach; ?>
     </div>
     <?php
-    return ob_get_clean();
-});
+    return (string) ob_get_clean();
+}
 
 /**
  * Resolve a stored image URL back to its attachment.
