@@ -7324,3 +7324,70 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 @media (max-width: 480px) {
   .boh-stats--photo .boh-stats__row { grid-template-columns: 1fr; }
 }
+
+/* ── A photograph behind a band ──────────────────────────────────────
+   Dropped into a group block by [boh_band_photo]. The picture is anchored
+   to the band rather than to the shortcode's own box, so the band keeps
+   whatever padding and vertical centring it already had - the mistake the
+   stats band taught. */
+.wp-block-group:has(> .boh-bandphoto),
+.wp-block-group:has(> .wp-block-group__inner-container > .boh-bandphoto),
+.wp-block-group:has(.boh-bandphoto) {
+  position: relative;
+  /* No overflow:hidden here. These bands are alignwide - a content column,
+     not the full page - and clipping to it cut the full-bleed photograph back
+     to the column with white gutters either side. The photograph is exactly
+     one viewport wide and the root carries overflow-x: clip, so nothing
+     escapes anyway. */
+}
+.boh-bandphoto {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* The band is alignwide, so inset:0 would stop at the content column. The
+     photograph should reach the edges of the view. Safe here: the root
+     carries overflow-x: clip. */
+  left: calc(50% - 50vw);
+  width: 100vw;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.boh-bandphoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* The wash. Light for a band with dark type, dark for one with light type -
+   in both cases heavy enough that the words never depend on which part of the
+   photograph happens to sit behind them. */
+.boh-bandphoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.boh-bandphoto--light::after {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.86) 42%,
+                            rgba(255,255,255,0.86) 58%, rgba(255,255,255,0.94) 100%),
+    rgba(253,242,248,0.35);
+}
+.boh-bandphoto--dark::after {
+  background:
+    linear-gradient(180deg, rgba(31,26,36,0.92) 0%, rgba(31,26,36,0.74) 40%,
+                            rgba(31,26,36,0.74) 60%, rgba(31,26,36,0.92) 100%),
+    rgba(31,26,36,0.28);
+}
+/* Everything else in the band sits above the picture - but the block editor's
+   own inner container must NOT be positioned. Lifting it made it the
+   containing block for the photograph, which then covered the content box
+   (1192x234) instead of the band (1440x900). */
+.wp-block-group:has(.boh-bandphoto) > .wp-block-group__inner-container {
+  position: static;
+}
+.wp-block-group:has(.boh-bandphoto) > *:not(.boh-bandphoto):not(.wp-block-group__inner-container),
+.wp-block-group:has(.boh-bandphoto) > .wp-block-group__inner-container > *:not(.boh-bandphoto) {
+  position: relative;
+  z-index: 1;
+}

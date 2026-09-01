@@ -158,6 +158,14 @@ function boh_content_schema(): array {
 					'help'  => 'Sits behind the impact numbers on the home page, darkened so the figures stay readable. Leave empty for the plain dark band.',
 				],
 				[
+					'key'   => 'home.about_image',
+					'label' => '"A community event" - background photograph',
+					'type'  => 'image',
+					'ratio' => '3:1',
+					'px'    => '2400 x 800',
+					'help'  => 'Behind the paragraph about the event, washed pale so the words stay readable. Leave empty for a plain background.',
+				],
+				[
 					'key'   => 'home.quick_links',
 					'label' => 'Explore links',
 					'help'  => 'The card grid near the foot of the home page.',

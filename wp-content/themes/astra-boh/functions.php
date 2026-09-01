@@ -1535,6 +1535,27 @@ add_shortcode('boh_quick_links', function () {
     return ob_get_clean();
 });
 
+// --- [boh_band_photo] - a photograph behind any full-width band ---------
+// Drop it inside a group block and that group gets the picture behind its
+// contents, with a wash over it so the existing type keeps its contrast.
+// tone="light" for a band with dark text, "dark" for one with light text.
+add_shortcode('boh_band_photo', function ($atts) {
+    $a = shortcode_atts([ 'key' => '', 'tone' => 'light', 'focus' => '38%' ], $atts);
+    $url = $a['key'] !== '' ? (string) boh_content($a['key'], '') : '';
+    if ($url === '') { return ''; }
+    [ $src, $set ] = boh_hero_sources($url);
+    if ($src === '') { return ''; }
+    ob_start(); ?>
+    <div class="boh-bandphoto boh-bandphoto--<?php echo esc_attr($a['tone'] === 'dark' ? 'dark' : 'light'); ?>" aria-hidden="true">
+      <img src="<?php echo esc_url($src); ?>"
+           <?php if ($set) : ?>srcset="<?php echo esc_attr($set); ?>" sizes="100vw"<?php endif; ?>
+           alt="" loading="lazy" decoding="async"
+           style="object-position:center <?php echo esc_attr($a['focus']); ?>">
+    </div>
+    <?php
+    return (string) ob_get_clean();
+});
+
 // --- [boh_stats] - moved from home to about ----------------------------
 add_shortcode('boh_stats', function () {
     // Editable in BoH Content -> Home. The figures below are only the
@@ -2730,8 +2751,20 @@ add_action('wp_footer', function () {
             return;
           }
           if (el.getBoundingClientRect().height < 200) return;    // editor markers
-          if (isDark(el)) return;                                 // keeps its own ground
+          // Two kinds of band keep their own ground. A dark one reads as
+          // neither pink nor white, so it sits out of the rotation entirely -
+          // it is a break in the rhythm on purpose. A pale photograph reads
+          // as the white in the sequence, so it takes that turn and the band
+          // after it goes back to pink. Getting this wrong either way put two
+          // of the same colour next to each other.
           el.classList.remove('boh-band--pink', 'boh-band--white');
+          if (isDark(el) || el.querySelector('.boh-bandphoto--dark, .boh-stats__bg')) {
+            return;
+          }
+          if (el.querySelector('.boh-bandphoto')) {
+            pink = !pink;
+            return;
+          }
           el.classList.add(pink ? 'boh-band--pink' : 'boh-band--white');
           pink = !pink;
         });
