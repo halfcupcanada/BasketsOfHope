@@ -6779,207 +6779,75 @@ body.boh-past-top .boh-header__wordmark {
   outline-offset: 2px;
 }
 
-/* ── Gallery timeline ────────────────────────────────────────────────
-   A real timeline rather than a row of buttons: one hairline runs the width
-   of the years and every dot sits on it, so the eye reads a line with stops
-   rather than four separate pills. Brand colours only - magenta for where
-   you are, the theme's greys for everywhere else. */
+/* A floating vertical timeline in the bottom-right corner, the same control
+   on every screen - pinned rather than in the flow, so it stays reachable
+   however far down the gallery you are. */
 .boh-yearrail {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: clamp(14px, 2.4vh, 26px);
+  right: clamp(12px, 1.6vw, 26px);
+  bottom: clamp(14px, 3vh, 34px);
   z-index: 60;
-  display: flex;
-  align-items: center;
-  gap: clamp(14px, 1.8vw, 24px);
-  max-width: min(94vw, 980px);
-  padding: 10px 10px 10px 22px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid var(--boh-rule);
-  box-shadow: 0 18px 44px -22px rgba(10,10,10,0.40), 0 0 0 1px rgba(10,10,10,0.03);
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(31,26,36,0.08);
+  box-shadow: 0 18px 44px -20px rgba(31,26,36,0.45);
 }
-.boh-yearrail__handle { display: none; }
-.boh-yearrail__title {
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--boh-ink-mute);
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-/* The line, and the stops on it. */
-.boh-yearrail__list {
-  position: relative;
-  list-style: none;
-  margin: 0;
-  padding: 0 2px;
-  display: flex;
-  align-items: flex-start;
-  gap: clamp(18px, 2.6vw, 40px);
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.boh-yearrail__list::-webkit-scrollbar { display: none; }
-/* One hairline behind every stop. Insetting it by half a dot keeps it from
-   poking out past the first and last. */
+.boh-yearrail__list { position: relative; }
+/* The line the dots sit on. */
 .boh-yearrail__list::before {
   content: '';
   position: absolute;
-  left: 8px; right: 8px; top: 5px;
-  height: 2px;
-  background: var(--boh-rule);
+  left: 17.5px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--boh-rule, #E5E5E5), rgba(208,20,130,0.45));
   border-radius: 2px;
 }
-.boh-yearrail__item { flex: 0 0 auto; }
-.boh-yearrail__link {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 0 2px;
-  text-decoration: none !important;
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  letter-spacing: 0.01em;
-  color: var(--boh-ink-mute);
-  white-space: nowrap;
-  transition: color .2s ease;
-}
-.boh-yearrail__dot {
-  position: relative;
-  z-index: 1;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--boh-rule);
-  background: #fff;
-  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-.boh-yearrail__link:hover { color: var(--boh-ink); }
-.boh-yearrail__link:hover .boh-yearrail__dot { border-color: var(--boh-magenta); }
-.boh-yearrail__link.is-current { color: var(--boh-ink); }
-.boh-yearrail__link.is-current .boh-yearrail__dot {
-  background: var(--boh-magenta);
-  border-color: var(--boh-magenta);
-  transform: scale(1.15);
-  /* The halo is the theme's own tint, so the marker reads as brand rather
-     than as a glow. */
-  box-shadow: 0 0 0 5px var(--boh-magenta-soft);
-}
-.boh-yearrail__link:focus-visible {
-  outline: 3px solid var(--boh-magenta);
-  outline-offset: 3px;
-  border-radius: 8px;
-}
+.boh-yearrail__item + .boh-yearrail__item { margin-top: 2px; }
+.boh-yearrail__link { position: relative; padding: 7px 12px; }
+.boh-yearrail__dot { box-shadow: 0 0 0 4px rgba(255,255,255,0.95); }
+.boh-yearrail__link.is-current { background: rgba(208,20,130,0.08); }
 
-/* Play highlights - the one action on the bar, so it is the one filled thing. */
-.boh-yearrail__play {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  flex: 0 0 auto;
-  padding: 9px 17px 9px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--boh-magenta);
-  background: var(--boh-magenta);
-  color: #fff !important;
-  text-decoration: none !important;
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  white-space: nowrap;
-  box-shadow: 0 10px 24px -12px rgba(208,20,130,0.7);
-  transition: background .2s ease, border-color .2s ease;
-}
-.boh-yearrail__play:hover { background: var(--boh-magenta-deep); border-color: var(--boh-magenta-deep); }
-.boh-yearrail__play:focus-visible { outline: 3px solid var(--boh-ink); outline-offset: 2px; }
-.boh-yearrail__playicon {
-  width: 0; height: 0;
-  border-left: 9px solid currentColor;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  flex: 0 0 auto;
-}
-.boh-yearrail__collapse {
-  flex: 0 0 auto;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0;
-  border: 1px solid var(--boh-rule);
-  border-radius: 50%;
-  background: #fff;
-  cursor: pointer;
-  transition: background .2s ease, border-color .2s ease;
-}
-.boh-yearrail__collapse:hover { background: var(--boh-magenta-soft); border-color: var(--boh-magenta); }
-.boh-yearrail__collapse:focus-visible { outline: 3px solid var(--boh-magenta); outline-offset: 2px; }
-.boh-yearrail__collapse span {
-  width: 8px; height: 8px;
-  border-right: 2px solid var(--boh-ink-soft);
-  border-bottom: 2px solid var(--boh-ink-soft);
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform .25s ease;
-}
-.boh-yearrail.is-collapsed { padding-left: 20px; gap: 12px; }
-.boh-yearrail.is-collapsed .boh-yearrail__list,
-.boh-yearrail.is-collapsed .boh-yearrail__play { display: none; }
-.boh-yearrail.is-collapsed .boh-yearrail__collapse span { transform: translateY(2px) rotate(-135deg); }
-
-@media (max-width: 860px) {
+@media (max-width: 600px) {
   .boh-yearrail {
-    left: 8px; right: 8px;
-    max-width: none;
-    transform: none;
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas: 'handle handle handle' 'title play collapse' 'years years years';
-    gap: 8px 10px;
-    padding: 8px 12px 14px;
-    border-radius: 20px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 9px;
+    border-radius: 15px;
   }
-  .boh-yearrail__handle {
-    display: block;
-    grid-area: handle;
-    justify-self: center;
-    width: 38px; height: 4px;
-    border-radius: 999px;
-    background: var(--boh-rule);
-    margin-bottom: 2px;
-  }
-  .boh-yearrail__title { grid-area: title; align-self: center; }
-  .boh-yearrail__list { grid-area: years; padding: 2px 6px 2px; }
-  .boh-yearrail__list::before { left: 14px; right: 14px; }
-  .boh-yearrail__play {
-    grid-area: play;
-    width: 38px; height: 38px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 50%;
-  }
-  .boh-yearrail__playlabel {
-    position: absolute; width: 1px; height: 1px;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
-  }
-  .boh-yearrail__playicon { margin-left: 2px; }
-  .boh-yearrail__collapse { grid-area: collapse; align-self: center; }
-  .boh-yearrail.is-collapsed { padding-bottom: 10px; }
-  .boh-yearrail.is-collapsed .boh-yearrail__play { display: inline-flex; }
+  .boh-yearrail__link { font-size: 12px; padding: 6px 9px; gap: 9px; }
+  .boh-yearrail__list::before { left: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .boh-yearrail__link,
-  .boh-yearrail__dot,
-  .boh-yearrail__collapse span { transition: none; }
+  .boh-yearrail__dot { transition: none; }
+}
+
+/* Short viewports: the badge earns its place only if the hero copy still
+   clears the scroll cue beneath it, so it shrinks rather than crowding. */
+.wp-block-cover.boh-hero .boh-hero-headrow:has(.boh-hero-mark--auto) {
+  gap: clamp(18px, 3.4vh, 36px);
+}
+/* On the shortest viewport the badge still appears on, the last line of the
+   lede met the scroll cue. There is 113px of empty hero above the mark on such
+   a screen and none to spare below it, so the top padding gives way first -
+   the block moves up, and the copy clears the cue with room to spare. The
+   header is 61px tall, so 76px still clears it. */
+@media (max-width: 640px) and (max-height: 700px) {
+  .wp-block-cover.boh-hero { padding-top: 76px !important; }
+}
+/* And the space between the headline and the lede tightens a little too. */
+@media (min-height: 660px) and (max-height: 700px) {
+  /* Matching the specificity of the rules that set this margin elsewhere in
+     the file - two of them, both !important, both a class deeper than a
+     shorter selector here would be. */
+  .wp-block-cover.boh-hero .boh-hero-copy .boh-hero-copy__lede,
+  .wp-block-cover.boh-hero .boh-hero-block .boh-hero-copy__lede { margin-top: 8px !important; }
 }
 
 /* ── Gallery section headings + separators ───────────────────────────
@@ -7896,35 +7764,6 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   flex-direction: column;
 }
 .boh-page-hero__body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
-
-/* The moment count under each year. Something in the gallery styles was
-   turning this paragraph into a magenta pill - inline-block, tinted
-   background, magenta border - which then sat left in a start-aligned
-   parent. It is quiet centred text, as the design has it. */
-.boh-gallery-section .boh-gallery-section__note,
-.boh-gallery-sections .boh-gallery-section__note {
-  display: block !important;
-  background: none !important;
-  border: 0 !important;
-  padding: 0 !important;
-  margin: 0 0 22px !important;
-  text-align: center !important;
-  color: var(--boh-ink-soft) !important;
-  font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: none;
-}
-@media (max-width: 700px) {
-  .boh-gallery-section .boh-gallery-section__note { font-size: 12px; margin-bottom: 16px !important; }
-}
-/* The hairlines between the years were drawn in the theme's rule grey, which
-   all but vanished on white. */
-.boh-yearrail__item + .boh-yearrail__item::before {
-  background: var(--boh-rule);
-}
-
 /* Arrow-only hero call to action. The words stay in the markup for anyone
    using a screen reader - it is the same control either way, just without
    the label showing. */

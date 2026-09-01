@@ -2082,12 +2082,8 @@ add_shortcode('boh_gallery', function ($atts) {
             // "Past Events" entry only when that section actually exists;
             // CSS puts it back alongside them. ?>
       <?php foreach ($recent as $y) : ?>
-        <?php $y_count = count((array) ($all[$y] ?? [])); ?>
         <section class="boh-gallery-section" id="gallery-<?php echo (int) $y; ?>">
           <h3 class="boh-gallery-section__title"><?php echo (int) $y; ?></h3>
-          <p class="boh-gallery-section__note"><?php
-              printf( _n( '%s moment', '%s moments', $y_count, 'boh' ), number_format_i18n( $y_count ) );
-          ?></p>
           <?php echo boh_gallery_block((array) ($all[$y] ?? []), (string) $y); ?>
         </section>
       <?php endforeach; ?>
@@ -2109,19 +2105,13 @@ add_shortcode('boh_gallery', function ($atts) {
         <?php $rail[] = ['id' => 'gallery-past', 'label' => 'Past']; ?>
         <section class="boh-gallery-section" id="gallery-past">
           <h3 class="boh-gallery-section__title">Past Events</h3>
-          <p class="boh-gallery-section__note"><?php
-              printf( '%s &middot; ', esc_html( $range ) );
-              printf( _n( '%s moment', '%s moments', count( $past ), 'boh' ), number_format_i18n( count( $past ) ) );
-          ?></p>
+          <p class="boh-gallery-section__note"><?php echo esc_html($range); ?></p>
           <?php echo boh_gallery_block($past, 'Past events'); ?>
         </section>
       <?php endif; endif; ?>
 
-      <?php if (!empty($rail)) :
-      ?>
+      <?php if (!empty($rail)) : ?>
         <nav class="boh-yearrail" aria-label="Jump to a year">
-          <span class="boh-yearrail__handle" aria-hidden="true"></span>
-          <span class="boh-yearrail__title">Timeline</span>
           <?php if (count($rail) > 1) : ?>
           <ol class="boh-yearrail__list">
             <?php foreach ($rail as $i => $r) : ?>
@@ -2138,10 +2128,8 @@ add_shortcode('boh_gallery', function ($atts) {
           <?php endif; ?>
           <a class="boh-yearrail__play" href="<?php echo esc_url( home_url( '/tv/' ) ); ?>">
             <span class="boh-yearrail__playicon" aria-hidden="true"></span>
-            <span class="boh-yearrail__playlabel">Play highlights</span>
+            <span>Play all</span>
           </a>
-          <button type="button" class="boh-yearrail__collapse" aria-expanded="true"
-                  aria-label="Hide the timeline"><span aria-hidden="true"></span></button>
         </nav>
       <?php endif; ?>
     </div>
@@ -3293,19 +3281,6 @@ add_action('wp_footer', function () {
         document.body.appendChild(rail);
       }
 
-      // Collapse: the bar spans the foot of the screen, so on a long scroll
-      // through photographs it should be possible to get it out of the way.
-      var collapse = rail.querySelector('.boh-yearrail__collapse');
-      if (collapse) {
-        collapse.addEventListener('click', function () {
-          var open = rail.classList.toggle('is-collapsed') === false;
-          collapse.setAttribute('aria-expanded', open ? 'true' : 'false');
-          collapse.setAttribute('aria-label', open ? 'Hide the timeline' : 'Show the timeline');
-          // The back-to-top button clears the bar by its measured height.
-          if (window.dispatchEvent) window.dispatchEvent(new Event('resize'));
-        });
-      }
-
       var links = Array.prototype.slice.call(rail.querySelectorAll('.boh-yearrail__link'));
       if (!links.length) return;
 
@@ -3324,17 +3299,7 @@ add_action('wp_footer', function () {
 
       function mark(id) {
         links.forEach(function (a) {
-          var on = a.dataset.bohYear === id;
-          a.classList.toggle('is-current', on);
-          // The strip scrolls sideways on a phone; the year you are looking at
-          // should be the one you can see.
-          if (on && a.parentElement && a.parentElement.parentElement) {
-            var strip = a.parentElement.parentElement;
-            if (strip.scrollWidth > strip.clientWidth + 4) {
-              var want = a.offsetLeft - (strip.clientWidth - a.offsetWidth) / 2;
-              strip.scrollTo({ left: Math.max(0, want), behavior: 'smooth' });
-            }
-          }
+          a.classList.toggle('is-current', a.dataset.bohYear === id);
         });
       }
 
