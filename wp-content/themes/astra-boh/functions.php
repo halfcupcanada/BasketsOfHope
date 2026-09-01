@@ -1556,6 +1556,53 @@ add_action('wp_footer', function () {
     <?php
 }, 5);
 
+// Back to top. Bottom centre on every page: the corners are taken - the home
+// page's section arrows and the gallery's year rail both sit bottom-right.
+add_action('wp_footer', function () {
+    ?>
+    <button type="button" class="boh-totop" hidden aria-label="Back to top">
+      <span class="boh-totop__arrow" aria-hidden="true"></span>
+    </button>
+    <script>
+    (function () {
+      var btn = document.querySelector('.boh-totop');
+      if (!btn) return;
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      // Far enough down that it never appears while someone is still reading
+      // the first screen, and never competes with the hero's own scroll cue.
+      function threshold() { return Math.max(600, window.innerHeight * 1.2); }
+
+      var ticking = false;
+      function update() {
+        var y = window.scrollY || document.documentElement.scrollTop;
+        var show = y > threshold();
+        if (show === !btn.hidden) return;
+        btn.hidden = !show;
+        // Fading in needs the element painted first, hence the frame.
+        if (show) { requestAnimationFrame(function () { btn.classList.add('is-in'); }); }
+        else { btn.classList.remove('is-in'); }
+      }
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () { ticking = false; update(); });
+      }, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+
+      btn.addEventListener('click', function () {
+        // Not the home page's own section scroller: that lands on the first
+        // panel's offset, which is 14px short of the top. "Back to top" should
+        // mean the top.
+        try { window.scrollTo({ top: 0, behavior: reduce.matches ? 'instant' : 'smooth' }); }
+        catch (e) { window.scrollTo(0, 0); }
+      });
+    })();
+    </script>
+    <?php
+}, 6);
+
 // --- [boh_band_photo] - a photograph behind any full-width band ---------
 // Drop it inside a group block and that group gets the picture behind its
 // contents, with a wash over it so the existing type keeps its contrast.
