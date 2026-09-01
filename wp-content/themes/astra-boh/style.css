@@ -8006,8 +8006,15 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 30px !important; }
 .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 68px !important; }
 @media (max-width: 640px) {
-  .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 22px !important; font-size: 9px !important; }
-  .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 54px !important; }
+  /* Three things share the foot of the hero on a phone and they were sitting
+     on top of each other - the dots ran 16-25px from the bottom and the
+     credit 22-40. Each gets its own band now, stacked upwards: dots, then
+     the credit, then the cue. */
+  .wp-block-cover.boh-hero .boh-hero-dots { bottom: 12px !important; }
+  .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 32px !important; font-size: 9px !important; }
+  .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 62px !important; }
+  /* And the pause disc lifts clear of the dots' row. */
+  .wp-block-cover.boh-hero .boh-hero-pause { bottom: 30px !important; }
 }
 
 /* ── The page you are on ─────────────────────────────────────────────
