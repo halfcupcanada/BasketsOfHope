@@ -3002,9 +3002,13 @@ add_action('wp_footer', function () {
           // page. Decided before the colour, because a band that keeps its
           // own ground returns early below and would otherwise never be
           // aligned. A band with no copy - the stats row - takes no turn.
-          var hasGrid = el.querySelector('.boh-how-it-works, .boh-quick-links, .boh-explore-band')
-                     || el.classList.contains('boh-explore-band');
-          if (el.querySelector('.boh-home-section') && !hasGrid) {
+          // A band stays centred if it is built around a grid of cards, or if
+          // a photograph fills the whole band behind the words - copy pushed
+          // to one side of a full-bleed picture reads as a mistake, not a
+          // rhythm. Alternation is for the sections that are just words.
+          var keepCentred = el.querySelector('.boh-how-it-works, .boh-quick-links, .boh-explore-band, .boh-bandphoto')
+                         || el.classList.contains('boh-explore-band');
+          if (el.querySelector('.boh-home-section') && !keepCentred) {
             el.classList.remove('boh-band--left', 'boh-band--right');
             el.classList.add(left ? 'boh-band--left' : 'boh-band--right');
             left = !left;
