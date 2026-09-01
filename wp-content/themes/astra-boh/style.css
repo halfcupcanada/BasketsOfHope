@@ -7912,7 +7912,11 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 .boh-sideimg img {
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 3;
+  /* Half the height it stood at: 4:3 put it at 75% of its own width, this
+     puts it at 37.5%. It crops harder as a result - object-fit keeps the
+     middle of the frame - so a photograph with its subject at the top or
+     bottom will lose it. */
+  aspect-ratio: 8 / 3;
   object-fit: cover;
   display: block;
 }
