@@ -3536,14 +3536,17 @@ add_action('wp_footer', function () {
         // matters most did not match the one host this knew about.
         var isWin = /(^|\/\/|\.)winhouse\.org/i.test(href)
                  || /donorperfect\.io|donorperfect\.net|donorperfect\.com/i.test(href);
-        if (!isMap && !isWin) return;
+        var isRohit = /(^|\/\/|\.)rohitgroup\.com/i.test(href);
+        if (!isMap && !isWin && !isRohit) return;
 
         var src = isMap ? mapEmbed(href) : href;
         if (!src) return;                 // unparseable - leave the link alone
 
         e.preventDefault();
         opener = a;
-        open(src, isMap ? 'Rohit Group Office - map' : 'WIN House Edmonton', href);
+        open(src, isMap ? 'Rohit Group Office - map'
+                        : isRohit ? 'Rohit Group'
+                        : 'WIN House Edmonton', href);
       });
     })();
     </script>
