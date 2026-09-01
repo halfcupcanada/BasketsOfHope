@@ -7770,21 +7770,21 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 /* The arrow-only button wears the colours the other way round: magenta ring,
    white disc, magenta chevron. On its own with no label it reads better as a
    solid mark than as a frosted pill with a coloured dot in it. */
-/* Light grey ring, white disc, magenta chevron. The theme's hairline grey.
-   It is quiet against the pale pink band, so the shadow carries the
-   separation; the chevron is the part that has to be legible, and that is
-   magenta on white. Darkens a step on hover so the button still answers. */
+/* White ring. The disc inside is white too, so the two merge into a single
+   white circle with a magenta chevron on it - the ring is no longer a ring.
+   Nothing separates it from the pale pink band but the shadow, so that does
+   the work, and the hover tints a shade off white to answer the pointer. */
 .boh-page-hero__cta--arrow {
   padding: 6px;
   gap: 0;
-  background: var(--boh-rule);
-  border-color: var(--boh-rule);
-  box-shadow: 0 12px 28px -12px rgba(10,10,10,0.30);
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 12px 30px -12px rgba(10,10,10,0.30);
 }
 .boh-page-hero__cta--arrow:hover {
-  background: #d2d2d2;
-  border-color: #d2d2d2;
-  box-shadow: 0 18px 38px -14px rgba(10,10,10,0.36);
+  background: #f7f7f7;
+  border-color: #f7f7f7;
+  box-shadow: 0 18px 40px -14px rgba(10,10,10,0.36);
 }
 .boh-page-hero__cta--arrow .boh-page-hero__cta-arrow {
   background: #fff;
