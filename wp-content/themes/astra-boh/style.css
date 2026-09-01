@@ -7851,3 +7851,174 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   body.home .boh-band--right .boh-countdown,
   body.home .boh-band--right .wp-block-buttons { justify-content: flex-end; }
 }
+
+/* ── A photograph beside the copy ────────────────────────────────────
+   An alternating section leaves half the page empty; this fills it. The
+   band becomes two columns and the picture takes whichever side the copy
+   is not, so it follows the alternation without being told. */
+@media (min-width: 901px) {
+  body.home .boh-band--left:has(.boh-sideimg) > .wp-block-group__inner-container,
+  body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container,
+  body.home .boh-band--left:has(> .boh-sideimg),
+  body.home .boh-band--right:has(> .boh-sideimg) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    column-gap: clamp(28px, 4vw, 64px);
+    max-width: 1240px;
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+  /* The copy stacks in its own column; the picture spans the other. */
+  body.home .boh-band--left:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg),
+  body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg) {
+    grid-column: 1;
+    max-width: none;
+    padding-inline: 0;
+    margin-inline: 0;
+  }
+  body.home .boh-sideimg { grid-column: 2; grid-row: 1 / span 99; align-self: center; }
+  body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg) { grid-column: 2; }
+  body.home .boh-band--right .boh-sideimg { grid-column: 1; }
+}
+.boh-sideimg {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 26px 60px -32px rgba(10,10,10,0.5);
+  line-height: 0;
+}
+.boh-sideimg img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+/* On a phone the copy is centred and there is no empty half to fill, so the
+   picture would only be pushing the next section further down the page. */
+@media (max-width: 900px) {
+  .boh-sideimg { display: none; }
+}
+
+/* ── The hero's fine print ───────────────────────────────────────────
+   "Since 2010 · A Rohit Group Initiative" used to sit above the headline,
+   competing with it. It reads better as a credit at the foot of the view,
+   under the scroll cue.
+
+   It is a sibling of the cue rather than a wrapper around it: the hero
+   forces position:relative on its children, and a separate script lifts the
+   cue out to the cover - so anything wrapped around the cue was emptied and
+   left behind. Both are positioned against the cover independently. */
+.wp-block-cover.boh-hero .boh-hero-fineprint {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 12px !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 5;
+  margin: 0 !important;
+  width: max-content;
+  max-width: 92vw;
+  text-align: center;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--boh-ink-soft);
+  text-shadow: 0 1px 10px rgba(255,255,255,0.85);
+}
+.wp-block-cover.boh-hero .boh-hero-fineprint a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.wp-block-cover.boh-hero .boh-hero-fineprint a:hover { color: var(--boh-magenta); }
+/* The cue lifts to make room for the line beneath it. */
+.wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 46px !important; }
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 8px !important; font-size: 9.5px; letter-spacing: 0.11em; }
+  .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 34px !important; }
+}
+
+/* ── Play/pause joins the dots ───────────────────────────────────────
+   It used to sit on its own in the bottom-left corner. It belongs with the
+   dots: same size, same row, reading as one more stop on the strip - except
+   this one carries the glyph. Overrides the corner positioning above. */
+.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause {
+  position: static !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 0;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.55) !important;
+  border: 1px solid rgba(255,255,255,0.85) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause:hover {
+  background: #fff !important;
+  transform: scale(1.15);
+}
+.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause:focus-visible {
+  outline: 2px solid var(--boh-magenta);
+  outline-offset: 2px;
+}
+/* The glyph is drawn at dot scale: two bars while it is playing, a triangle
+   once it is paused, so the control says what pressing it will do. */
+.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause .boh-hero-pause__icon {
+  width: 6px; height: 6px;
+  display: block;
+  background: none !important;
+  border: 0 !important;
+  border-left: 2px solid var(--boh-ink);
+  border-right: 2px solid var(--boh-ink);
+  box-sizing: border-box;
+  transition: none;
+}
+.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause[aria-pressed="true"] .boh-hero-pause__icon {
+  width: 0; height: 0;
+  border-left: 6px solid var(--boh-ink);
+  border-right: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  margin-left: 1px;
+}
+
+/* ── The page you are on ─────────────────────────────────────────────
+   The navigation gave no sign of where you were. WordPress marks the item
+   with current-menu-item (and current-menu-ancestor for a child page), so
+   the accent and a rule under the word are enough - no extra markup. */
+.boh-header .current-menu-item > a,
+.boh-header .current_page_item > a,
+.boh-header .current-menu-ancestor > a,
+.boh-header .current-menu-parent > a {
+  color: var(--boh-magenta) !important;
+  position: relative;
+}
+.boh-header .current-menu-item > a::after,
+.boh-header .current_page_item > a::after,
+.boh-header .current-menu-ancestor > a::after,
+.boh-header .current-menu-parent > a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--boh-magenta);
+}
+/* The RSVP button is already a filled pill; a rule under it would read as a
+   mistake, and it is never "the page you are on" in the same sense. */
+.boh-header .current-menu-item > a.wp-block-button__link::after,
+.boh-header .current-menu-item > .boh-nav__cta::after,
+.boh-header .boh-nav__cta::after { display: none; }
+.boh-header .boh-nav__cta { color: #fff !important; }

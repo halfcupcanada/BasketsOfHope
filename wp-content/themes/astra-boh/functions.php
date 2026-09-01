@@ -826,6 +826,11 @@ add_action('wp_footer', function () {
       if (cueHero && cue && cue.parentElement !== cueHero) {
         cueHero.appendChild(cue);
       }
+      // The credit under the cue anchors to the cover for the same reason.
+      const fine = document.querySelector('.boh-hero-fineprint');
+      if (cueHero && fine && fine.parentElement !== cueHero) {
+        cueHero.appendChild(fine);
+      }
 
       // ── 1. Auto-tag elements for scroll-reveal ──────────────────
       document.querySelectorAll(
@@ -1358,10 +1363,10 @@ add_shortcode('boh_hero_slideshow', function () {
                 aria-label="Show hero image <?php echo $i + 1; ?>"
                 role="tab" aria-selected="<?php echo $i === 0 ? 'true' : 'false'; ?>"></button>
       <?php endforeach; ?>
+      <button type="button" class="boh-hero-pause" aria-label="Pause slideshow" aria-pressed="false">
+        <span class="boh-hero-pause__icon" aria-hidden="true"></span>
+      </button>
     </div>
-    <button type="button" class="boh-hero-pause" aria-label="Pause slideshow" aria-pressed="false">
-      <span class="boh-hero-pause__icon" aria-hidden="true"></span>
-    </button>
     <script>
     (function () {
       // Reparent the slideshow + dots + pause button so they're direct
@@ -1378,9 +1383,15 @@ add_shortcode('boh_hero_slideshow', function () {
       if (container && dotStrip && dotStrip.parentElement !== container) {
         container.appendChild(dotStrip);
       }
-      if (container && pauseBtn && pauseBtn.parentElement !== container) {
+      // The pause control now lives in the dot strip, which is itself moved
+      // above - so pulling it out again would undo that. Only rescue it if it
+      // has somehow been left behind.
+      if (container && pauseBtn && !dotStrip.contains(pauseBtn)
+          && pauseBtn.parentElement !== container) {
         container.appendChild(pauseBtn);
       }
+
+
 
       const dots   = document.querySelectorAll('.boh-hero-dots .boh-hero-dot');
       const slides = document.querySelectorAll('.boh-hero-slideshow .boh-hero-slide');
@@ -1723,6 +1734,26 @@ add_action('wp_footer', function () {
     </script>
     <?php
 }, 6);
+
+// --- [boh_side_image] - a photograph beside the copy --------------------
+// Sits in the half an alternating section leaves empty. Which half is decided
+// by the band's own left/right class, so the picture follows the copy without
+// being told which side it is on.
+add_shortcode('boh_side_image', function ($atts) {
+    $a = shortcode_atts([ 'key' => '', 'alt' => '' ], $atts);
+    $url = $a['key'] !== '' ? (string) boh_content($a['key'], '') : '';
+    if ($url === '') { return ''; }
+    [ $src, $set ] = boh_hero_sources($url);
+    if ($src === '') { return ''; }
+    ob_start(); ?>
+    <div class="boh-sideimg" aria-hidden="<?php echo $a['alt'] === '' ? 'true' : 'false'; ?>">
+      <img src="<?php echo esc_url($src); ?>"
+           <?php if ($set) : ?>srcset="<?php echo esc_attr($set); ?>" sizes="(max-width: 900px) 100vw, 46vw"<?php endif; ?>
+           alt="<?php echo esc_attr($a['alt']); ?>" loading="lazy" decoding="async">
+    </div>
+    <?php
+    return (string) ob_get_clean();
+});
 
 // --- [boh_band_photo] - a photograph behind any full-width band ---------
 // Drop it inside a group block and that group gets the picture behind its
@@ -2971,10 +3002,14 @@ add_action('wp_footer', function () {
           // page. Decided before the colour, because a band that keeps its
           // own ground returns early below and would otherwise never be
           // aligned. A band with no copy - the stats row - takes no turn.
-          if (el.querySelector('.boh-home-section')) {
+          var hasGrid = el.querySelector('.boh-how-it-works, .boh-quick-links, .boh-explore-band')
+                     || el.classList.contains('boh-explore-band');
+          if (el.querySelector('.boh-home-section') && !hasGrid) {
             el.classList.remove('boh-band--left', 'boh-band--right');
             el.classList.add(left ? 'boh-band--left' : 'boh-band--right');
             left = !left;
+          } else {
+            el.classList.remove('boh-band--left', 'boh-band--right');
           }
           // Two kinds of band keep their own ground. A dark one reads as
           // neither pink nor white, so it sits out of the rotation entirely -

@@ -158,6 +158,22 @@ function boh_content_schema(): array {
 					'help'  => 'Sits behind the impact numbers on the home page, darkened so the figures stay readable. Leave empty for the plain dark band.',
 				],
 				[
+					'key'   => 'home.when_image',
+					'label' => 'Beside the date and countdown',
+					'type'  => 'image',
+					'ratio' => '4:3',
+					'px'    => '1200 x 900',
+					'help'  => 'Fills the half of that section the copy leaves empty. Hidden on a phone, where the copy is centred.',
+				],
+				[
+					'key'   => 'home.cares_image',
+					'label' => 'Beside "A reminder that someone cares"',
+					'type'  => 'image',
+					'ratio' => '4:3',
+					'px'    => '1200 x 900',
+					'help'  => 'Same again, on the other side of the page.',
+				],
+				[
 					'key'   => 'home.about_image',
 					'label' => '"A community event" - background photograph',
 					'type'  => 'image',
