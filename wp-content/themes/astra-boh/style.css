@@ -7258,3 +7258,69 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 @media (max-width: 780px) {
   .boh-page-hero__img { object-position: center 18%; }
 }
+
+/* ── Impact numbers over a photograph ────────────────────────────────
+   The figures are about people and the band said nothing about them. The
+   photograph carries a dark scrim so the numbers keep their contrast; the
+   band's own colour still shows through wherever the image does not reach.
+   Only applies when a picture has been chosen in BoH Content -> Home. */
+/* The band itself becomes the frame the photograph fills. Cancelling its
+   padding with a negative margin was the obvious way and the wrong one: the
+   inline padding is 64px but the home page's tile rules override it to 48,
+   so the photo missed the edges by 16px on desktop and matched on a phone.
+   Anchoring to the band instead means the padding can be whatever it likes. */
+.wp-block-group:has(> .boh-stats--photo),
+.wp-block-group:has(> .wp-block-group__inner-container > .boh-stats--photo) {
+  position: relative;
+  overflow: hidden;
+}
+.boh-stats--photo {
+  display: block !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  /* Still needed horizontally: the inner container is narrower than the band.
+     100vw is safe here - the root carries overflow-x: clip. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+}
+.boh-stats--photo .boh-stats__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.boh-stats--photo .boh-stats__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  display: block;
+}
+/* Dark enough for white type at any point of any photograph, with a little
+   more weight top and bottom so the band still reads as a band. */
+.boh-stats--photo .boh-stats__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(31,26,36,0.92) 0%, rgba(31,26,36,0.74) 40%,
+                            rgba(31,26,36,0.74) 60%, rgba(31,26,36,0.92) 100%),
+    rgba(31,26,36,0.28);
+}
+.boh-stats--photo .boh-stats__row {
+  position: relative;
+  z-index: 1;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 24px;
+}
+@media (max-width: 900px) {
+  .boh-stats--photo .boh-stats__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .boh-stats--photo .boh-stats__row { grid-template-columns: 1fr; }
+}

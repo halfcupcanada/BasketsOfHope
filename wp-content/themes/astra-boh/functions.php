@@ -1545,14 +1545,28 @@ add_shortcode('boh_stats', function () {
         ['3,421', 'Volunteers engaged'],
         ['15',    'Years of service'],
     ]);
+    // A photograph behind the numbers, chosen in BoH Content -> Home. The
+    // figures are about people, and the dark band said nothing about them.
+    $bg = (string) boh_content('home.stats_image', '');
+    [ $bg_src, $bg_set ] = $bg !== '' ? boh_hero_sources($bg) : [ '', '' ];
+
     ob_start(); ?>
-    <div class="boh-stats">
-      <?php foreach ($stats as [$num, $label]) : ?>
-        <div class="boh-stats__cell">
-          <h2><?php echo esc_html($num); ?></h2>
-          <div class="boh-stats__label"><?php echo esc_html($label); ?></div>
+    <div class="boh-stats<?php echo $bg_src ? ' boh-stats--photo' : ''; ?>">
+      <?php if ($bg_src) : ?>
+        <div class="boh-stats__bg" aria-hidden="true">
+          <img src="<?php echo esc_url($bg_src); ?>"
+               <?php if ($bg_set) : ?>srcset="<?php echo esc_attr($bg_set); ?>" sizes="100vw"<?php endif; ?>
+               alt="" loading="lazy" decoding="async">
         </div>
-      <?php endforeach; ?>
+      <?php endif; ?>
+      <?php if ($bg_src) : ?><div class="boh-stats__row"><?php endif; ?>
+        <?php foreach ($stats as [$num, $label]) : ?>
+          <div class="boh-stats__cell">
+            <h2><?php echo esc_html($num); ?></h2>
+            <div class="boh-stats__label"><?php echo esc_html($label); ?></div>
+          </div>
+        <?php endforeach; ?>
+      <?php if ($bg_src) : ?></div><?php endif; ?>
     </div>
     <?php
     return ob_get_clean();

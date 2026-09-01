@@ -150,6 +150,14 @@ function boh_content_schema(): array {
 					],
 				],
 				[
+					'key'   => 'home.stats_image',
+					'label' => 'Impact numbers - background photograph',
+					'type'  => 'image',
+					'ratio' => '3:1',
+					'px'    => '2400 x 800',
+					'help'  => 'Sits behind the impact numbers on the home page, darkened so the figures stay readable. Leave empty for the plain dark band.',
+				],
+				[
 					'key'   => 'home.quick_links',
 					'label' => 'Explore links',
 					'help'  => 'The card grid near the foot of the home page.',
