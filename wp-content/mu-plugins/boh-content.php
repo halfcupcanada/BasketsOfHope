@@ -408,6 +408,7 @@ function boh_content_schema(): array {
 
 		'donate' => [
 			'title'  => 'Donate',
+			'help'   => 'The two cards near the top of the page, the copy above the donation form, and every word the form itself renders.',
 			'fields' => [
 				[ 'key' => 'donate.card1_eyebrow', 'label' => 'Card 1 - eyebrow', 'type' => 'text' ],
 				[ 'key' => 'donate.card1_title',   'label' => 'Card 1 - title',   'type' => 'text' ],
@@ -418,6 +419,30 @@ function boh_content_schema(): array {
 				[ 'key' => 'donate.card2_title',   'label' => 'Card 2 - title',   'type' => 'text' ],
 				[ 'key' => 'donate.card2_body',    'label' => 'Card 2 - body',    'type' => 'richtext' ],
 				[ 'key' => 'donate.card2_button',  'label' => 'Card 2 - button',  'type' => 'text' ],
+
+				[ 'key' => 'donate.eyebrow', 'label' => 'Form - small label above it', 'type' => 'text' ],
+				[ 'key' => 'donate.heading', 'label' => 'Form - heading above it', 'type' => 'text',
+				  'help' => 'Use <em>words</em> to set part of it in magenta.' ],
+				[ 'key' => 'donate.intro', 'label' => 'Form - copy above it', 'type' => 'richtext' ],
+
+				// GiveWP renders its own labels, headings and button, so none
+				// of them live in the page and none could be edited before.
+				[ 'key' => 'donate.button', 'label' => 'Form - the button', 'type' => 'text',
+				  'help' => 'The one people press to give.' ],
+				[ 'key' => 'donate.amount_colon', 'label' => 'Form - amount label', 'type' => 'text' ],
+				[ 'key' => 'donate.choose', 'label' => 'Form - "choose your amount" line', 'type' => 'text' ],
+				[ 'key' => 'donate.custom', 'label' => 'Form - custom amount label', 'type' => 'text' ],
+				[ 'key' => 'donate.total_colon', 'label' => 'Form - total label', 'type' => 'text' ],
+				[ 'key' => 'donate.heading_payment', 'label' => 'Form - payment method heading', 'type' => 'text' ],
+				[ 'key' => 'donate.heading_personal', 'label' => 'Form - personal details heading', 'type' => 'text' ],
+				[ 'key' => 'donate.heading_card', 'label' => 'Form - card details heading', 'type' => 'text' ],
+				[ 'key' => 'donate.label_first', 'label' => 'Form - first name field', 'type' => 'text' ],
+				[ 'key' => 'donate.label_last', 'label' => 'Form - last name field', 'type' => 'text' ],
+				[ 'key' => 'donate.label_email', 'label' => 'Form - email field', 'type' => 'text' ],
+				[ 'key' => 'donate.processing', 'label' => 'Form - while the payment goes through', 'type' => 'text' ],
+				[ 'key' => 'donate.amount', 'label' => 'Form - amount label, no colon', 'type' => 'text',
+				  'help' => 'Give uses both forms of this in different places.' ],
+				[ 'key' => 'donate.total', 'label' => 'Form - total label, no colon', 'type' => 'text' ],
 			],
 		],
 

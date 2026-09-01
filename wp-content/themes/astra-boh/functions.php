@@ -2064,21 +2064,46 @@ add_shortcode('boh_gallery', function ($atts) {
     return (string) ob_get_clean();
 });
 
-// --- Relabel GiveWP's built-in "Donation" / "Donate" strings to
-//     "Sponsorship" / "Sponsor" - the BoH team frames every gift as
-//     sponsoring a basket, so the checkout should read consistently.
-add_filter('gettext', function ($translated, $original, $domain) {
-    if ($domain !== 'give') return $translated;
-    static $map = [
-        'Donate Now'                => 'Sponsor Now',
-        'Donation Total'            => 'Sponsorship Total',
-        'Donation Total:'           => 'Sponsorship Total:',
-        'Donation Amount'           => 'Sponsorship Amount',
-        'Donation Amount:'          => 'Sponsorship Amount:',
-        'Donation Processing...'    => 'Sponsorship Processing...',
-        'Choose Your Donation Amount' => 'Choose Your Sponsorship Amount',
-        'Custom Donation Amount'    => 'Custom Sponsorship Amount',
+// --- Every word on the donation form ------------------------------------
+// GiveWP renders its own labels, headings and button, so none of them live in
+// the page and none could be edited. They are all translatable strings, which
+// makes gettext the one place that can reach all of them.
+//
+// The wording started as a hardcoded map: the BoH team frames every gift as
+// sponsoring a basket, so "Donate Now" read "Sponsor Now". That map is now the
+// set of defaults behind BoH Content -> Donate, so the team can change any of
+// it without a deploy.
+function boh_give_strings(): array
+{
+    static $map = null;
+    if ($map !== null) { return $map; }
+    // original string in Give => [ content key, the wording shipped today ]
+    $fields = [
+        'Donate Now'                  => ['donate.button',          'Sponsor Now'],
+        'Donation Total'              => ['donate.total',           'Sponsorship Total'],
+        'Donation Total:'             => ['donate.total_colon',     'Sponsorship Total:'],
+        'Donation Amount'             => ['donate.amount',          'Sponsorship Amount'],
+        'Donation Amount:'            => ['donate.amount_colon',    'Sponsorship Amount:'],
+        'Donation Processing...'      => ['donate.processing',      'Sponsorship Processing...'],
+        'Choose Your Donation Amount' => ['donate.choose',          'Choose Your Sponsorship Amount'],
+        'Custom Donation Amount'      => ['donate.custom',          'Custom Sponsorship Amount'],
+        'Select Payment Method'       => ['donate.heading_payment', 'Select Payment Method'],
+        'Personal Info'               => ['donate.heading_personal','Personal Info'],
+        'Credit Card Info'            => ['donate.heading_card',    'Credit Card Info'],
+        'First Name'                  => ['donate.label_first',     'First Name'],
+        'Last Name'                   => ['donate.label_last',      'Last Name'],
+        'Email Address'               => ['donate.label_email',     'Email Address'],
     ];
+    $map = [];
+    foreach ($fields as $original => [$key, $default]) {
+        $map[$original] = (string) boh_content($key, $default);
+    }
+    return $map;
+}
+
+add_filter('gettext', function ($translated, $original, $domain) {
+    if ($domain !== 'give') { return $translated; }
+    $map = boh_give_strings();
     return $map[$original] ?? $translated;
 }, 10, 3);
 
