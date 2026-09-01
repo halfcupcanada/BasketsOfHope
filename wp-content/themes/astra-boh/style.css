@@ -7774,11 +7774,14 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   padding: 6px;
   gap: 0;
   background: var(--boh-magenta);
-  border-color: var(--boh-magenta);
+  /* A white ring rather than a magenta one: against the pale pink band a
+     pink border on a pink disc blurred the edge of the mark. */
+  border-color: rgba(255,255,255,0.92);
   box-shadow: 0 14px 34px -12px rgba(208,20,130,0.62);
 }
 .boh-page-hero__cta--arrow:hover {
   background: var(--boh-magenta-deep);
+  border-color: #ffffff;
   box-shadow: 0 22px 46px -14px rgba(208,20,130,0.7);
 }
 .boh-page-hero__cta--arrow .boh-page-hero__cta-arrow {
