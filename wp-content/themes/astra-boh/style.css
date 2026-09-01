@@ -7767,10 +7767,28 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 /* Arrow-only hero call to action. The words stay in the markup for anyone
    using a screen reader - it is the same control either way, just without
    the label showing. */
+/* The arrow-only button wears the colours the other way round: magenta ring,
+   white disc, magenta chevron. On its own with no label it reads better as a
+   solid mark than as a frosted pill with a coloured dot in it. */
 .boh-page-hero__cta--arrow {
   padding: 6px;
   gap: 0;
-  background: rgba(255,255,255,0.92);
+  background: var(--boh-magenta);
+  border-color: var(--boh-magenta);
+  box-shadow: 0 14px 34px -12px rgba(208,20,130,0.62);
+}
+.boh-page-hero__cta--arrow:hover {
+  background: var(--boh-magenta-deep);
+  box-shadow: 0 22px 46px -14px rgba(208,20,130,0.7);
+}
+.boh-page-hero__cta--arrow .boh-page-hero__cta-arrow {
+  background: #fff;
+  box-shadow: none;
+}
+.boh-page-hero__cta--arrow:hover .boh-page-hero__cta-arrow { background: #fff; }
+.boh-page-hero__cta--arrow .boh-page-hero__cta-arrow::after {
+  border-right-color: var(--boh-magenta);
+  border-bottom-color: var(--boh-magenta);
 }
 .boh-page-hero__cta--arrow .boh-page-hero__cta-label {
   position: absolute;
