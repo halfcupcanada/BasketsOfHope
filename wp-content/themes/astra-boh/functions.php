@@ -1017,11 +1017,14 @@ add_shortcode('boh_copy', function ($atts, $content = '') {
     $html = (string) boh_content($a['key'], (string) $content);
     if (trim($html) === '') { return ''; }
     $tag = preg_match('/^[a-z0-9]+$/i', $a['tag']) ? $a['tag'] : 'div';
+    // wpautop inside a heading puts a <p> in an <h2>, which is invalid and
+    // loses the heading's own styling. Headings take their markup as written.
+    $body = preg_match('/^h[1-6]$/i', $tag) ? $html : wpautop($html);
     return sprintf(
         '<%1$s class="boh-copy %2$s">%3$s</%1$s>',
         $tag,
         esc_attr($a['class']),
-        wp_kses_post(wpautop($html))
+        wp_kses_post($body)
     );
 });
 
@@ -1636,7 +1639,20 @@ add_action('wp_footer', function () {
         ticking = true;
         requestAnimationFrame(function () { ticking = false; update(); });
       }, { passive: true });
-      window.addEventListener('resize', update);
+      // The gallery's year rail owns the bottom-right corner. Measure it and
+      // lift the button clear rather than guessing at a fixed offset - the
+      // rail's height depends on how many years there are.
+      function lift() {
+        var rail = document.querySelector('.boh-yearrail');
+        var px = 0;
+        if (rail && getComputedStyle(rail).display !== 'none') {
+          px = Math.round(rail.getBoundingClientRect().height) + 14;
+        }
+        document.documentElement.style.setProperty('--boh-totop-lift', px + 'px');
+      }
+      lift();
+      window.addEventListener('load', lift);
+      window.addEventListener('resize', function () { lift(); update(); });
       update();
 
       btn.addEventListener('click', function () {
