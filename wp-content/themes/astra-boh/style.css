@@ -7935,20 +7935,49 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   max-width: 92vw;
   text-align: center;
   font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-weight: 600;
+  /* !important because the hero styles paragraphs at 15px with the same
+     weight - a credit set at the size of body copy is not a credit. */
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.04em;
+  /* Sentence case, not shouted: this is a credit, and it sits under the one
+     thing on the view that is asking to be pressed. */
+  text-transform: none;
   color: var(--boh-ink-soft);
   text-shadow: 0 1px 10px rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
-.wp-block-cover.boh-hero .boh-hero-fineprint a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-.wp-block-cover.boh-hero .boh-hero-fineprint a:hover { color: var(--boh-magenta); }
-/* The cue lifts to make room for the line beneath it. */
-.wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 46px !important; }
+/* "Rohit Group" as a small yellow chip - the logo's own second colour, and
+   the only part of the line that goes anywhere when pressed. */
+.wp-block-cover.boh-hero .boh-hero-fineprint a {
+  color: var(--boh-ink) !important;
+  text-decoration: none !important;
+  background: var(--boh-yellow-soft);
+  border: 1px solid rgba(220,179,29,0.55);
+  border-radius: 999px;
+  padding: 1px 8px 2px;
+  font-weight: 700;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.wp-block-cover.boh-hero .boh-hero-fineprint a:hover {
+  background: var(--boh-yellow);
+  border-color: var(--boh-yellow-deep);
+  color: var(--boh-ink) !important;
+}
+.wp-block-cover.boh-hero .boh-hero-fineprint a:focus-visible {
+  outline: 2px solid var(--boh-magenta);
+  outline-offset: 2px;
+}
+/* Room underneath so the line sits above the edge rather than on it, and the
+   cue lifts to keep its own distance. */
+.wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 30px !important; }
+.wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 68px !important; }
 @media (max-width: 640px) {
-  .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 8px !important; font-size: 9.5px; letter-spacing: 0.11em; }
-  .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 34px !important; }
+  .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 22px !important; font-size: 9px !important; }
+  .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 54px !important; }
 }
 
 /* ── Play/pause joins the dots ───────────────────────────────────────
