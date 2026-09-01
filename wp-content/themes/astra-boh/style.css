@@ -7665,3 +7665,76 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   background: rgba(208,20,130,0.10) !important;
   color: var(--boh-magenta) !important;
 }
+
+/* ── Page-hero call to action ────────────────────────────────────────
+   The same bob as the home page's scroll cue, so the two read as one
+   family: the pill rises and settles, and holds still while pointed at.
+   Solid magenta rather than the cue's frosted white - this one commits
+   somebody to something rather than nudging them down the page. */
+.boh-page-hero__ctarow { margin: clamp(20px, 3vh, 32px) 0 0; text-align: center; }
+.boh-page-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 8px 26px;
+  border-radius: 999px;
+  background: var(--boh-magenta);
+  color: #fff !important;
+  text-decoration: none !important;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 34px -12px rgba(208,20,130,0.62);
+  animation: bohHeroCtaBob 3.4s ease-in-out infinite;
+  transition: box-shadow .25s ease, background .2s ease;
+}
+@keyframes bohHeroCtaBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.boh-page-hero__cta:hover {
+  animation-play-state: paused;
+  background: var(--boh-magenta-deep, #C2005F);
+  box-shadow: 0 22px 46px -14px rgba(208,20,130,0.7);
+}
+.boh-page-hero__cta:focus-visible { outline: 3px solid var(--boh-ink); outline-offset: 3px; }
+.boh-page-hero__cta-arrow {
+  position: relative;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.16);
+  flex: 0 0 auto;
+  transition: transform .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
+}
+.boh-page-hero__cta:hover .boh-page-hero__cta-arrow {
+  transform: scale(1.08);
+  background: rgba(255,255,255,0.26);
+}
+/* Chevron on the pseudo-element so the disc itself stays still. */
+.boh-page-hero__cta-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 8px; height: 8px;
+  margin: -6px 0 0 -4px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-page-hero__cta { animation: none; }
+}
+
+/* The hero fills the screen down to the fold, so whatever comes next starts
+   below it rather than peeking in under the call to action. */
+.boh-page-hero {
+  /* 100vh, not 100vh minus the header: the header's height is already inside
+     this section as the photograph's top margin, so subtracting it again left
+     the next section peeking in by exactly that many pixels. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.boh-page-hero__body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }

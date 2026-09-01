@@ -1260,11 +1260,13 @@ function boh_hero_sources(string $url): array
 // + optional subhead below the image.
 add_shortcode('boh_page_hero', function ($atts) {
     $a = shortcode_atts([
-        'image'   => '',
-        'eyebrow' => '',
-        'title'   => '',
-        'sub'     => '',
-        'align'   => 'center', // center | left
+        'image'     => '',
+        'eyebrow'   => '',
+        'title'     => '',
+        'sub'       => '',
+        'align'     => 'center', // center | left
+        'cta'       => '',       // label; empty means no call to action
+        'cta_url'   => '',
     ], $atts);
     // A photo chosen in BoH Content -> Page headers wins over the one written
     // into the page, so the header image can be swapped from the media
@@ -1309,6 +1311,14 @@ add_shortcode('boh_page_hero', function ($atts) {
         <?php endif; ?>
         <?php if ( $a['sub'] ) : ?>
           <p class="boh-page-hero__sub"><?php echo wp_kses_post( $a['sub'] ); ?></p>
+        <?php endif; ?>
+        <?php if ( $a['cta'] && $a['cta_url'] ) : ?>
+          <p class="boh-page-hero__ctarow">
+            <a class="boh-page-hero__cta" href="<?php echo esc_url( $a['cta_url'] ); ?>">
+              <span class="boh-page-hero__cta-label"><?php echo esc_html( $a['cta'] ); ?></span>
+              <span class="boh-page-hero__cta-arrow" aria-hidden="true"></span>
+            </a>
+          </p>
         <?php endif; ?>
       </div>
     </section>
