@@ -1267,6 +1267,7 @@ add_shortcode('boh_page_hero', function ($atts) {
         'align'     => 'center', // center | left
         'cta'       => '',       // label; empty means no call to action
         'cta_url'   => '',
+        'cta_style' => '',       // "arrow" keeps the disc and hides the label
     ], $atts);
     // A photo chosen in BoH Content -> Page headers wins over the one written
     // into the page, so the header image can be swapped from the media
@@ -1314,7 +1315,7 @@ add_shortcode('boh_page_hero', function ($atts) {
         <?php endif; ?>
         <?php if ( $a['cta'] ) : ?>
           <p class="boh-page-hero__ctarow">
-            <a class="boh-page-hero__cta<?php echo $a['cta_url'] ? '' : ' boh-page-hero__cta--next'; ?>"
+            <a class="boh-page-hero__cta<?php echo $a['cta_url'] ? '' : ' boh-page-hero__cta--next'; ?><?php echo $a['cta_style'] === 'arrow' ? ' boh-page-hero__cta--arrow' : ''; ?>"
                href="<?php echo $a['cta_url'] ? esc_url( $a['cta_url'] ) : '#'; ?>">
               <span class="boh-page-hero__cta-label"><?php echo esc_html( $a['cta'] ); ?></span>
               <span class="boh-page-hero__cta-arrow" aria-hidden="true"></span>
@@ -1664,8 +1665,24 @@ add_action('wp_footer', function () {
       // the first screen, and never competes with the hero's own scroll cue.
       function threshold() { return Math.max(600, window.innerHeight * 1.2); }
 
+      // Clear the footer's bottom bar rather than sitting on top of the
+      // HalfCup credit, which is exactly where it landed once the button moved
+      // into the corner.
+      function clearFooter() {
+        var bar = document.querySelector('.boh-footer__bottom');
+        var px = 0;
+        if (bar) {
+          var r = bar.getBoundingClientRect();
+          if (r.top < window.innerHeight) {
+            px = Math.round(window.innerHeight - r.top) + 16;
+          }
+        }
+        document.documentElement.style.setProperty('--boh-totop-footer', px + 'px');
+      }
+
       var ticking = false;
       function update() {
+        clearFooter();
         var y = window.scrollY || document.documentElement.scrollTop;
         var show = y > threshold();
         if (show === !btn.hidden) return;
@@ -2101,9 +2118,6 @@ add_shortcode('boh_gallery', function ($atts) {
       <?php endif; endif; ?>
 
       <?php if (!empty($rail)) :
-          // A colour per year, so the dots read as a legend as well as a
-          // control. Cycles if a fifth entry ever appears.
-          $tones = ['#D01482', '#12A594', '#F2B705', '#6B3FA0'];
       ?>
         <nav class="boh-yearrail" aria-label="Jump to a year">
           <span class="boh-yearrail__handle" aria-hidden="true"></span>
@@ -2113,7 +2127,6 @@ add_shortcode('boh_gallery', function ($atts) {
             <?php foreach ($rail as $i => $r) : ?>
               <li class="boh-yearrail__item">
                 <a class="boh-yearrail__link<?php echo $i === 0 ? ' is-current' : ''; ?>"
-                   style="--boh-year-tone: <?php echo esc_attr($tones[$i % count($tones)]); ?>"
                    href="#<?php echo esc_attr($r['id']); ?>"
                    data-boh-year="<?php echo esc_attr($r['id']); ?>">
                   <span class="boh-yearrail__dot" aria-hidden="true"></span>

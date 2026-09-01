@@ -6780,9 +6780,10 @@ body.boh-past-top .boh-header__wordmark {
 }
 
 /* ── Gallery timeline ────────────────────────────────────────────────
-   A bar along the foot of the screen rather than a column in the corner:
-   the years read left to right as a timeline, each with its own colour, and
-   the whole thing can be folded away on a long scroll. */
+   A real timeline rather than a row of buttons: one hairline runs the width
+   of the years and every dot sits on it, so the eye reads a line with stops
+   rather than four separate pills. Brand colours only - magenta for where
+   you are, the theme's greys for everywhere else. */
 .boh-yearrail {
   position: fixed;
   left: 50%;
@@ -6791,148 +6792,151 @@ body.boh-past-top .boh-header__wordmark {
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: clamp(10px, 1.4vw, 18px);
-  max-width: min(94vw, 1020px);
-  padding: 10px 12px 10px 22px;
+  gap: clamp(14px, 1.8vw, 24px);
+  max-width: min(94vw, 980px);
+  padding: 10px 10px 10px 22px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.94);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(31,26,36,0.08);
-  box-shadow: 0 20px 48px -22px rgba(31,26,36,0.45);
-  transition: padding .25s ease, gap .25s ease;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--boh-rule);
+  box-shadow: 0 18px 44px -22px rgba(10,10,10,0.40), 0 0 0 1px rgba(10,10,10,0.03);
 }
 .boh-yearrail__handle { display: none; }
 .boh-yearrail__title {
   font-family: 'Montserrat', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--boh-ink-soft);
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--boh-ink-mute);
   white-space: nowrap;
   flex: 0 0 auto;
 }
 
-/* The years. A hairline runs between them, so they read as one line rather
-   than as separate buttons. */
+/* The line, and the stops on it. */
 .boh-yearrail__list {
+  position: relative;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 2px;
   display: flex;
-  align-items: center;
-  gap: 0;
+  align-items: flex-start;
+  gap: clamp(18px, 2.6vw, 40px);
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .boh-yearrail__list::-webkit-scrollbar { display: none; }
-.boh-yearrail__item { display: flex; align-items: center; flex: 0 0 auto; }
-.boh-yearrail__item + .boh-yearrail__item::before {
+/* One hairline behind every stop. Insetting it by half a dot keeps it from
+   poking out past the first and last. */
+.boh-yearrail__list::before {
   content: '';
-  width: clamp(10px, 1.6vw, 26px);
+  position: absolute;
+  left: 8px; right: 8px; top: 5px;
   height: 2px;
-  background: var(--boh-rule, #E5E5E5);
+  background: var(--boh-rule);
   border-radius: 2px;
-  flex: 0 0 auto;
 }
+.boh-yearrail__item { flex: 0 0 auto; }
 .boh-yearrail__link {
-  display: inline-flex;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px 7px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(31,26,36,0.10);
-  background: #fff;
+  gap: 6px;
+  padding: 0 2px;
   text-decoration: none !important;
   font-family: 'Montserrat', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 13px;
-  color: var(--boh-ink);
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: var(--boh-ink-mute);
   white-space: nowrap;
-  transition: background .2s ease, border-color .2s ease, color .2s ease;
+  transition: color .2s ease;
 }
 .boh-yearrail__dot {
+  position: relative;
+  z-index: 1;
   width: 12px; height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--boh-year-tone, var(--boh-magenta));
-  background: transparent;
-  flex: 0 0 auto;
-  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
-}
-.boh-yearrail__link:hover { border-color: var(--boh-year-tone, var(--boh-magenta)); }
-.boh-yearrail__link.is-current {
-  background: var(--boh-year-tone, var(--boh-magenta));
-  border-color: var(--boh-year-tone, var(--boh-magenta));
-  color: #fff;
-}
-.boh-yearrail__link.is-current .boh-yearrail__dot {
-  border-color: #fff;
-  box-shadow: inset 0 0 0 3px var(--boh-year-tone, var(--boh-magenta));
+  border: 2px solid var(--boh-rule);
   background: #fff;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.boh-yearrail__link:hover { color: var(--boh-ink); }
+.boh-yearrail__link:hover .boh-yearrail__dot { border-color: var(--boh-magenta); }
+.boh-yearrail__link.is-current { color: var(--boh-ink); }
+.boh-yearrail__link.is-current .boh-yearrail__dot {
+  background: var(--boh-magenta);
+  border-color: var(--boh-magenta);
+  transform: scale(1.15);
+  /* The halo is the theme's own tint, so the marker reads as brand rather
+     than as a glow. */
+  box-shadow: 0 0 0 5px var(--boh-magenta-soft);
 }
 .boh-yearrail__link:focus-visible {
-  outline: 3px solid var(--boh-year-tone, var(--boh-magenta));
-  outline-offset: 2px;
+  outline: 3px solid var(--boh-magenta);
+  outline-offset: 3px;
+  border-radius: 8px;
 }
 
-/* Play highlights, and the fold-away control. */
+/* Play highlights - the one action on the bar, so it is the one filled thing. */
 .boh-yearrail__play {
   display: inline-flex;
   align-items: center;
   gap: 9px;
   flex: 0 0 auto;
-  padding: 8px 16px 8px 13px;
+  padding: 9px 17px 9px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(208,20,130,0.30);
-  color: var(--boh-magenta) !important;
+  border: 1px solid var(--boh-magenta);
+  background: var(--boh-magenta);
+  color: #fff !important;
   text-decoration: none !important;
   font-family: 'Montserrat', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12.5px;
   white-space: nowrap;
+  box-shadow: 0 10px 24px -12px rgba(208,20,130,0.7);
   transition: background .2s ease, border-color .2s ease;
 }
-.boh-yearrail__play:hover { background: rgba(208,20,130,0.08); border-color: var(--boh-magenta); }
-.boh-yearrail__play:focus-visible { outline: 3px solid var(--boh-magenta); outline-offset: 2px; }
+.boh-yearrail__play:hover { background: var(--boh-magenta-deep); border-color: var(--boh-magenta-deep); }
+.boh-yearrail__play:focus-visible { outline: 3px solid var(--boh-ink); outline-offset: 2px; }
 .boh-yearrail__playicon {
   width: 0; height: 0;
-  border-left: 10px solid currentColor;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
+  border-left: 9px solid currentColor;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
   flex: 0 0 auto;
 }
 .boh-yearrail__collapse {
   flex: 0 0 auto;
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--boh-rule);
   border-radius: 50%;
-  background: rgba(31,26,36,0.05);
+  background: #fff;
   cursor: pointer;
-  transition: background .2s ease;
+  transition: background .2s ease, border-color .2s ease;
 }
-.boh-yearrail__collapse:hover { background: rgba(31,26,36,0.10); }
+.boh-yearrail__collapse:hover { background: var(--boh-magenta-soft); border-color: var(--boh-magenta); }
 .boh-yearrail__collapse:focus-visible { outline: 3px solid var(--boh-magenta); outline-offset: 2px; }
 .boh-yearrail__collapse span {
-  width: 9px; height: 9px;
-  border-right: 2px solid var(--boh-ink);
-  border-bottom: 2px solid var(--boh-ink);
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--boh-ink-soft);
+  border-bottom: 2px solid var(--boh-ink-soft);
   transform: translateY(-2px) rotate(45deg);
   transition: transform .25s ease;
 }
-/* Folded: everything but the label and the chevron goes. */
-.boh-yearrail.is-collapsed { padding-left: 18px; gap: 10px; }
+.boh-yearrail.is-collapsed { padding-left: 20px; gap: 12px; }
 .boh-yearrail.is-collapsed .boh-yearrail__list,
 .boh-yearrail.is-collapsed .boh-yearrail__play { display: none; }
 .boh-yearrail.is-collapsed .boh-yearrail__collapse span { transform: translateY(2px) rotate(-135deg); }
 
 @media (max-width: 860px) {
-  /* A sheet across the foot of the screen: the strip scrolls sideways and
-     the play control becomes a disc, as there is no room for its label. */
   .boh-yearrail {
-    left: 8px;
-    right: 8px;
+    left: 8px; right: 8px;
     max-width: none;
     transform: none;
     bottom: calc(8px + env(safe-area-inset-bottom, 0px));
@@ -6940,7 +6944,7 @@ body.boh-past-top .boh-header__wordmark {
     grid-template-columns: 1fr auto auto;
     grid-template-areas: 'handle handle handle' 'title play collapse' 'years years years';
     gap: 8px 10px;
-    padding: 8px 12px 12px;
+    padding: 8px 12px 14px;
     border-radius: 20px;
   }
   .boh-yearrail__handle {
@@ -6949,35 +6953,30 @@ body.boh-past-top .boh-header__wordmark {
     justify-self: center;
     width: 38px; height: 4px;
     border-radius: 999px;
-    background: rgba(31,26,36,0.18);
+    background: var(--boh-rule);
     margin-bottom: 2px;
   }
-  .boh-yearrail__title { grid-area: title; align-self: center; font-size: 14px; color: var(--boh-ink); }
-  .boh-yearrail__list { grid-area: years; padding-bottom: 2px; }
+  .boh-yearrail__title { grid-area: title; align-self: center; }
+  .boh-yearrail__list { grid-area: years; padding: 2px 6px 2px; }
+  .boh-yearrail__list::before { left: 14px; right: 14px; }
   .boh-yearrail__play {
     grid-area: play;
     width: 38px; height: 38px;
     padding: 0;
     justify-content: center;
     border-radius: 50%;
-    background: var(--boh-magenta);
-    border-color: var(--boh-magenta);
-    color: #fff !important;
   }
-  .boh-yearrail__play:hover { background: var(--boh-magenta-deep, #C2005F); }
   .boh-yearrail__playlabel {
     position: absolute; width: 1px; height: 1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
   }
   .boh-yearrail__playicon { margin-left: 2px; }
-  .boh-yearrail__collapse { grid-area: collapse; }
-  .boh-yearrail.is-collapsed { padding-bottom: 8px; }
-  .boh-yearrail.is-collapsed .boh-yearrail__list { display: none; }
+  .boh-yearrail__collapse { grid-area: collapse; align-self: center; }
+  .boh-yearrail.is-collapsed { padding-bottom: 10px; }
   .boh-yearrail.is-collapsed .boh-yearrail__play { display: inline-flex; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boh-yearrail,
   .boh-yearrail__link,
   .boh-yearrail__dot,
   .boh-yearrail__collapse span { transition: none; }
@@ -7538,7 +7537,7 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 .boh-totop {
   position: fixed;
   left: 50%;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--boh-totop-footer, 0px));
   transform: translate(-50%, 12px);
   z-index: 70;
   width: 46px;
@@ -7566,12 +7565,14 @@ body:not(.home) .boh-totop {
   transform: translateY(12px);
   /* On the gallery the year rail is already in that corner; --boh-totop-lift
      is measured in the page and raises the button clear of it. */
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--boh-totop-lift, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px)
+               + max(var(--boh-totop-lift, 0px), var(--boh-totop-footer, 0px)));
 }
 body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 @media (max-width: 600px) {
   body:not(.home) .boh-totop {
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px) + var(--boh-totop-lift, 0px));
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px)
+                 + max(var(--boh-totop-lift, 0px), var(--boh-totop-footer, 0px)));
   }
 }
 .boh-totop:hover { border-color: var(--boh-magenta); }
@@ -7587,7 +7588,8 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 }
 .boh-totop:hover .boh-totop__arrow { border-color: var(--boh-magenta); }
 @media (max-width: 600px) {
-  .boh-totop { width: 42px; height: 42px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .boh-totop { width: 42px; height: 42px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px) + var(--boh-totop-footer, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .boh-totop { transition: opacity .01s linear; }
@@ -7711,8 +7713,21 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 }
 .boh-footer__bottom a { color: rgba(255,255,255,0.72) !important; }
 .boh-footer__bottom a:hover { color: var(--boh-magenta) !important; }
-.boh-footer__social a { color: rgba(255,255,255,0.78) !important; }
-.boh-footer__social a:hover { color: var(--boh-magenta) !important; }
+.boh-footer__social a {
+  color: rgba(255,255,255,0.78) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+  background: transparent !important;
+}
+/* The old hover filled the disc magenta with a white glyph, which worked on
+   the pink footer. On black it read as a solid pink blob - and once the
+   footer rules also turned the glyph magenta, it was magenta on magenta.
+   A magenta ring on a faint ground instead, with the glyph left legible. */
+.boh-footer__social a:hover {
+  background: rgba(208,20,130,0.16) !important;
+  border-color: var(--boh-magenta) !important;
+  color: #ffffff !important;
+}
+.boh-footer__social a svg { fill: currentColor; }
 /* The HalfCup mark draws itself in ink; on black it draws in white. */
 .boh-footer .boh-halfcup__label { color: rgba(255,255,255,0.55) !important; }
 .boh-footer .boh-halfcup__mark [stroke="#1F1A24"],
@@ -7804,22 +7819,31 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
    family: the pill rises and settles, and holds still while pointed at.
    Solid magenta rather than the cue's frosted white - this one commits
    somebody to something rather than nudging them down the page. */
-.boh-page-hero__ctarow { margin: clamp(20px, 3vh, 32px) 0 0; text-align: center; }
+/* Room above the button so it reads as its own beat after the copy rather
+   than as a third line of it. The hero body is flex-centred, so the block
+   stays balanced in the band as this grows. */
+.boh-page-hero__ctarow { margin: clamp(34px, 5.2vh, 60px) 0 0; text-align: center; }
 .boh-page-hero__cta {
   display: inline-flex;
   align-items: center;
   gap: 14px;
   padding: 8px 8px 8px 26px;
   border-radius: 999px;
-  background: var(--boh-magenta);
-  color: #fff !important;
+  /* Frosted rather than solid: on a sub-page this sits over the pink band
+     under the photograph, where a filled magenta pill shouted. The colour is
+     carried by the chevron disc instead. */
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.85);
+  color: var(--boh-ink) !important;
   text-decoration: none !important;
   font-family: 'Montserrat', system-ui, sans-serif;
   font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
-  box-shadow: 0 14px 34px -12px rgba(208,20,130,0.62);
+  box-shadow: 0 14px 38px -14px rgba(31,26,36,0.45), 0 0 0 1px rgba(10,10,10,0.04);
   animation: bohHeroCtaBob 3.4s ease-in-out infinite;
   transition: box-shadow .25s ease, background .2s ease;
 }
@@ -7829,21 +7853,22 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 }
 .boh-page-hero__cta:hover {
   animation-play-state: paused;
-  background: var(--boh-magenta-deep, #C2005F);
-  box-shadow: 0 22px 46px -14px rgba(208,20,130,0.7);
+  background: #fff;
+  box-shadow: 0 22px 48px -16px rgba(208,20,130,0.45), 0 0 0 1px rgba(208,20,130,0.18);
 }
-.boh-page-hero__cta:focus-visible { outline: 3px solid var(--boh-ink); outline-offset: 3px; }
+.boh-page-hero__cta:focus-visible { outline: 3px solid var(--boh-magenta); outline-offset: 3px; }
 .boh-page-hero__cta-arrow {
   position: relative;
   width: 34px; height: 34px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.16);
+  background: var(--boh-magenta);
   flex: 0 0 auto;
+  box-shadow: 0 6px 16px -6px rgba(208,20,130,0.65);
   transition: transform .25s cubic-bezier(.2,.8,.2,1), background .2s ease;
 }
 .boh-page-hero__cta:hover .boh-page-hero__cta-arrow {
   transform: scale(1.08);
-  background: rgba(255,255,255,0.26);
+  background: var(--boh-magenta-deep);
 }
 /* Chevron on the pseudo-element so the disc itself stays still. */
 .boh-page-hero__cta-arrow::after {
@@ -7897,5 +7922,22 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 /* The hairlines between the years were drawn in the theme's rule grey, which
    all but vanished on white. */
 .boh-yearrail__item + .boh-yearrail__item::before {
-  background: rgba(31,26,36,0.16);
+  background: var(--boh-rule);
 }
+
+/* Arrow-only hero call to action. The words stay in the markup for anyone
+   using a screen reader - it is the same control either way, just without
+   the label showing. */
+.boh-page-hero__cta--arrow {
+  padding: 6px;
+  gap: 0;
+  background: rgba(255,255,255,0.92);
+}
+.boh-page-hero__cta--arrow .boh-page-hero__cta-label {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.boh-page-hero__cta--arrow .boh-page-hero__cta-arrow { width: 40px; height: 40px; }
