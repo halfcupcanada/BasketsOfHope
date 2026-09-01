@@ -1363,10 +1363,10 @@ add_shortcode('boh_hero_slideshow', function () {
                 aria-label="Show hero image <?php echo $i + 1; ?>"
                 role="tab" aria-selected="<?php echo $i === 0 ? 'true' : 'false'; ?>"></button>
       <?php endforeach; ?>
-      <button type="button" class="boh-hero-pause" aria-label="Pause slideshow" aria-pressed="false">
-        <span class="boh-hero-pause__icon" aria-hidden="true"></span>
-      </button>
     </div>
+    <button type="button" class="boh-hero-pause" aria-label="Pause slideshow" aria-pressed="false">
+      <span class="boh-hero-pause__icon" aria-hidden="true"></span>
+    </button>
     <script>
     (function () {
       // Reparent the slideshow + dots + pause button so they're direct
@@ -1383,11 +1383,7 @@ add_shortcode('boh_hero_slideshow', function () {
       if (container && dotStrip && dotStrip.parentElement !== container) {
         container.appendChild(dotStrip);
       }
-      // The pause control now lives in the dot strip, which is itself moved
-      // above - so pulling it out again would undo that. Only rescue it if it
-      // has somehow been left behind.
-      if (container && pauseBtn && !dotStrip.contains(pauseBtn)
-          && pauseBtn.parentElement !== container) {
+      if (container && pauseBtn && pauseBtn.parentElement !== container) {
         container.appendChild(pauseBtn);
       }
 
@@ -2786,12 +2782,7 @@ add_action('wp_footer', function () {
         return;
     }
     ?>
-    <div class="boh-tilenav" hidden>
-      <button type="button" class="boh-tilenav__btn boh-tilenav__btn--play"
-              aria-label="Play through the page" aria-pressed="false">
-        <span class="boh-tilenav__glyph" aria-hidden="true"></span>
-      </button>
-    </div>
+
     <script>
     (function () {
       var mq = window.matchMedia('(min-width: 901px) and (min-height: 700px)');

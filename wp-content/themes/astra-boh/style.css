@@ -8010,60 +8010,6 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 54px !important; }
 }
 
-/* ── Play/pause joins the dots ───────────────────────────────────────
-   It used to sit on its own in the bottom-left corner. It belongs with the
-   dots: same size, same row, reading as one more stop on the strip - except
-   this one carries the glyph. Overrides the corner positioning above. */
-.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause {
-  position: static !important;
-  left: auto !important;
-  bottom: auto !important;
-  width: 14px !important;
-  height: 14px !important;
-  min-width: 0;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,0.55) !important;
-  border: 1px solid rgba(255,255,255,0.85) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  margin-left: 6px;
-  cursor: pointer;
-  transition: background .2s ease, transform .2s ease;
-}
-.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause:hover {
-  background: #fff !important;
-  transform: scale(1.15);
-}
-.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause:focus-visible {
-  outline: 2px solid var(--boh-magenta);
-  outline-offset: 2px;
-}
-/* The glyph is drawn at dot scale: two bars while it is playing, a triangle
-   once it is paused, so the control says what pressing it will do. */
-.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause .boh-hero-pause__icon {
-  width: 6px; height: 6px;
-  display: block;
-  background: none !important;
-  border: 0 !important;
-  border-left: 2px solid var(--boh-ink);
-  border-right: 2px solid var(--boh-ink);
-  box-sizing: border-box;
-  transition: none;
-}
-.wp-block-cover.boh-hero .boh-hero-dots .boh-hero-pause[aria-pressed="true"] .boh-hero-pause__icon {
-  width: 0; height: 0;
-  border-left: 6px solid var(--boh-ink);
-  border-right: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  margin-left: 1px;
-}
-
 /* ── The page you are on ─────────────────────────────────────────────
    The navigation gave no sign of where you were. WordPress marks the item
    with current-menu-item (and current-menu-ancestor for a child page), so
@@ -8111,5 +8057,73 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
   body.home .boh-band--right .boh-home-section__meta {
     margin-left: auto !important;
     margin-right: 0 !important;
+  }
+}
+
+/* ── The slideshow's play/pause ──────────────────────────────────────
+   Bottom-right of the hero, where the section arrows used to be. Two bars
+   while the slideshow is running, a triangle once it is stopped, so the
+   glyph says what pressing it will do rather than what it is doing. */
+.wp-block-cover.boh-hero .boh-hero-pause {
+  position: absolute !important;
+  right: 22px !important;
+  bottom: 26px !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 6;
+  width: 46px !important;
+  height: 46px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(31,26,36,0.10) !important;
+  background: rgba(255,255,255,0.94) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 26px -12px rgba(31,26,36,0.45) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.wp-block-cover.boh-hero .boh-hero-pause:hover {
+  background: #fff !important;
+  transform: translateY(-2px);
+}
+.wp-block-cover.boh-hero .boh-hero-pause:focus-visible {
+  outline: 3px solid var(--boh-magenta);
+  outline-offset: 3px;
+}
+.wp-block-cover.boh-hero .boh-hero-pause .boh-hero-pause__icon {
+  display: block;
+  width: 12px;
+  height: 14px;
+  margin: 0;
+  background: none !important;
+  /* The bars need !important as well: the `border: 0 !important` above is a
+     shorthand, and a plain longhand after it cannot override an important
+     declaration - which is why the disc came out empty. */
+  border: 0 !important;
+  border-left: 4px solid var(--boh-ink, #1F1A24) !important;
+  border-right: 4px solid var(--boh-ink, #1F1A24) !important;
+  box-sizing: border-box;
+  opacity: 1 !important;
+  transform: none;
+}
+.wp-block-cover.boh-hero .boh-hero-pause[aria-pressed="true"] .boh-hero-pause__icon {
+  width: 0;
+  height: 0;
+  margin-left: 3px;
+  border: 0 !important;
+  border-left: 13px solid var(--boh-ink, #1F1A24) !important;
+  border-top: 8px solid transparent !important;
+  border-bottom: 8px solid transparent !important;
+}
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-pause {
+    right: 14px !important;
+    bottom: 18px !important;
+    width: 40px !important;
+    height: 40px !important;
   }
 }
