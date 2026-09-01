@@ -8073,3 +8073,22 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 .boh-header .current-menu-item > .boh-nav__cta::after,
 .boh-header .boh-nav__cta::after { display: none; }
 .boh-header .boh-nav__cta { color: #fff !important; }
+
+/* The lede sets to a narrower measure than the heading (54-58ch against the
+   block's 720px) and centres itself inside it with margin: 0 auto - so its
+   right edge stopped about 50px short of the heading's and the two read as
+   misaligned. Each edge now hugs the side its band is on. */
+@media (min-width: 901px) {
+  body.home .boh-band--left .boh-home-section__lede,
+  body.home .boh-band--left .boh-home-section__cta,
+  body.home .boh-band--left .boh-home-section__meta {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+  body.home .boh-band--right .boh-home-section__lede,
+  body.home .boh-band--right .boh-home-section__cta,
+  body.home .boh-band--right .boh-home-section__meta {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+}
