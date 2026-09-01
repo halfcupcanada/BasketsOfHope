@@ -7770,19 +7770,22 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
 /* The arrow-only button wears the colours the other way round: magenta ring,
    white disc, magenta chevron. On its own with no label it reads better as a
    solid mark than as a frosted pill with a coloured dot in it. */
+/* The ring is the brand's yellow rather than its pink. Cream (#fef4c7) was
+   the obvious read of "cream", but on the pale pink band it is only a couple
+   of steps away from the background and the ring disappeared; the yellow is
+   the same family, comes from the logo's top arc, and actually holds an edge
+   there. White disc, magenta chevron. */
 .boh-page-hero__cta--arrow {
   padding: 6px;
   gap: 0;
-  background: var(--boh-magenta);
-  /* A white ring rather than a magenta one: against the pale pink band a
-     pink border on a pink disc blurred the edge of the mark. */
-  border-color: rgba(255,255,255,0.92);
-  box-shadow: 0 14px 34px -12px rgba(208,20,130,0.62);
+  background: var(--boh-yellow);
+  border-color: var(--boh-yellow);
+  box-shadow: 0 14px 30px -14px rgba(220,179,29,0.75);
 }
 .boh-page-hero__cta--arrow:hover {
-  background: var(--boh-magenta-deep);
-  border-color: #ffffff;
-  box-shadow: 0 22px 46px -14px rgba(208,20,130,0.7);
+  background: var(--boh-yellow-deep);
+  border-color: var(--boh-yellow-deep);
+  box-shadow: 0 20px 40px -16px rgba(220,179,29,0.85);
 }
 .boh-page-hero__cta--arrow .boh-page-hero__cta-arrow {
   background: #fff;
