@@ -7877,7 +7877,16 @@ body:not(.home) .boh-totop.is-in { transform: translateY(0); }
     padding-inline: 0;
     margin-inline: 0;
   }
-  body.home .boh-sideimg { grid-column: 2; grid-row: 1 / span 99; align-self: center; }
+  body.home .boh-sideimg {
+    grid-column: 2;
+    grid-row: 1 / span 99;
+    align-self: center;
+    /* The rule that gives an aligned band's children the page gutter was
+       padding this box too, so the photograph sat inside a 24px white
+       border on each side instead of filling its own frame. */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
   /* The copy column is narrower than the full page, so the countdown wrapped
      onto a second row. Give the copy the larger share and let the cells
      tighten rather than break the line. */
