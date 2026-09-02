@@ -7887,9 +7887,12 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   /* The copy column is narrower than the full page, so the countdown wrapped
      onto a second row. Give the copy the larger share and let the cells
      tighten rather than break the line. */
+  /* The picture takes the larger share now. The copy still sets to a
+     comfortable measure at this width, and the countdown keeps its single
+     row on the strength of the tightened cells below. */
   body.home .boh-band--left:has(.boh-sideimg) > .wp-block-group__inner-container,
   body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container {
-    grid-template-columns: 1.15fr 0.85fr;
+    grid-template-columns: 0.92fr 1.08fr;
   }
   body.home .wp-block-group:has(.boh-sideimg) .boh-countdown { flex-wrap: nowrap; gap: 10px; }
   body.home .wp-block-group:has(.boh-sideimg) .boh-countdown__unit {
@@ -7900,20 +7903,25 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg) { grid-column: 2; }
   body.home .boh-band--right .boh-sideimg { grid-column: 1; }
 }
+/* It should read as a photograph placed on the page, not a thumbnail beside
+   the words: a deeper lift off the ground, a white edge holding it away from
+   the band behind it, and a wash of the brand colour in the shadow. */
 .boh-sideimg {
-  border-radius: 20px;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 26px 60px -32px rgba(10,10,10,0.5);
+  border: 6px solid #fff;
+  box-shadow: 0 30px 60px -28px rgba(10,10,10,0.45),
+              0 10px 30px -18px rgba(208,20,130,0.35);
   line-height: 0;
+  box-sizing: border-box;
 }
 .boh-sideimg img {
   width: 100%;
   height: auto;
-  /* Half the height it stood at: 4:3 put it at 75% of its own width, this
-     puts it at 37.5%. It crops harder as a result - object-fit keeps the
-     middle of the frame - so a photograph with its subject at the top or
-     bottom will lose it. */
-  aspect-ratio: 8 / 3;
+  /* 3:2 - the shape most of these photographs were taken in, so it crops
+     least. Taller than the 8:3 strip it was, which was hiding most of each
+     picture. */
+  aspect-ratio: 3 / 2;
   object-fit: cover;
   display: block;
 }
@@ -8227,5 +8235,21 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   .boh-explore-band {
     padding-top: 56px !important;
     padding-bottom: 72px !important;
+  }
+}
+
+/* The agenda shortcut sits under the RSVP button and should start where it
+   starts, not in the middle of the column. It follows the band's alignment
+   like everything else in it. */
+@media (min-width: 901px) {
+  body.home .boh-band--left .boh-agenda-shortcut {
+    text-align: left;
+    margin-left: 0;
+    margin-right: auto;
+  }
+  body.home .boh-band--right .boh-agenda-shortcut {
+    text-align: right;
+    margin-left: auto;
+    margin-right: 0;
   }
 }
