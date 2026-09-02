@@ -8053,9 +8053,11 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
    glyph says what pressing it will do rather than what it is doing. */
 .wp-block-cover.boh-hero .boh-hero-pause {
   position: absolute !important;
-  right: 22px !important;
+  /* Bottom-left: the section arrows are back in the right-hand corner and
+     the two sat on top of each other there. */
+  left: 22px !important;
   bottom: 26px !important;
-  left: auto !important;
+  right: auto !important;
   top: auto !important;
   z-index: 6;
   width: 46px !important;
@@ -8108,7 +8110,8 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 }
 @media (max-width: 640px) {
   .wp-block-cover.boh-hero .boh-hero-pause {
-    right: 14px !important;
+    left: 14px !important;
+    right: auto !important;
     bottom: 18px !important;
     width: 40px !important;
     height: 40px !important;
