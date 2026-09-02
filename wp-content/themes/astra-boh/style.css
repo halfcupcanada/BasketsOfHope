@@ -7978,19 +7978,19 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 /* "Rohit Group" as a small yellow chip - the logo's own second colour, and
    the only part of the line that goes anywhere when pressed. */
 .wp-block-cover.boh-hero .boh-hero-fineprint a {
-  color: var(--boh-ink) !important;
+  color: #ffffff !important;
   text-decoration: none !important;
-  background: var(--boh-yellow-soft);
-  border: 1px solid rgba(220,179,29,0.55);
+  background: var(--boh-ink);
+  border: 1px solid var(--boh-ink);
   border-radius: 999px;
-  padding: 1px 8px 2px;
+  padding: 1px 9px 2px;
   font-weight: 700;
   transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
 .wp-block-cover.boh-hero .boh-hero-fineprint a:hover {
-  background: var(--boh-yellow);
-  border-color: var(--boh-yellow-deep);
-  color: var(--boh-ink) !important;
+  background: var(--boh-magenta);
+  border-color: var(--boh-magenta);
+  color: #ffffff !important;
 }
 .wp-block-cover.boh-hero .boh-hero-fineprint a:focus-visible {
   outline: 2px solid var(--boh-magenta);
@@ -8308,10 +8308,9 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   body.home .boh-explore-band { display: none !important; }
 }
 
-/* The Rohit Group mark, in front of the words in the hero credit. Rendered
-   in the deeper yellow rather than the #f9d135 it ships with: the chip it
-   sits on is the pale yellow, and the two are a step apart - the mark all but
-   disappeared on it. Same hue, still the brand's yellow, actually visible. */
+/* The Rohit Group mark, in front of the words in the hero credit. On the
+   black chip it can wear the yellow it ships with - that was only changed
+   because the chip used to be pale yellow itself. */
 .wp-block-cover.boh-hero .boh-hero-fineprint a {
   display: inline-flex;
   align-items: center;
@@ -8321,11 +8320,11 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   width: 12px;
   height: auto;
   flex: 0 0 auto;
-  fill: var(--boh-yellow-deep, #dcb31d);
+  fill: #f9d135;
   transition: fill .18s ease;
 }
 .wp-block-cover.boh-hero .boh-hero-fineprint a:hover .boh-rohit-mark {
-  fill: var(--boh-ink);
+  fill: #ffffff;
 }
 @media (max-width: 640px) {
   .boh-rohit-mark { width: 10px; }
