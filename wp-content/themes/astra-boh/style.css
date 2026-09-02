@@ -7884,15 +7884,22 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-  /* The copy column is narrower than the full page, so the countdown wrapped
-     onto a second row. Give the copy the larger share and let the cells
-     tighten rather than break the line. */
-  /* The picture takes the larger share now. The copy still sets to a
-     comfortable measure at this width, and the countdown keeps its single
-     row on the strength of the tightened cells below. */
+  /* Even columns, so the two photographs come out identical whichever side
+     they sit on. Weighting the split gave the right-hand band's picture the
+     narrower column and it came out 90px smaller than its neighbour. The
+     countdown keeps its single row on the strength of the tightened cells
+     below. */
   body.home .boh-band--left:has(.boh-sideimg) > .wp-block-group__inner-container,
   body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container {
-    grid-template-columns: 0.92fr 1.08fr;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+  /* The copy keeps its own alignment inside its half; only the picture
+     centres in its cell. */
+  body.home .boh-band--left:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg),
+  body.home .boh-band--right:has(.boh-sideimg) > .wp-block-group__inner-container > *:not(.boh-sideimg) {
+    justify-self: stretch;
   }
   body.home .wp-block-group:has(.boh-sideimg) .boh-countdown { flex-wrap: nowrap; gap: 10px; }
   body.home .wp-block-group:has(.boh-sideimg) .boh-countdown__unit {
