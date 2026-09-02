@@ -7982,7 +7982,7 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   text-decoration: none !important;
   background: var(--boh-ink);
   border: 1px solid var(--boh-ink);
-  border-radius: 5px;
+  border-radius: 999px;
   padding: 1px 9px 2px;
   font-weight: 700;
   transition: background .18s ease, border-color .18s ease, color .18s ease;
@@ -8364,7 +8364,7 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   gap: 5px;
   color: #f9d135 !important;
   padding: 1px 8px 2px;
-  border-radius: 5px;
+  border-radius: 999px;
   box-shadow: none;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease;
 }
