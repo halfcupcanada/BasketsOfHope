@@ -7987,10 +7987,12 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   font-weight: 700;
   transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
+/* Hover in Rohit's own yellow rather than the site's magenta - it is their
+   name on the chip. Ink text on it, because white on #f9d135 is unreadable. */
 .wp-block-cover.boh-hero .boh-hero-fineprint a:hover {
-  background: var(--boh-magenta);
-  border-color: var(--boh-magenta);
-  color: #ffffff !important;
+  background: #f9d135;
+  border-color: #f9d135;
+  color: var(--boh-ink) !important;
 }
 .wp-block-cover.boh-hero .boh-hero-fineprint a:focus-visible {
   outline: 2px solid var(--boh-magenta);
@@ -8324,8 +8326,30 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   transition: fill .18s ease;
 }
 .wp-block-cover.boh-hero .boh-hero-fineprint a:hover .boh-rohit-mark {
-  fill: #ffffff;
+  fill: var(--boh-ink);
 }
 @media (max-width: 640px) {
   .boh-rohit-mark { width: 10px; }
 }
+
+/* ── Silent auction card: centred ────────────────────────────────────
+   The eyebrow was centred and everything under it ran left, which left the
+   right half of a very wide card empty and the two halves disagreeing. */
+.boh-auction-card .boh-copy,
+.boh-auction-card .boh-copy--left,
+.boh-auction-card .boh-copy--h2,
+.boh-auction-card .boh-copy--h2.boh-copy--left {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* A measure the eye can follow: the card runs the full width of the page
+   column, and a line of body copy that long is hard to read back. */
+/* A fixed measure rather than 68ch: the two paragraphs are set at different
+   sizes, so a ch-based width made them different widths and their edges
+   disagreed by 60px. */
+.boh-auction-card .boh-copy--body,
+.boh-auction-card .boh-copy--small {
+  max-width: 720px;
+}
+.boh-auction-card .boh-copy--h2 { max-width: 22ch; }
