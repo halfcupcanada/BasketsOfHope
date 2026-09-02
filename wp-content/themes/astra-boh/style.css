@@ -8260,3 +8260,41 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
     margin-right: 0;
   }
 }
+
+/* ── How it works: a swipeable row on a phone ────────────────────────
+   Four cards stacked one under another made this the tallest thing on the
+   page - 2.5 screens for 109 words. Side by side in a scroller they take
+   about a third of that, and the four steps read as a sequence rather than
+   as four separate things you scroll past. */
+@media (max-width: 640px) {
+  body.home .boh-how-it-works--compact .boh-how-it-works__grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    /* Full bleed, so a card can sit against the edge of the screen and the
+       next one shows just enough to say "there is more". */
+    width: 100vw;
+    /* border-box, or the 20px of padding is added to the 100vw and the whole
+       page picks up a horizontal scrollbar. */
+    box-sizing: border-box;
+    margin-left: calc(50% - 50vw);
+    padding: 4px 20px 14px;
+    scrollbar-width: none;
+  }
+  body.home .boh-how-it-works--compact .boh-how-it-works__grid::-webkit-scrollbar { display: none; }
+  body.home .boh-how-it-works--compact .boh-how-it-works__step {
+    scroll-snap-align: center;
+    min-width: 0;
+  }
+  /* The reveal animation staggers these in from the side, which fights a
+     horizontal scroller - it starts the row part-scrolled. */
+  body.home .boh-how-it-works--compact .boh-how-it-works__grid.boh-reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
