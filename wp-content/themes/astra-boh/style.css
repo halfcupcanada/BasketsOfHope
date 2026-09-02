@@ -8307,3 +8307,26 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 @media (max-width: 640px) {
   body.home .boh-explore-band { display: none !important; }
 }
+
+/* The Rohit Group mark, in front of the words in the hero credit. Rendered
+   in the deeper yellow rather than the #f9d135 it ships with: the chip it
+   sits on is the pale yellow, and the two are a step apart - the mark all but
+   disappeared on it. Same hue, still the brand's yellow, actually visible. */
+.wp-block-cover.boh-hero .boh-hero-fineprint a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.boh-rohit-mark {
+  width: 12px;
+  height: auto;
+  flex: 0 0 auto;
+  fill: var(--boh-yellow-deep, #dcb31d);
+  transition: fill .18s ease;
+}
+.wp-block-cover.boh-hero .boh-hero-fineprint a:hover .boh-rohit-mark {
+  fill: var(--boh-ink);
+}
+@media (max-width: 640px) {
+  .boh-rohit-mark { width: 10px; }
+}
