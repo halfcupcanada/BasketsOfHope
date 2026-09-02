@@ -8184,3 +8184,48 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
     justify-content: center;
   }
 }
+
+/* ── Explore: lighter on a phone ─────────────────────────────────────
+   Five boxed cards stacked one under another made the foot of the page feel
+   heavy and long. At this width they become a simple list: no box, no
+   border, no shadow - just a hairline between each, the title and its arrow
+   on one line, and the description under it in a smaller, quieter face. */
+@media (max-width: 640px) {
+  .boh-quick-links {
+    gap: 0;
+    margin-top: 22px;
+    padding: 0 20px;
+  }
+  .boh-quick-links__card {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    border-top: 1px solid rgba(10,10,10,0.09);
+    padding: 15px 0 16px;
+  }
+  .boh-quick-links__card:first-child { border-top: 0; }
+  .boh-quick-links__card:hover,
+  .boh-quick-links__card:focus-visible {
+    transform: none;
+    box-shadow: none;
+    background: none;
+    border-color: rgba(10,10,10,0.09);
+  }
+  .boh-quick-links__title {
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+  .boh-quick-links__desc {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--boh-ink-mute);
+    max-width: 34em;
+  }
+  /* Tighter top and bottom to match. The band's colour is left alone: it is
+     set by the alternating-grounds pass, and overriding it here would put two
+     bands of the same colour next to each other. */
+  .boh-explore-band {
+    padding-top: 56px !important;
+    padding-bottom: 72px !important;
+  }
+}
