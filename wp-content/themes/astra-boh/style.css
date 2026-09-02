@@ -6124,31 +6124,16 @@ a.boh-rohit-brand,
 /* One control now, not two arrows: it plays through the page a section at a
    time. Triangle at rest, two bars while it is running - the glyph says what
    pressing it will do next. Drawn in CSS, so no icon asset. */
-.boh-tilenav__btn--play { background: rgba(255,255,255,0.94); }
-.boh-tilenav__glyph {
+/* Chevron drawn in CSS so the control needs no icon asset. */
+.boh-tilenav__btn span {
   display: block;
-  width: 0;
-  height: 0;
-  margin-left: 3px;
-  border-left: 13px solid var(--boh-ink, #1F1A24);
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
+  width: 11px;
+  height: 11px;
+  border-right: 2.5px solid var(--boh-ink, #1F1A24);
+  border-bottom: 2.5px solid var(--boh-ink, #1F1A24);
 }
-.boh-tilenav.is-playing .boh-tilenav__btn--play {
-  background: var(--boh-magenta);
-  border-color: var(--boh-magenta);
-  box-shadow: 0 12px 28px -12px rgba(208,20,130,0.7);
-}
-.boh-tilenav.is-playing .boh-tilenav__glyph {
-  width: 12px;
-  height: 14px;
-  margin-left: 0;
-  border: 0;
-  border-left: 4px solid #fff;
-  border-right: 4px solid #fff;
-  box-sizing: border-box;
-}
-
+.boh-tilenav__btn--next span { transform: translateY(-2px) rotate(45deg); }
+.boh-tilenav__btn--prev span { transform: translateY(2px) rotate(-135deg); }
 @media (prefers-reduced-motion: reduce) {
   .boh-tilenav__btn { transition: none; }
 }
@@ -8180,5 +8165,19 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
     min-height: 68px;
     padding-left: 18px !important;
     padding-right: 18px !important;
+  }
+}
+
+/* ── Three sections fill the window again ────────────────────────────
+   The date, the community-event copy and "someone cares" are each meant to
+   be arrived at as a view of their own. Everything else - the card grids,
+   the numbers - stays sized to its contents, which is what took the page
+   from nine screens down to five. */
+@media (min-width: 901px) and (min-height: 640px) {
+  body.home .entry-content > .boh-when-band,
+  body.home .entry-content > #boh-what,
+  body.home .entry-content > .boh-band-full {
+    min-height: 100vh;
+    justify-content: center;
   }
 }
