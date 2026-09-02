@@ -8298,3 +8298,12 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
     transform: none !important;
   }
 }
+
+/* ── Explore is desktop only ─────────────────────────────────────────
+   On a phone it was 1.2 screens of links that all live in the menu two taps
+   away, at the very foot of a page people had already told us felt long. The
+   alternating-grounds pass skips anything with no height, so hiding it does
+   not leave two bands of the same colour next to each other. */
+@media (max-width: 640px) {
+  body.home .boh-explore-band { display: none !important; }
+}
