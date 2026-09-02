@@ -2849,7 +2849,10 @@ add_action('wp_footer', function () {
         var t = tops();
         if (index < 0 || index >= t.length) return;
         var from = window.scrollY || root.scrollTop;
-        var to = t[index];
+        // The hero's own document position is 14px down, so stepping back to
+        // it left a sliver of the page above showing and the up arrow still
+        // enabled with nowhere to go. The first panel means the top.
+        var to = index === 0 ? 0 : t[index];
         if (Math.abs(to - from) < 4) return;
         if (reduce.matches) { jumpTo(to); update(); return; }
 
