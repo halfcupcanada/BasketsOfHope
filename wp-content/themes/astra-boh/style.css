@@ -8353,3 +8353,86 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   max-width: 720px;
 }
 .boh-auction-card .boh-copy--h2 { max-width: 22ch; }
+
+/* ── Footer credit: the hero's Rohit Group chip, adapted to a black ground ──
+   Same mark in front of the words and the same yellow on hover. The hero
+   chip is black-on-photograph; here the footer is already black, so the chip
+   fills rather than inverts - yellow ground, ink words and ink mark. */
+.boh-footer__initiative a.boh-rohit-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #f9d135 !important;
+  padding: 1px 8px 2px;
+  border-radius: 999px;
+  box-shadow: none;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.boh-footer__initiative a.boh-rohit-brand .boh-rohit-mark {
+  fill: #f9d135;
+}
+.boh-footer__initiative a.boh-rohit-brand:hover,
+.boh-footer__initiative a.boh-rohit-brand:focus {
+  background: #f9d135 !important;
+  box-shadow: none;
+  color: var(--boh-ink) !important;
+}
+.boh-footer__initiative a.boh-rohit-brand:hover .boh-rohit-mark,
+.boh-footer__initiative a.boh-rohit-brand:focus .boh-rohit-mark {
+  fill: var(--boh-ink);
+}
+
+/* ── Sponsorship cards: choosing one fills in the form ───────────────
+   The button carries a stretched overlay, so a click anywhere on the card
+   picks that level while the control itself stays a real, focusable button. */
+.boh-tier__choose {
+  position: static;
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--boh-rule);
+  margin: 18px -22px 0;
+  padding: 12px 22px;
+  width: calc(100% + 44px);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--boh-magenta);
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+/* Anything above the price band that has its own bottom spacing would fight
+   this row for the card foot; the button owns the gap instead. */
+.boh-tier__choose + .boh-tier__price { margin-top: 0; border-top: 0; }
+.boh-tier__choose::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.boh-tier:hover .boh-tier__choose { background: rgba(208,20,130,0.06); }
+.boh-tier__choose:focus-visible {
+  outline: 2px solid var(--boh-magenta);
+  outline-offset: -3px;
+}
+/* The chosen card: a magenta ring, and the row reads back what it did. */
+.boh-tier.is-chosen {
+  border-color: var(--boh-magenta);
+  box-shadow: 0 0 0 2px var(--boh-magenta), 0 12px 28px rgba(208,20,130,0.14);
+}
+.boh-tier.is-chosen .boh-tier__choose {
+  background: var(--boh-magenta);
+  color: #fff;
+}
+.boh-tier.is-chosen .boh-tier__choose::before {
+  content: '✓ ';
+}
+/* And the field itself, on arrival, so the pre-filled value is noticed. */
+select[name="sponsorship-level"].is-prefilled {
+  border-color: var(--boh-magenta) !important;
+  box-shadow: 0 0 0 3px rgba(208,20,130,0.18);
+}

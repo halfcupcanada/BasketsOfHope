@@ -590,7 +590,7 @@ add_action('wp_footer', function () {
         <div class="boh-footer__brand">
           <h3>Rohit's Baskets <span>of Hope</span></h3>
           <p class="boh-footer__initiative">
-            A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand">Rohit Group</a> initiative.
+            A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand"><svg class="boh-rohit-mark" viewBox="0 0 870.52 608.37" aria-hidden="true" focusable="false"><path d="m677.58,170.99C449.55,40.55,435.4.33,435.29,0c-.23.65-15.31,41.15-242.42,171.06C102.2,222.93,40.96,252.88,0,270.17v68.02c40.96,17.3,102.2,47.24,192.87,99.11,227.11,129.92,242.19,170.41,242.42,171.06.11-.33,14.26-40.55,242.29-170.99,90.69-51.88,151.95-81.84,192.94-99.15v-68.08c-40.99-17.31-102.25-47.27-192.94-99.15Zm-31.74,211.91c-46.53,26.62-145.67,83.33-210.74,136.59-66.56-54.33-168.23-112.49-210.49-136.66-56.08-32.08-105.22-58.31-147.3-78.65,42.08-20.34,91.22-46.57,147.3-78.65,42.26-24.18,143.93-82.33,210.49-136.66,65.06,53.27,164.21,109.98,210.74,136.59,56.13,32.11,105.31,58.36,147.43,78.72-42.12,20.35-91.3,46.61-147.43,78.72Z"/></svg><span>Rohit Group</span></a> initiative.
           </p>
           <p>Since 2010, delivering dignity and care to women and families escaping violence - one basket at a time, in partnership with WIN House Edmonton.</p>
           <div class="boh-footer__social" aria-label="Follow Rohit's Baskets of Hope">
@@ -1128,6 +1128,8 @@ function boh_sponsor_tiers_html(array $tiers): string
               <li><?php echo esc_html($b); ?></li>
             <?php endforeach; ?>
           </ul>
+          <button type="button" class="boh-tier__choose" aria-pressed="false"
+                  data-level="<?php echo esc_attr($t['level']); ?>">Choose this level</button>
           <div class="boh-tier__price"><?php echo esc_html($t['price']); ?></div>
         </article>
       <?php endforeach; ?>
@@ -1135,6 +1137,101 @@ function boh_sponsor_tiers_html(array $tiers): string
     <?php
     return (string) ob_get_clean();
 }
+
+/**
+ * Picking a sponsorship card fills in the level on the form below.
+ *
+ * Someone who has just read eight cards and decided on one should not have to
+ * find that same wording again in a nine-item dropdown - the card sets it and
+ * takes them there. Matching is on the level name, not on position, because
+ * the tiers are editable in admin: a card whose level no longer appears in the
+ * form's list simply doesn't offer the button, rather than sending someone to
+ * a field that cannot record their choice.
+ */
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function () {
+      var wrap = document.querySelector('.boh-sponsor-tiers');
+      var sel  = document.querySelector('select[name="sponsorship-level"]');
+      if (!wrap || !sel) { return; }
+
+      var form = document.getElementById('sponsorship-form');
+      var norm = function (s) {
+        return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      };
+
+      // Level name -> the option that starts with it; a contains-match as a
+      // fallback for wording that has drifted apart in admin.
+      var options = Array.prototype.filter.call(sel.options, function (o) { return o.value; });
+      var optionFor = function (level) {
+        var want = norm(level);
+        if (!want) { return null; }
+        var hit = null;
+        options.forEach(function (o) {
+          if (hit) { return; }
+          if (norm(o.text).indexOf(want) === 0) { hit = o; }
+        });
+        if (hit) { return hit; }
+        options.forEach(function (o) {
+          if (hit) { return; }
+          if (norm(o.text).indexOf(want) !== -1) { hit = o; }
+        });
+        return hit;
+      };
+
+      var buttons = Array.prototype.slice.call(wrap.querySelectorAll('.boh-tier__choose'));
+      var pairs = [];
+      buttons.forEach(function (btn) {
+        var opt = optionFor(btn.getAttribute('data-level'));
+        if (!opt) { btn.remove(); return; }
+        pairs.push({ btn: btn, opt: opt, card: btn.closest('.boh-tier') });
+      });
+      if (!pairs.length) { return; }
+
+      function paint() {
+        pairs.forEach(function (p) {
+          var on = sel.value === p.opt.value;
+          p.card.classList.toggle('is-chosen', on);
+          p.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          p.btn.textContent = on ? 'Selected' : 'Choose this level';
+        });
+      }
+
+      pairs.forEach(function (p) {
+        p.btn.addEventListener('click', function () {
+          sel.value = p.opt.value;
+          // CF7 and any listeners should see this as a real change.
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          paint();
+
+          // Land on the top of the form where it fits, but never leave the
+          // field that was just filled in below the fold - on a phone the
+          // level sits six rows down and the whole point would be missed.
+          var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var target = form || sel;
+          var block = 'start';
+          if (form) {
+            var span = sel.getBoundingClientRect().bottom - form.getBoundingClientRect().top;
+            if (span > window.innerHeight - 140) {
+              target = sel.closest('.boh-form-row') || sel;
+              block = 'center';
+            }
+          }
+          target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: block });
+          // A brief ring on the field, so the arrival explains itself.
+          sel.classList.add('is-prefilled');
+          window.setTimeout(function () { sel.classList.remove('is-prefilled'); }, 2200);
+        });
+      });
+
+      // Changing the dropdown by hand keeps the cards honest.
+      sel.addEventListener('change', paint);
+      paint();
+    }());
+    </script>
+    <?php
+}, 60);
 
 /**
  * Resolve a stored image URL back to its attachment.
