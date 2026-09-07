@@ -8458,3 +8458,97 @@ select[name="sponsorship-level"].is-prefilled {
   transform: scale(1.2);
   box-shadow: 0 2px 8px rgba(0,0,0,0.45);
 }
+
+/* ── The hero's closing card: button, with the credit as its footer ───
+   They were two floating things a few pixels apart. Now one card carries
+   both - the call to action on top, the credit on a hairline beneath it -
+   so the hero ends on a single object rather than a stack of chrome.
+
+   The card owns the position, the centring and the bob; the two children
+   go static inside it. All of that needs !important because their own
+   rules pin them to the cover with it. */
+.wp-block-cover.boh-hero .boh-hero-cta {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 30px !important;
+  top: auto !important;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: max-content;
+  max-width: 92vw;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.85);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 14px 38px -14px rgba(31,26,36,0.45),
+              0 0 0 1px rgba(10,10,10,0.04);
+  animation: bohCtaBob 3.4s ease-in-out infinite;
+  transition: box-shadow .25s ease;
+}
+@keyframes bohCtaBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-6px); }
+}
+.wp-block-cover.boh-hero .boh-hero-cta:hover {
+  animation-play-state: paused;
+  box-shadow: 0 22px 48px -16px rgba(208,20,130,0.45),
+              0 0 0 1px rgba(208,20,130,0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wp-block-cover.boh-hero .boh-hero-cta {
+    animation: none;
+    transform: translateX(-50%);
+  }
+}
+
+/* Both children hand their positioning, their frame and their own bob to
+   the card. The rounding comes from the card clipping them. */
+.wp-block-cover.boh-hero .boh-hero-cta .boh-scroll-cue--labelled,
+.wp-block-cover.boh-hero .boh-hero-cta .boh-hero-fineprint {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  animation: none !important;
+  margin: 0 !important;
+  /* width:auto plus the card's align-items:stretch, not width:100%: these
+     two are content-box, so a 100% width put their padding 45px past the
+     card's right edge, where overflow:hidden cropped it silently. */
+  width: auto !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  justify-content: center;
+}
+.wp-block-cover.boh-hero .boh-hero-cta .boh-scroll-cue--labelled {
+  background: rgba(255,255,255,0.92) !important;
+  padding: 9px 22px 9px 24px !important;
+}
+.wp-block-cover.boh-hero .boh-hero-cta:hover .boh-scroll-cue--labelled {
+  background: #fff !important;
+}
+/* The footer: same frosted ground, one hairline holding it to the button. */
+.wp-block-cover.boh-hero .boh-hero-cta .boh-hero-fineprint {
+  background: rgba(255,255,255,0.62) !important;
+  border-top: 1px solid rgba(10,10,10,0.10) !important;
+  padding: 6px 16px 7px !important;
+}
+/* Under 600px tall the cue hides itself, and a hairline above nothing reads
+   as a mistake. */
+@media (max-height: 600px) {
+  .wp-block-cover.boh-hero .boh-hero-cta .boh-hero-fineprint { border-top: 0 !important; }
+}
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-cta { bottom: 32px !important; }
+}

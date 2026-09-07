@@ -832,6 +832,21 @@ add_action('wp_footer', function () {
         cueHero.appendChild(fine);
       }
 
+      // The two are one object: the button, with the credit as its footer.
+      // The wrapper is built here rather than authored in the page because
+      // both children are lifted out to the cover above - anything wrapped
+      // around them in the content is emptied and left behind.
+      if (cueHero && cue && fine) {
+        let stack = cueHero.querySelector('.boh-hero-cta');
+        if (!stack) {
+          stack = document.createElement('div');
+          stack.className = 'boh-hero-cta';
+          cueHero.appendChild(stack);
+        }
+        stack.appendChild(cue);
+        stack.appendChild(fine);
+      }
+
       // ── 1. Auto-tag elements for scroll-reveal ──────────────────
       document.querySelectorAll(
         '.entry-content > .wp-block-group, ' +
