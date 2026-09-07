@@ -8009,8 +8009,6 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
      the credit, then the cue. */
   .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 32px !important; font-size: 9px !important; }
   .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 62px !important; }
-  /* And the pause disc lifts clear of the dots' row. */
-  .wp-block-cover.boh-hero .boh-hero-pause { bottom: 30px !important; }
 }
 
 /* ── The page you are on ─────────────────────────────────────────────
@@ -8072,7 +8070,10 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   /* Bottom-left: the section arrows are back in the right-hand corner and
      the two sat on top of each other there. */
   left: 22px !important;
-  bottom: 26px !important;
+  /* Bottom edge level with the credit plate to its right (which sits at 30);
+     the disc is taller, so matching the offset is what makes the two read as
+     one row rather than aligning their centres. */
+  bottom: 30px !important;
   right: auto !important;
   top: auto !important;
   z-index: 6;
@@ -8128,7 +8129,8 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   .wp-block-cover.boh-hero .boh-hero-pause {
     left: 14px !important;
     right: auto !important;
-    bottom: 18px !important;
+    /* Level with the credit plate, which sits at 32 on a phone. */
+    bottom: 32px !important;
     width: 40px !important;
     height: 40px !important;
   }
