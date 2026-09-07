@@ -2712,9 +2712,15 @@ add_action('template_redirect', function () {
     }
 }, 1);
 
-// GiveWP's legacy on-page template can render without donor fields in this
-// sandbox setup. Provide test donor data and keep the selected gateway synced
-// so both "Test Donation" and "Offline Donation" submit reliably.
+// Keep the selected gateway synced so the form submits reliably against
+// GiveWP's legacy on-page template.
+//
+// This used to also stuff the donor fields with "Sandbox Donor" so a sandbox
+// checkout could be driven without typing. Those fields render for real now,
+// and the helper below writes into whatever input carries the name - so on a
+// live form it was overwriting the donor's own name and email with a fake
+// one, which would have booked real donations to sandbox-donor@example.com
+// and sent the receipt there.
 add_action('wp_footer', function () {
     if (!is_page('donate')) return;
     ?>
@@ -2726,21 +2732,6 @@ add_action('wp_footer', function () {
       }
       ready(function(){
         document.querySelectorAll('#give-form .give-form-wrap form').forEach(function(form){
-          function hidden(name, value){
-            let input = form.querySelector('input[name="' + name + '"]');
-            if (!input) {
-              input = document.createElement('input');
-              input.type = 'hidden';
-              input.name = name;
-              form.appendChild(input);
-            }
-            input.value = value;
-            return input;
-          }
-          hidden('give_first', 'Sandbox');
-          hidden('give_last', 'Donor');
-          hidden('give_email', 'sandbox-donor@example.com');
-
           const hiddenGateway = form.querySelector('input[name="give-gateway"]');
           const radios = Array.from(form.querySelectorAll('input.give-gateway[name="payment-mode"]'));
 
