@@ -8552,3 +8552,28 @@ select[name="sponsorship-level"].is-prefilled {
 @media (max-width: 640px) {
   .wp-block-cover.boh-hero .boh-hero-cta { bottom: 32px !important; }
 }
+
+/* ── The two "add to calendar" buttons match ─────────────────────────
+   They were sized by their own labels, so "Download .ics (Apple / Outlook)"
+   ran a good deal wider than "Add to Google Calendar" and the pair read as
+   one button with an afterthought beside it. Two equal columns, sized by the
+   longer label; below 560px they stack, where equal width means full width. */
+.boh-cal {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: max-content;
+  max-width: 100%;
+  margin: 26px auto 0;
+}
+.boh-cal a {
+  justify-content: center;
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .boh-cal {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 360px;
+  }
+}
