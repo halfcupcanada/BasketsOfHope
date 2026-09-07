@@ -8007,7 +8007,6 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
      on top of each other - the dots ran 16-25px from the bottom and the
      credit 22-40. Each gets its own band now, stacked upwards: dots, then
      the credit, then the cue. */
-  .wp-block-cover.boh-hero .boh-hero-dots { bottom: 12px !important; }
   .wp-block-cover.boh-hero .boh-hero-fineprint { bottom: 32px !important; font-size: 9px !important; }
   .wp-block-cover.boh-hero .boh-scroll-cue--labelled { bottom: 62px !important; }
   /* And the pause disc lifts clear of the dots' row. */
@@ -8404,4 +8403,37 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
 select[name="sponsorship-level"].is-prefilled {
   border-color: var(--boh-magenta) !important;
   box-shadow: 0 0 0 3px rgba(208,20,130,0.18);
+}
+
+/* ── Hero credit: an opaque plate behind the words ───────────────────
+   White glow on white text was doing the legibility work, which fails on the
+   slides that are pale in that corner. The line sits on its own solid ground
+   instead - white, because the Rohit Group chip stays black and needs
+   something to be black against. */
+.wp-block-cover.boh-hero .boh-hero-fineprint {
+  background: #ffffff;
+  color: var(--boh-ink) !important;
+  text-shadow: none !important;
+  padding: 5px 14px 6px !important;
+  border-radius: 999px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-fineprint { padding: 4px 11px 5px !important; }
+}
+
+/* ── The slideshow dots keep the right-hand rail on a phone ──────────
+   They were moved to a row along the bottom to clear the other hero chrome;
+   asked for back on the rail, so the row override goes and only the smaller
+   dot size stays. The rail tucks a little closer to the edge at this width. */
+@media (max-width: 720px) {
+  .wp-block-cover.boh-hero .boh-hero-dots {
+    flex-direction: column !important;
+    left: auto !important;
+    right: 14px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    gap: 10px !important;
+  }
 }
