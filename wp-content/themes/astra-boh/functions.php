@@ -590,7 +590,7 @@ add_action('wp_footer', function () {
         <div class="boh-footer__brand">
           <h3>Rohit's Baskets <span>of Hope</span></h3>
           <p class="boh-footer__initiative">
-            A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand"><svg class="boh-rohit-mark" viewBox="0 0 870.52 608.37" aria-hidden="true" focusable="false"><path d="m677.58,170.99C449.55,40.55,435.4.33,435.29,0c-.23.65-15.31,41.15-242.42,171.06C102.2,222.93,40.96,252.88,0,270.17v68.02c40.96,17.3,102.2,47.24,192.87,99.11,227.11,129.92,242.19,170.41,242.42,171.06.11-.33,14.26-40.55,242.29-170.99,90.69-51.88,151.95-81.84,192.94-99.15v-68.08c-40.99-17.31-102.25-47.27-192.94-99.15Zm-31.74,211.91c-46.53,26.62-145.67,83.33-210.74,136.59-66.56-54.33-168.23-112.49-210.49-136.66-56.08-32.08-105.22-58.31-147.3-78.65,42.08-20.34,91.22-46.57,147.3-78.65,42.26-24.18,143.93-82.33,210.49-136.66,65.06,53.27,164.21,109.98,210.74,136.59,56.13,32.11,105.31,58.36,147.43,78.72-42.12,20.35-91.3,46.61-147.43,78.72Z"/></svg><span>Rohit Group</span></a> initiative.
+            A <a href="https://www.rohitgroup.com" target="_blank" rel="noopener" class="boh-rohit-brand"><span>Rohit Group</span></a> initiative.
           </p>
           <p>Since 2010, delivering dignity and care to women and families escaping violence - one basket at a time, in partnership with WIN House Edmonton.</p>
           <div class="boh-footer__social" aria-label="Follow Rohit's Baskets of Hope">

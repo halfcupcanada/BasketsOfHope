@@ -480,6 +480,7 @@ function boh_content_schema(): array {
 
 		'rsvp' => [
 			'title'  => 'RSVP & event details',
+			'help'   => 'The event details shown on the RSVP page, and the wording of the form itself. The form is rendered by Contact Form 7, and saving this screen writes these words into it - so edits made there directly are replaced the next time this screen is saved. Which questions the form asks is fixed in code: the confirmation email and the guest list read the answers by name.',
 			'fields' => [
 				[ 'key' => 'event.when',     'label' => 'When',        'type' => 'text' ],
 				[ 'key' => 'event.when_sub', 'label' => 'When - note',  'type' => 'text' ],
@@ -491,6 +492,24 @@ function boh_content_schema(): array {
 				[ 'key' => 'event.bring_sub','label' => 'Bring - note', 'type' => 'text' ],
 				[ 'key' => 'rsvp.title',     'label' => 'RSVP form - heading', 'type' => 'text' ],
 				[ 'key' => 'rsvp.intro',     'label' => 'RSVP form - intro',   'type' => 'richtext' ],
+
+				[ 'key' => 'rsvp.form.first_label',  'label' => 'Form - first name label', 'type' => 'text' ],
+				[ 'key' => 'rsvp.form.last_label',   'label' => 'Form - last name label',  'type' => 'text' ],
+				[ 'key' => 'rsvp.form.email_label',  'label' => 'Form - email label',      'type' => 'text' ],
+				[ 'key' => 'rsvp.form.guests_label', 'label' => 'Form - guest question',   'type' => 'text' ],
+				[
+					'key'   => 'rsvp.form.guest_options',
+					'label' => 'Form - guest choices',
+					'type'  => 'textarea',
+					'help'  => 'One per line, in the order they appear. Start each line with a number: the headcount on the guest list is read from it, so "4" and "4 - table of four" both count as four.',
+				],
+				[
+					'key'   => 'rsvp.form.consent',
+					'label' => 'Form - consent checkbox',
+					'type'  => 'textarea',
+					'help'  => 'Ticking this is required to submit. It is the permission the RSVP relies on to email that guest afterwards, so keep it accurate.',
+				],
+				[ 'key' => 'rsvp.form.submit', 'label' => 'Form - button text', 'type' => 'text' ],
 			],
 		],
 	];

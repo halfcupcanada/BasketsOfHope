@@ -8310,27 +8310,6 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   body.home .boh-explore-band { display: none !important; }
 }
 
-/* The Rohit Group mark, in front of the words in the hero credit. On the
-   black chip it can wear the yellow it ships with - that was only changed
-   because the chip used to be pale yellow itself. */
-.wp-block-cover.boh-hero .boh-hero-fineprint a {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.boh-rohit-mark {
-  width: 12px;
-  height: auto;
-  flex: 0 0 auto;
-  fill: #f9d135;
-  transition: fill .18s ease;
-}
-.wp-block-cover.boh-hero .boh-hero-fineprint a:hover .boh-rohit-mark {
-  fill: var(--boh-ink);
-}
-@media (max-width: 640px) {
-  .boh-rohit-mark { width: 10px; }
-}
 
 /* ── Silent auction card: centred ────────────────────────────────────
    The eyebrow was centred and everything under it ran left, which left the
@@ -8359,27 +8338,17 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
    chip is black-on-photograph; here the footer is already black, so the chip
    fills rather than inverts - yellow ground, ink words and ink mark. */
 .boh-footer__initiative a.boh-rohit-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
   color: #f9d135 !important;
   padding: 1px 8px 2px;
   border-radius: 999px;
   box-shadow: none;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease;
 }
-.boh-footer__initiative a.boh-rohit-brand .boh-rohit-mark {
-  fill: #f9d135;
-}
 .boh-footer__initiative a.boh-rohit-brand:hover,
 .boh-footer__initiative a.boh-rohit-brand:focus {
   background: #f9d135 !important;
   box-shadow: none;
   color: var(--boh-ink) !important;
-}
-.boh-footer__initiative a.boh-rohit-brand:hover .boh-rohit-mark,
-.boh-footer__initiative a.boh-rohit-brand:focus .boh-rohit-mark {
-  fill: var(--boh-ink);
 }
 
 /* ── Sponsorship cards: choosing one fills in the form ───────────────
