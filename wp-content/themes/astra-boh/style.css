@@ -8657,3 +8657,61 @@ select[name="sponsorship-level"].is-prefilled {
     text-align: center;
   }
 }
+
+/* ── The play/pause, smaller ─────────────────────────────────────────
+   46px was sized for a lone control in the corner. Sitting under a rail of
+   14px dots it read as the loudest thing in the hero; 32 keeps it pressable
+   and lets the dots lead. The glyph scales with it - the bars and the
+   triangle are drawn out of borders, so each width is set on its own. */
+.wp-block-cover.boh-hero .boh-hero-pause {
+  width: 32px !important;
+  height: 32px !important;
+}
+.wp-block-cover.boh-hero .boh-hero-pause .boh-hero-pause__icon {
+  width: 9px;
+  height: 11px;
+  border-left-width: 3px !important;
+  border-right-width: 3px !important;
+}
+.wp-block-cover.boh-hero .boh-hero-pause[aria-pressed="true"] .boh-hero-pause__icon {
+  margin-left: 2px;
+  border-left-width: 10px !important;
+  border-top-width: 6px !important;
+  border-bottom-width: 6px !important;
+}
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-pause {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-pause .boh-hero-pause__icon {
+    width: 8px;
+    height: 10px;
+    border-left-width: 2.5px !important;
+    border-right-width: 2.5px !important;
+  }
+  .wp-block-cover.boh-hero .boh-hero-pause[aria-pressed="true"] .boh-hero-pause__icon {
+    border-left-width: 9px !important;
+    border-top-width: 5px !important;
+    border-bottom-width: 5px !important;
+  }
+}
+
+/* ── Each footer section runs two columns on a phone ─────────────────
+   Stacked one item per line, those lists ran the footer on for a screen and
+   a half. Each section keeps its own full-width heading and splits its list
+   into two columns underneath, so the sections stay separate.
+   The email address is the one string wide enough to break a 150px column,
+   so it is allowed to wrap mid-word. */
+@media (max-width: 520px) {
+  .boh-footer__col ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 16px;
+    align-items: start;
+  }
+  .boh-footer__col a,
+  .boh-footer__col p {
+    overflow-wrap: anywhere;
+  }
+}
