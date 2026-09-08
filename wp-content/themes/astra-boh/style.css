@@ -8533,7 +8533,18 @@ select[name="sponsorship-level"].is-prefilled {
 }
 .wp-block-cover.boh-hero .boh-hero-cta .boh-scroll-cue--labelled {
   background: rgba(255,255,255,0.92) !important;
-  padding: 9px 22px 9px 24px !important;
+  /* The button is stretched to the card, so it is wider than its own
+     contents. Fixed side padding put all that slack on the outside - 33px
+     left, 31px right, against a 14px gap in the middle. space-evenly hands
+     the same space to all three, at whatever width the card ends up. */
+  padding: 9px 0 !important;
+  gap: 0 !important;
+  justify-content: space-evenly !important;
+}
+/* The label's own letter-spacing hangs off the last character, which makes
+   the gap to the arrow read a pixel tighter than it measures. */
+.wp-block-cover.boh-hero .boh-hero-cta .boh-scroll-cue__label {
+  margin-right: -1.2px !important;
 }
 .wp-block-cover.boh-hero .boh-hero-cta:hover .boh-scroll-cue--labelled {
   background: #fff !important;
