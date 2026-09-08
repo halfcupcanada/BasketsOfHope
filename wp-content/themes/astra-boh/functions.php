@@ -1499,6 +1499,21 @@ add_shortcode('boh_hero_slideshow', function () {
         container.appendChild(pauseBtn);
       }
 
+      // The dots and the play/pause are one control now, so they travel
+      // together in a rail rather than being pinned to opposite corners.
+      // A wrapper rather than putting the button inside the dot strip: that
+      // strip is a tablist, and a play button is not one of its tabs.
+      if (container && dotStrip && pauseBtn) {
+        let rail = container.querySelector('.boh-hero-rail');
+        if (!rail) {
+          rail = document.createElement('div');
+          rail.className = 'boh-hero-rail';
+          container.appendChild(rail);
+        }
+        rail.appendChild(dotStrip);
+        rail.appendChild(pauseBtn);
+      }
+
 
 
       const dots   = document.querySelectorAll('.boh-hero-dots .boh-hero-dot');

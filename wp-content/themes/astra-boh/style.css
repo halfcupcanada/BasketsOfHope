@@ -8588,3 +8588,72 @@ select[name="sponsorship-level"].is-prefilled {
     max-width: 360px;
   }
 }
+
+/* ── The dots and the play/pause travel together ─────────────────────
+   The button was in the opposite corner from the thing it controls. Both
+   now sit in one rail on the right: the dots, then the button under them.
+   The rail owns the position; the two children go static inside it. */
+.wp-block-cover.boh-hero .boh-hero-rail {
+  position: absolute !important;
+  right: 24px;
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  transform: translateY(-50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.wp-block-cover.boh-hero .boh-hero-rail .boh-hero-dots,
+.wp-block-cover.boh-hero .boh-hero-rail .boh-hero-pause {
+  position: static !important;
+  right: auto !important;
+  left: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+@media (max-width: 640px) {
+  .wp-block-cover.boh-hero .boh-hero-rail { right: 14px; gap: 14px; }
+}
+
+/* ── Footer, centred once it stacks ──────────────────────────────────
+   At this width the four columns become one, and left-aligned text in a
+   single narrow column reads as ragged - each block centres on the phone's
+   axis instead. The lists lose their inherited indent, which would otherwise
+   push "centred" text a few pixels off centre. */
+@media (max-width: 520px) {
+  .boh-footer__inner {
+    text-align: center;
+    justify-items: center;
+  }
+  .boh-footer__brand,
+  .boh-footer__col,
+  .boh-footer__cta {
+    width: 100%;
+  }
+  /* Matching :not() here on purpose: the blurb's own rule carries it, so a
+     plainer selector loses even with !important - which left it 12px off
+     centre while everything around it lined up. */
+  .boh-footer__brand p,
+  .boh-footer__brand p:not(.boh-footer__initiative),
+  .boh-footer__brand h3 {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .boh-footer__social { justify-content: center; }
+  .boh-footer__col ul,
+  .boh-footer__col li { padding-left: 0 !important; text-align: center; }
+  .boh-footer__cta {
+    align-items: center;
+    text-align: center;
+  }
+  .boh-footer__bottom {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+}
