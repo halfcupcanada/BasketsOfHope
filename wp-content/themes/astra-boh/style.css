@@ -8715,3 +8715,19 @@ select[name="sponsorship-level"].is-prefilled {
     overflow-wrap: anywhere;
   }
 }
+
+/* Contact stays a single centred column on a phone. Two columns suited the
+   five short links above it; an address and an opening time are not that
+   shape, and splitting them put a wrapped street address beside a time. */
+@media (max-width: 520px) {
+  .boh-footer__col--contact ul {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .boh-footer__col--contact li,
+  .boh-footer__col--contact a,
+  .boh-footer__col--contact p {
+    text-align: center;
+    overflow-wrap: normal;
+  }
+}

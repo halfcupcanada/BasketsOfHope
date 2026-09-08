@@ -611,7 +611,7 @@ add_action('wp_footer', function () {
           </ul>
         </div>
 
-        <div class="boh-footer__col">
+        <div class="boh-footer__col boh-footer__col--contact">
           <h4>Contact</h4>
           <ul>
             <li><a href="mailto:BoH@rohitgroup.com">BoH@rohitgroup.com</a></li>
