@@ -2634,7 +2634,7 @@ add_action( 'wp_footer', function () {
             b.innerHTML = ''
               + '<div class="boh-rsvp-welcome__eyebrow">Invitation confirmed</div>'
               + '<h3 class="boh-rsvp-welcome__title">Welcome, ' + first.replace(/[<>&]/g, '') + '.</h3>'
-              + '<p class="boh-rsvp-welcome__body">We\'ve pre-filled your name and email below. Confirm your party size, tick the terms, and hit Reserve to save your seat.</p>';
+              + '<p class="boh-rsvp-welcome__body">We\'ve pre-filled your name and email below. Confirm your party size, tick the terms, and press RSVP Now to save your seat.</p>';
             rsvp.insertBefore(b, rsvp.firstChild);
             return true;
         }

@@ -148,6 +148,33 @@ function boh_email_whiten_links( string $html ): string {
 	);
 }
 
+/** First word of a name, for a greeting. */
+function boh_email_first_name( string $name ): string {
+	$parts = preg_split( '/\s+/', trim( $name ) );
+	return $parts && $parts[0] !== '' ? $parts[0] : 'friend';
+}
+
+/**
+ * The RSVP link, carrying whoever it is being sent to.
+ *
+ * The page fills the form in from boh_n and boh_e - that is how invitations
+ * have always worked. The sample was sending a bare /rsvp/, so a test send
+ * arrived at an empty form and looked broken. Same parameter names as
+ * boh_invitations_render_email, deliberately: one contract, one place the
+ * page has to understand.
+ */
+function boh_email_rsvp_url( string $email = '', string $name = '' ): string {
+	$args = [];
+	if ( $name !== '' ) {
+		$args['boh_n'] = rawurlencode( $name );
+	}
+	if ( $email !== '' && is_email( $email ) ) {
+		$args['boh_e'] = rawurlencode( $email );
+	}
+	$url = home_url( '/rsvp/' );
+	return $args ? add_query_arg( $args, $url ) : $url;
+}
+
 /**
  * A pink button, built the way email buttons have to be built: a table cell
  * carrying the colour so Outlook's Word engine still shows a filled block
@@ -185,7 +212,10 @@ function boh_email_textify( string $text ): string {
 		// A paragraph ending in the RSVP link becomes the button. Anything in
 		// front of it stays, unless it is only there to introduce the link -
 		// "RSVP here:" above a button that says RSVP is saying it twice.
-		if ( preg_match( '~^(.*?)(https?://[^\s<]*/rsvp/?)$~is', $para, $m ) ) {
+		// The query string matters: an invitation's link carries who it is for,
+		// and a pattern that stopped at "/rsvp/" quietly stopped making the
+		// button the moment those parameters were added.
+		if ( preg_match( '~^(.*?)(https?://[^\s<]*/rsvp/?(?:\?[^\s<]*)?)$~is', $para, $m ) ) {
 			$lead = rtrim( trim( $m[1] ), ":- " );
 			if ( $lead !== '' && ! preg_match( '~^(rsvp|rsvp here|reserve (your |my )?(seat|place|spot)s?|you can rsvp( here)?)$~i', $lead ) ) {
 				$out .= '<p style="margin:0 0 12px">' . nl2br( esc_html( $lead ) ) . "</p>\n";
@@ -385,7 +415,11 @@ add_action( 'boh_content_after_screen_emails', 'boh_email_admin_tools' );
 
 function boh_email_admin_tools(): void {
 	$sent = boh_email_handle_test_send();
-	$demo = boh_email_document( boh_email_textify( boh_email_sample_text() ), 'A test from the website' );
+	$viewer = wp_get_current_user();
+	$demo   = boh_email_document(
+		boh_email_textify( boh_email_sample_text( (string) $viewer->user_email, (string) ( $viewer->display_name ?: 'Rahul Chona' ) ) ),
+		'A test from the website'
+	);
 	?>
 	<h2 style="margin:34px 0 6px">Preview</h2>
 	<p class="description" style="margin:0 0 12px">A sample message inside the current header and footer. Save your changes first - this shows what is stored, not what is typed.</p>
@@ -422,7 +456,7 @@ function boh_email_handle_test_send() {
 	$ok = wp_mail(
 		$to,
 		'A test from ' . boh_email_site_name(),
-		boh_email_sample_text(),
+		boh_email_sample_text( $to ),
 		[ 'Content-Type: text/plain; charset=UTF-8' ]
 	);
 	return $ok ? true : 'The mail server refused the message. Nothing was sent.';
@@ -432,16 +466,17 @@ function boh_email_handle_test_send() {
  * Written as plain text on purpose: it goes through the same wrapping every
  * real message does, so a preview that looks right means the real thing will.
  */
-function boh_email_sample_text(): string {
+function boh_email_sample_text( string $to = '', string $for_name = 'Rahul Chona' ): string {
 	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : 'Tuesday, November 3, 2026 at 6:00 pm';
 	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : 'Rohit Group Office, 10130 112 St NW, Edmonton';
-	return "Dear Rahul,\n\n"
+	$first = boh_email_first_name( $for_name );
+	return "Dear " . $first . ",\n\n"
 		. "Thank you for reserving your seat at " . boh_email_site_name() . ". We cannot wait to share the evening with you.\n\n"
 		. "When:  " . $when . "\n"
 		. "Where: " . $where . "\n"
 		. "Bring: 12 comfort items (or partner with a friend)\n\n"
 		. "The full running order is on the website: " . home_url( '/' ) . "\n\n"
-		. "Reserve your seat:\n" . home_url( '/rsvp/' ) . "\n\n"
+		. "Reserve your seat:\n" . boh_email_rsvp_url( $to, $for_name ) . "\n\n"
 		. "Questions? Just reply to this email.\n\n"
 		. "With gratitude,\n"
 		. boh_email_site_name();
