@@ -545,6 +545,21 @@ function boh_content_schema(): array {
 				[ 'key' => 'rsvp.success.bring_note',  'label' => 'Thank you screen - note under it', 'type' => 'text' ],
 				[ 'key' => 'rsvp.success.share',       'label' => 'Thank you screen - sharing line', 'type' => 'text' ],
 				[ 'key' => 'rsvp.success.forward',     'label' => 'Thank you screen - forward button', 'type' => 'text' ],
+
+				[
+					'key'      => 'rsvp.confirm.enabled',
+					'label'    => 'Send a confirmation email',
+					'type'     => 'toggle',
+					'on_label' => 'Email the guest a confirmation when they RSVP',
+					'help'     => 'The message the guest receives. It goes out in the same branded frame as every other email - the header, footer and logo are on the Emails screen. Field names in square brackets are filled in from their reply.',
+				],
+				[ 'key' => 'rsvp.confirm.subject', 'label' => 'Confirmation email - subject', 'type' => 'text' ],
+				[
+					'key'   => 'rsvp.confirm.body',
+					'label' => 'Confirmation email - message',
+					'type'  => 'textarea',
+					'help'  => 'Plain text; blank lines start a new paragraph. [first-name], [last-name], [your-email] and [party-size] are filled in from their reply. Leave the RSVP link out - they have just used it.',
+				],
 			],
 		],
 	];

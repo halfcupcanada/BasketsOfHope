@@ -19,6 +19,52 @@ defined( 'ABSPATH' ) || exit;
 const BOH_RSVP_FORM_ID_OPTION = 'boh_rsvp_form_id';
 const BOH_RSVP_FORM_SYNCED    = 'boh_rsvp_form_synced';
 
+/**
+ * The confirmation the guest receives, and whether they receive one.
+ *
+ * There was no such email: Contact Form 7's second mail was empty and switched
+ * off, so the only message an RSVP produced was the internal one to
+ * BoH@rohitgroup.com - while the thank-you screen told the guest "a
+ * confirmation is on its way". This closes that.
+ *
+ * Deliberately carries no RSVP link. They have just RSVP'd; a button asking
+ * them to do it again reads as though it did not work.
+ */
+function boh_rsvp_confirmation_defaults(): array {
+	$name  = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : '';
+	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : '';
+
+	return [
+		'enabled' => '1',
+		'subject' => "You're in - " . $name,
+		'body'    => "Hi [first-name],\n\n"
+			. "Thank you for reserving your seat at " . $name . ". We cannot wait to share the evening with you.\n\n"
+			. "When:  " . $when . "\n"
+			. "Where: " . $where . "\n"
+			. "Party: [party-size]\n"
+			. "Bring: 12 comfort items (or partner with a friend)\n\n"
+			. "The full running order is on the website: " . home_url( '/' ) . "\n\n"
+			. "Questions? Just reply to this email.\n\n"
+			. "With gratitude,\n"
+			. $name,
+	];
+}
+
+/** The confirmation's current wording, saved or shipped. */
+function boh_rsvp_confirmation_copy(): array {
+	$stored = get_option( BOH_CONTENT_OPTION, [] );
+	$stored = is_array( $stored ) ? $stored : [];
+	$out    = [];
+	foreach ( boh_rsvp_confirmation_defaults() as $name => $default ) {
+		$key = 'rsvp.confirm.' . $name;
+		boh_content_note_default( $key, $default );
+		$value = $stored[ $key ] ?? '';
+		$out[ $name ] = ( is_string( $value ) && trim( $value ) !== '' ) ? $value : $default;
+	}
+	return $out;
+}
+
 /** The shipped wording. Also what the admin fields show before a first save. */
 function boh_rsvp_form_defaults(): array {
 	return [
@@ -118,6 +164,33 @@ FORM;
 }
 
 /**
+ * Contact Form 7's second mail: the one that goes to the guest.
+ *
+ * Sent as plain text on purpose - boh-email-template wraps it in the branded
+ * document on the way out, the same as every other message, so there is one
+ * design to maintain rather than two. The sender stays whatever the form
+ * already uses, because that address is the one the mail server is set up to
+ * send as; Reply-To is where an answer should actually land.
+ */
+function boh_rsvp_confirmation_mail( $cf ): array {
+	$copy     = boh_rsvp_confirmation_copy();
+	$existing = (array) $cf->prop( 'mail_2' );
+	$primary  = (array) $cf->prop( 'mail' );
+
+	return [
+		'active'             => trim( (string) $copy['enabled'] ) === '1',
+		'subject'            => (string) $copy['subject'],
+		'sender'             => $existing['sender'] ?? ( $primary['sender'] ?? '[_site_title] <' . get_option( 'admin_email' ) . '>' ),
+		'recipient'          => '[your-email]',
+		'body'               => (string) $copy['body'],
+		'additional_headers' => 'Reply-To: BoH@rohitgroup.com',
+		'attachments'        => $existing['attachments'] ?? '',
+		'use_html'           => false,
+		'exclude_blank'      => false,
+	];
+}
+
+/**
  * Which Contact Form 7 form is the RSVP.
  *
  * Found by its field names rather than by id, because the ids differ between
@@ -159,11 +232,16 @@ function boh_rsvp_form_sync(): bool {
 		return false;
 	}
 	$template = boh_rsvp_form_template();
-	if ( trim( (string) $cf->prop( 'form' ) ) === trim( $template ) ) {
+	$mail_2   = boh_rsvp_confirmation_mail( $cf );
+	$current  = (array) $cf->prop( 'mail_2' );
+	if ( trim( (string) $cf->prop( 'form' ) ) === trim( $template )
+		&& ( $current['body'] ?? '' ) === $mail_2['body']
+		&& ( $current['subject'] ?? '' ) === $mail_2['subject']
+		&& ( ! empty( $current['active'] ) ) === ( ! empty( $mail_2['active'] ) ) ) {
 		update_option( BOH_RSVP_FORM_SYNCED, '1', false );
 		return true;
 	}
-	$cf->set_properties( [ 'form' => $template ] );
+	$cf->set_properties( [ 'form' => $template, 'mail_2' => boh_rsvp_confirmation_mail( $cf ) ] );
 	$cf->save();
 	update_option( BOH_RSVP_FORM_SYNCED, '1', false );
 	return true;
