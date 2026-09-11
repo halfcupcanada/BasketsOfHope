@@ -53,7 +53,7 @@ function boh_invitations_maybe_install() {
 	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
 		update_option( BOH_INV_OPT_TEMPLATES, [
 			'invitation_subject' => "You're invited - Rohit's Baskets of Hope 2026",
-			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 6:00 PM\nWhere: Rohit Group Office, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
+			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 6:00 PM\nWhere: Rohit Group Headquarters, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
 			'reminder_subject'   => "Save your seat - Baskets of Hope 2026",
 			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 6:00 PM. We haven't heard back from you yet - would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
 		] );
@@ -166,11 +166,52 @@ function boh_invitations_render_email( $tpl_key, $invitee ) {
 	];
 }
 
+/**
+ * Is this site allowed to send invitations at all?
+ *
+ * Off unless wp-config says otherwise, deliberately: 250 invitations went out
+ * that nobody meant to send, and a switch that defaults to "on" would turn
+ * itself back on the next time this file, the database or a backup moved.
+ *
+ * To send again, add to wp-config.php:  define( 'BOH_INV_SENDING', true );
+ * and re-schedule the queue (see boh_invitations_sending_enabled callers).
+ */
+function boh_invitations_sending_enabled(): bool {
+	return defined( 'BOH_INV_SENDING' ) && BOH_INV_SENDING === true;
+}
+
 function boh_invitations_send_email( $invitee, $tpl_key ) {
+	// Every path that sends - the cron queue, the admin bulk actions, a single
+	// resend - comes through here, so this is the one gate that has to hold.
+	if ( ! boh_invitations_sending_enabled() ) {
+		boh_invitations_log_blocked( $invitee, $tpl_key );
+		return false;
+	}
 	$mail = boh_invitations_render_email( $tpl_key, $invitee );
 	if ( ! $mail['subject'] || ! $mail['body'] ) return false;
 	$headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
 	return wp_mail( $invitee->email, $mail['subject'], $mail['body'], $headers );
+}
+
+/**
+ * Record what would have gone out.
+ *
+ * Silence would leave nobody able to answer "is it still trying?" - and the
+ * answer to that is the whole question right now.
+ */
+function boh_invitations_log_blocked( $invitee, $tpl_key ): void {
+	$log = get_option( 'boh_inv_blocked_log', [] );
+	$log = is_array( $log ) ? $log : [];
+	$log[] = [
+		'at'    => current_time( 'mysql', true ),
+		'to'    => is_object( $invitee ) ? (string) $invitee->email : '',
+		'tpl'   => (string) $tpl_key,
+	];
+	// Keep the tail; this is a tripwire, not an archive.
+	if ( count( $log ) > 200 ) {
+		$log = array_slice( $log, -200 );
+	}
+	update_option( 'boh_inv_blocked_log', $log, false );
 }
 
 function boh_invitations_send_count_today() {
@@ -190,6 +231,15 @@ add_filter( 'cron_schedules', function ( $s ) {
 	return $s;
 } );
 add_action( 'init', function () {
+	// While sending is off, the queue is not scheduled at all - and any
+	// event already on the schedule is cleared. Otherwise this very hook
+	// would put the timer back every time WordPress loaded.
+	if ( ! boh_invitations_sending_enabled() ) {
+		if ( wp_next_scheduled( BOH_INV_CRON_HOOK ) ) {
+			wp_unschedule_hook( BOH_INV_CRON_HOOK );
+		}
+		return;
+	}
 	if ( ! wp_next_scheduled( BOH_INV_CRON_HOOK ) ) {
 		wp_schedule_event( time() + 60, 'boh_10min', BOH_INV_CRON_HOOK );
 	}
@@ -197,6 +247,11 @@ add_action( 'init', function () {
 add_action( BOH_INV_CRON_HOOK, 'boh_invitations_process_queue' );
 
 function boh_invitations_process_queue() {
+	// Belt and braces: the gate in send_email() already holds, but there is
+	// no reason to walk the list and mark people as sent to.
+	if ( ! boh_invitations_sending_enabled() ) {
+		return;
+	}
 	global $wpdb;
 	$t = boh_invitations_table();
 	$limits = get_option( BOH_INV_OPT_LIMITS );

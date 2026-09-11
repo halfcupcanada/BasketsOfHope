@@ -52,6 +52,17 @@ function boh_content( string $key, $default = '' ) {
 	return $value;
 }
 
+/**
+ * Read a toggle.
+ *
+ * Toggles store '1' or '0'. The default matters: a section that ships visible
+ * has to stay visible on a site that has never opened the screen, and one
+ * that ships hidden has to stay hidden.
+ */
+function boh_content_is_on( string $key, bool $default_on = false ): bool {
+	return (string) boh_content( $key, $default_on ? '1' : '0' ) === '1';
+}
+
 /** True when any cell in a repeater row carries content. */
 function boh_content_row_has_value( $row ): bool {
 	if ( ! is_array( $row ) ) {
@@ -315,6 +326,13 @@ function boh_content_schema(): array {
 			'title'  => 'Sponsorship',
 			'help'   => 'Everything written on the Sponsorship page. Each block below is the copy as it appears, in order down the page. The eight sponsorship levels are a list you can reorder, add to or delete from.',
 			'fields' => [
+				[
+					'key'      => 'sponsor.tiers_enabled',
+					'label'    => 'Show the sponsorship packages',
+					'type'     => 'toggle',
+					'on_label' => 'Show the detailed package section on the Sponsorship page',
+					'help'     => 'Turns off the whole packages block - the label, the heading, the intro, the eight level cards and the two buttons under them. Everything else on the page stays. The levels themselves are kept, so switching this back on restores them as they were.',
+				],
 				[ 'key' => 'sponsor.intro', 'label' => 'Opening paragraph', 'type' => 'richtext' ],
 				[ 'key' => 'sponsor.cta_label', 'label' => 'Opening button - text', 'type' => 'text' ],
 				[ 'key' => 'sponsor.tiers_eyebrow', 'label' => 'Levels - small label', 'type' => 'text' ],
@@ -510,6 +528,23 @@ function boh_content_schema(): array {
 					'help'  => 'Ticking this is required to submit. It is the permission the RSVP relies on to email that guest afterwards, so keep it accurate.',
 				],
 				[ 'key' => 'rsvp.form.submit', 'label' => 'Form - button text', 'type' => 'text' ],
+
+				[
+					'key'   => 'rsvp.success.eyebrow',
+					'label' => 'Thank you screen - small label',
+					'type'  => 'text',
+					'help'  => 'The screen shown after someone RSVPs. In all of these you can use {first} for their first name, {email} for the address they gave, and {date} for the event date.',
+				],
+				[ 'key' => 'rsvp.success.title', 'label' => 'Thank you screen - heading', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.lede',  'label' => 'Thank you screen - opening line', 'type' => 'textarea' ],
+				[ 'key' => 'rsvp.success.label_when',  'label' => 'Thank you screen - "When" label',  'type' => 'text' ],
+				[ 'key' => 'rsvp.success.label_where', 'label' => 'Thank you screen - "Where" label', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.label_party', 'label' => 'Thank you screen - "Party of" label', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.label_bring', 'label' => 'Thank you screen - "Bring" label', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.bring',       'label' => 'Thank you screen - what to bring', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.bring_note',  'label' => 'Thank you screen - note under it', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.share',       'label' => 'Thank you screen - sharing line', 'type' => 'text' ],
+				[ 'key' => 'rsvp.success.forward',     'label' => 'Thank you screen - forward button', 'type' => 'text' ],
 			],
 		],
 	];

@@ -95,7 +95,7 @@ if (!defined('BOH_EVENT_END')) {
     define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 21:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
 }
 if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope - A Night of Giving");
-if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4");
+if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4");
 // RSVP form ID - auto-discover by title so the theme works regardless of
 // install order. Cached for an hour to avoid repeating the lookup. Override
 // by defining BOH_RSVP_FORM_ID in wp-config.php if you want a specific form.
@@ -430,7 +430,7 @@ add_shortcode('boh_event_meta', function () {
     // Every value is editable in BoH Content -> RSVP & event details.
     $cells = [
         ['When',     boh_content('event.when',     'Tue, Nov 3, 2026'),   boh_content('event.when_sub',     '6:00 PM MT')],
-        ['Where',    boh_content('event.where',    'Rohit Group Office'), boh_content('event.where_sub',    '10130 112 St NW, Edmonton')],
+        ['Where',    boh_content('event.where',    'Rohit Group Headquarters'), boh_content('event.where_sub',    '10130 112 St NW, Edmonton')],
         ['Benefits', boh_content('event.benefits', 'WIN House'),          boh_content('event.benefits_sub', "Edmonton's shelter for survivors")],
         ['Bring',    boh_content('event.bring',    '12 comfort items'),   boh_content('event.bring_sub',    'Or contribute online')],
     ];
@@ -623,7 +623,7 @@ add_action('wp_footer', function () {
         <div class="boh-footer__cta">
           <span class="boh-eyebrow">Save the date</span>
           <strong>A Night of Giving</strong>
-          <p>Tuesday, Nov 3 2026 · 6:00 PM<br>Rohit Group Office, Edmonton</p>
+          <p>Tuesday, Nov 3 2026 · 6:00 PM<br>Rohit Group Headquarters, Edmonton</p>
           <a class="boh-btn-cta" href="/rsvp/">RSVP →</a>
         </div>
 
@@ -1048,8 +1048,49 @@ add_shortcode('boh_copy', function ($atts, $content = '') {
     );
 });
 
+/**
+ * The marker a switched-off packages section leaves behind.
+ *
+ * Hiding the cards alone would leave their heading, their intro and two
+ * buttons pointing at nothing. The shortcode emits this instead, and the
+ * block filter below takes out whichever group contains it - so the section
+ * goes as a section, and it goes server-side rather than being hidden in CSS
+ * where it would still be in the page for anyone reading the source.
+ */
+const BOH_TIERS_OFF_MARK = '<!--boh-tiers-off-->';
+
+add_filter('render_block', function ($html, $block) {
+    if (($block['blockName'] ?? '') !== 'core/group') {
+        return $html;
+    }
+    if (boh_content_is_on('sponsor.tiers_enabled', true)) {
+        return $html;
+    }
+    // Blocks render before shortcodes run, so at this point the group still
+    // holds the literal "[boh_sponsor_tiers]" rather than anything the
+    // shortcode returned - which is why matching the marker alone left the
+    // heading, the intro and the two buttons behind.
+    $html = (string) $html;
+    if (strpos($html, '[boh_sponsor_tiers') === false && strpos($html, BOH_TIERS_OFF_MARK) === false) {
+        return $html;
+    }
+    // Pass the marker up: an outer group wrapping this one would otherwise
+    // render as an empty band of padding where the section used to be.
+    return BOH_TIERS_OFF_MARK;
+}, 10, 2);
+
+// Nothing should be left in the finished page but the content around it.
+add_filter('the_content', function ($content) {
+    return str_replace(BOH_TIERS_OFF_MARK, '', (string) $content);
+}, 99);
+
 // --- [boh_sponsor_tiers] - 8-tier sponsorship cards (per PDF) -----------
 add_shortcode('boh_sponsor_tiers', function () {
+    // Off from BoH Content -> Sponsorship. The levels stay stored; only the
+    // section stops being rendered.
+    if (!boh_content_is_on('sponsor.tiers_enabled', true)) {
+        return BOH_TIERS_OFF_MARK;
+    }
     // Editable in BoH Content -> Sponsorship. Columns: level, title, price,
     // description, benefits (one per line), tone.
     $rows = boh_content('sponsor.tiers', []);
@@ -1945,7 +1986,7 @@ add_shortcode('boh_faqs', function () {
         ['Who does Baskets of Hope support?',
          'In Edmonton, Baskets of Hope supports WIN House and the women, non-binary individuals, and children they serve while fleeing domestic violence.'],
         ['When and where is this year\'s event?',
-         'This year\'s event is scheduled for Tuesday, November 3, 2026 at 6:00 PM at the Rohit Group Office, 10130 112 St NW, Edmonton, AB T5K 2K4. Please confirm the final date and time before publishing.'],
+         'This year\'s event is scheduled for Tuesday, November 3, 2026 at 6:00 PM at the Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4. Please confirm the final date and time before publishing.'],
         ['What should I bring?',
          'Guests are encouraged to bring 12 new comfort items for the baskets. Suggested items include cozy socks or slippers, journals, books, body care, hand lotion, bath products, shampoo, conditioner, toothbrushes, reusable water bottles, small blankets, gift cards, or other thoughtful self-care items.'],
         ['Do I need to bring all 12 items myself?',
@@ -2340,7 +2381,7 @@ add_filter('gettext', function ($translated, $original, $domain) {
 add_action( 'wp_footer', function () {
     if ( ! is_page( 'rsvp' ) ) return;
     $event_when_full = 'Tuesday, November 3, 2026 · 6:00 PM';
-    $event_where     = 'Rohit Group Office, 10130 112 St NW, Edmonton';
+    $event_where     = 'Rohit Group Headquarters, 10130 112 St NW, Edmonton';
     ?>
     <script>
     (function () {
@@ -2414,34 +2455,46 @@ add_action( 'wp_footer', function () {
             // the form they have just submitted.
             window.BOH_REFERRER = { name: first, email: email };
 
+            // Every word on this screen comes from BoH Content -> RSVP.
+            // {first}, {email} and {date} are filled in from the reply.
+            const S = <?php echo wp_json_encode( boh_rsvp_success_copy() ); ?>;
+            const safeFirst = first.replace(/[<>&]/g, '');
+            const safeEmail = email.replace(/[<>&]/g, '');
+            function say(t) {
+                return String(t || '')
+                    .split('{first}').join(safeFirst)
+                    .split('{date}').join(<?php echo wp_json_encode( boh_rsvp_event_day() ); ?>)
+                    .split('{email}').join(safeEmail ? '<strong>' + safeEmail + '</strong>' : 'your inbox');
+            }
+
             const html = ''
               + '<div class="boh-rsvp-success">'
-              +   '<div class="boh-rsvp-success__eyebrow">You\'re in</div>'
-              +   '<h3 class="boh-rsvp-success__title">See you November 3, ' + first.replace(/[<>&]/g, '') + '.</h3>'
-              +   '<p class="boh-rsvp-success__lede">We\'ve saved you a seat at Rohit\'s Baskets of Hope 2026. A confirmation is on its way to <strong>' + (email.replace(/[<>&]/g, '') || 'your inbox') + '</strong>.</p>'
+              +   '<div class="boh-rsvp-success__eyebrow">' + say(S.eyebrow) + '</div>'
+              +   '<h3 class="boh-rsvp-success__title">' + say(S.title) + '</h3>'
+              +   '<p class="boh-rsvp-success__lede">' + say(S.lede) + '</p>'
               +   '<div class="boh-rsvp-success__grid">'
               +     '<div class="boh-rsvp-success__cell">'
-              +       '<div class="boh-rsvp-success__label">When</div>'
+              +       '<div class="boh-rsvp-success__label">' + say(S.label_when) + '</div>'
               +       '<div class="boh-rsvp-success__val">' + <?php echo wp_json_encode( $event_when_full ); ?> + '</div>'
               +     '</div>'
               +     '<div class="boh-rsvp-success__cell">'
-              +       '<div class="boh-rsvp-success__label">Where</div>'
+              +       '<div class="boh-rsvp-success__label">' + say(S.label_where) + '</div>'
               +       '<div class="boh-rsvp-success__val">' + <?php echo wp_json_encode( $event_where ); ?> + '</div>'
               +     '</div>'
               +     '<div class="boh-rsvp-success__cell">'
-              +       '<div class="boh-rsvp-success__label">Party of</div>'
+              +       '<div class="boh-rsvp-success__label">' + say(S.label_party) + '</div>'
               +       '<div class="boh-rsvp-success__val">' + (party.replace(/[<>&]/g, '') || '-') + '</div>'
               +     '</div>'
               +     '<div class="boh-rsvp-success__cell">'
-              +       '<div class="boh-rsvp-success__label">Bring</div>'
-              +       '<div class="boh-rsvp-success__val">12 comfort items<br><span class="boh-rsvp-success__sub">Or partner with a friend</span></div>'
+              +       '<div class="boh-rsvp-success__label">' + say(S.label_bring) + '</div>'
+              +       '<div class="boh-rsvp-success__val">' + say(S.bring) + '<br><span class="boh-rsvp-success__sub">' + say(S.bring_note) + '</span></div>'
               +     '</div>'
               +   '</div>'
               +   '<div class="boh-rsvp-success__ctas">'
               +     '<a class="boh-rsvp-success__cta boh-rsvp-success__cta--primary" href="' + gcal + '" target="_blank" rel="noopener">Add to Google Calendar</a>'
               +     '<a class="boh-rsvp-success__cta" href="' + ics + '">Download .ics (Apple / Outlook)</a>'
               +   '</div>'
-              +   '<p class="boh-rsvp-success__share">Know someone who\'d love this? <button type="button" class="boh-rsvp-success__forward" data-boh-forward>Forward the invitation</button></p>'
+              +   '<p class="boh-rsvp-success__share">' + say(S.share) + ' <button type="button" class="boh-rsvp-success__forward" data-boh-forward>' + say(S.forward) + '</button></p>'
               + '</div>';
 
             // Hide the form + old spots row + welcome banner
@@ -2593,6 +2646,43 @@ add_action( 'wp_footer', function () {
     </style>
     <?php
 }, 65 );
+
+/**
+ * The thank-you screen's words.
+ *
+ * This screen is drawn in JavaScript after Contact Form 7 reports the mail
+ * sent, which is why none of it could be found in WordPress: it was neither
+ * page content nor an email template. It reads from BoH Content -> RSVP now,
+ * with the same fallbacks it used to hardcode.
+ */
+function boh_rsvp_success_copy(): array
+{
+    return [
+        'eyebrow'     => boh_content( 'rsvp.success.eyebrow', "You're in" ),
+        'title'       => boh_content( 'rsvp.success.title', 'See you {date}, {first}.' ),
+        'lede'        => boh_content( 'rsvp.success.lede', "We've saved you a seat at " . boh_rsvp_site_name() . ". A confirmation is on its way to {email}." ),
+        'label_when'  => boh_content( 'rsvp.success.label_when', 'When' ),
+        'label_where' => boh_content( 'rsvp.success.label_where', 'Where' ),
+        'label_party' => boh_content( 'rsvp.success.label_party', 'Party of' ),
+        'label_bring' => boh_content( 'rsvp.success.label_bring', 'Bring' ),
+        'bring'       => boh_content( 'rsvp.success.bring', '12 comfort items' ),
+        'bring_note'  => boh_content( 'rsvp.success.bring_note', 'Or partner with a friend' ),
+        'share'       => boh_content( 'rsvp.success.share', "Know someone who'd love this?" ),
+        'forward'     => boh_content( 'rsvp.success.forward', 'Forward the invitation' ),
+    ];
+}
+
+/** The event's day, for {date}: written once so it cannot go stale. */
+function boh_rsvp_event_day(): string
+{
+    return defined( 'BOH_EVENT_ISO' ) ? wp_date( 'F j', strtotime( BOH_EVENT_ISO ) ) : 'November 3';
+}
+
+/** The site's name with its apostrophe decoded, as everywhere else. */
+function boh_rsvp_site_name(): string
+{
+    return wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES ) . ' 2026';
+}
 
 // Pre-fill the RSVP CF7 form + show a welcome banner when someone lands
 // on /rsvp/ from an invitation email (URL contains ?boh_n / ?boh_e).
@@ -3644,7 +3734,7 @@ add_action('wp_footer', function () {
 
         e.preventDefault();
         opener = a;
-        open(src, isMap ? 'Rohit Group Office - map'
+        open(src, isMap ? 'Rohit Group Headquarters - map'
                         : isRohit ? 'Rohit Group'
                         : 'WIN House Edmonton', href);
       });

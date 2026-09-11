@@ -94,6 +94,35 @@ add_action( 'phpmailer_init', function ( $mailer ) {
 }, 100 );
 
 /**
+ * Replies go to the event's own inbox.
+ *
+ * Mail leaves as rohitsbasketsofhope@halfcup.ca - the domain that is set up
+ * to send - so "reply to this email" was landing at the sending domain rather
+ * than with anyone who reads it. A Reply-To fixes where the answer goes
+ * without touching what the mail server is allowed to send as. An address
+ * already set by the message itself is left alone.
+ */
+add_filter( 'wp_mail', function ( array $args ) {
+	$reply_to = apply_filters( 'boh_email_reply_to', 'BoH@rohitgroup.com' );
+	if ( ! $reply_to || ! is_email( $reply_to ) ) {
+		return $args;
+	}
+	$headers = $args['headers'] ?? [];
+	if ( is_string( $headers ) ) {
+		$headers = array_filter( array_map( 'trim', explode( "\n", $headers ) ) );
+	}
+	$headers = (array) $headers;
+	foreach ( $headers as $h ) {
+		if ( stripos( (string) $h, 'reply-to:' ) === 0 ) {
+			return $args;
+		}
+	}
+	$headers[]       = 'Reply-To: ' . boh_email_site_name() . ' <' . $reply_to . '>';
+	$args['headers'] = $headers;
+	return $args;
+}, 5 );
+
+/**
  * The site's name, readable.
  *
  * The stored blogname is "Rohit&#039;s Baskets of Hope" - an encoded
@@ -184,8 +213,8 @@ function boh_email_button( string $url, string $label ): string {
 	$font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 	return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px">'
 		. '<tr><td align="center" bgcolor="#D01482" style="border-radius:999px">'
-		. '<a href="' . esc_url( $url ) . '" style="display:inline-block;padding:13px 32px;' . $font
-		. ';font-size:15px;font-weight:700;letter-spacing:0.02em;color:#ffffff;text-decoration:none;border-radius:999px">'
+		. '<a href="' . esc_url( $url ) . '" style="display:inline-block;padding:11px 26px;' . $font
+		. ';font-size:14px;font-weight:700;letter-spacing:0.02em;color:#ffffff;text-decoration:none;border-radius:999px">'
 		. esc_html( $label ) . '</a>'
 		. '</td></tr></table>';
 }
@@ -314,7 +343,7 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
       <tr><td class="boh-pad" align="center" style="padding:32px 40px 0">
         <?php if ( $logo ) : ?>
           <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:inline-block;text-decoration:none;border:0">
-            <img src="<?php echo esc_url( $logo ); ?>" width="76" alt="<?php echo esc_attr( $name ); ?>" style="display:block;width:76px;height:auto;border:0">
+            <img src="<?php echo esc_url( $logo ); ?>" width="112" alt="<?php echo esc_attr( $name ); ?>" style="display:block;width:112px;height:auto;border:0">
           </a>
         <?php else : ?>
           <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="<?php echo $font; ?>;font-size:18px;font-weight:700;color:#1F1A24;text-decoration:none"><?php echo esc_html( $name ); ?></a>
@@ -359,13 +388,13 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#0A0A0A;border-radius:16px;margin-top:14px">
       <tr><td class="boh-pad" align="center" style="padding:30px 40px 26px">
 
-        <div style="<?php echo $font; ?>;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;padding-bottom:4px">
+        <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:inline-block;<?php echo $font; ?>;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;text-decoration:none;padding-bottom:4px">
           <?php if ( $split !== false ) : ?>
             <?php echo esc_html( substr( $wordmark, 0, $split ) ); ?><span style="color:#D01482"><?php echo esc_html( substr( $wordmark, $split ) ); ?></span>
           <?php else : ?>
             <?php echo esc_html( $wordmark ); ?>
           <?php endif; ?>
-        </div>
+        </a>
 
         <?php if ( trim( (string) $footer ) !== '' ) : ?>
         <div class="boh-foot" style="<?php echo $font; ?>;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.72);padding-top:6px">
@@ -468,7 +497,7 @@ function boh_email_handle_test_send() {
  */
 function boh_email_sample_text( string $to = '', string $for_name = 'Rahul Chona' ): string {
 	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : 'Tuesday, November 3, 2026 at 6:00 pm';
-	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : 'Rohit Group Office, 10130 112 St NW, Edmonton';
+	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : 'Rohit Group Headquarters, 10130 112 St NW, Edmonton';
 	$first = boh_email_first_name( $for_name );
 	return "Dear " . $first . ",\n\n"
 		. "Thank you for reserving your seat at " . boh_email_site_name() . ". We cannot wait to share the evening with you.\n\n"
