@@ -32,7 +32,7 @@ const BOH_RSVP_FORM_SYNCED    = 'boh_rsvp_form_synced';
  */
 function boh_rsvp_confirmation_defaults(): array {
 	$name  = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
-	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : '';
+	$when  = boh_event_when();
 	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : '';
 
 	return [

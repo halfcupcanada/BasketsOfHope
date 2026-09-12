@@ -88,12 +88,13 @@ add_action('init', function () {
 // event held on 3 Nov. Naming the zone keeps this correct through any future
 // rule change too.
 if (!defined('BOH_EVENT_TZ'))    define('BOH_EVENT_TZ',    'America/Edmonton');
-if (!defined('BOH_EVENT_ISO')) {
-    define('BOH_EVENT_ISO', (new DateTimeImmutable('2026-11-03 17:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
-}
-if (!defined('BOH_EVENT_END')) {
-    define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 20:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
-}
+// Written with the offset rather than resolved from the zone name. Asking the
+// zone means trusting the server's timezone database, and this one puts
+// 3 November 2026 in daylight time - Alberta goes back to MST on the 1st - so
+// every calendar file it built was an hour early, before and after the change
+// from six o'clock. -07:00 is what that date is, whatever the server believes.
+if (!defined('BOH_EVENT_ISO')) define('BOH_EVENT_ISO', '2026-11-03T17:00:00-07:00');
+if (!defined('BOH_EVENT_END')) define('BOH_EVENT_END', '2026-11-03T20:00:00-07:00');
 if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope - A Night of Giving");
 if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4");
 // RSVP form ID - auto-discover by title so the theme works regardless of
@@ -1097,7 +1098,12 @@ add_shortcode('boh_sponsor_tiers', function () {
     if (is_array($rows) && $rows) {
         $tiers = [];
         foreach ($rows as $r) {
-            $r = array_pad((array) $r, 6, '');
+            $r = array_pad((array) $r, 7, '');
+            // Seventh cell is the row's own switch. Blank means shown: rows
+            // saved before the column existed have nothing there.
+            if ((string) $r[6] === '0') {
+                continue;
+            }
             $tiers[] = [
                 'level'    => (string) $r[0],
                 'title'    => (string) $r[1],
@@ -1163,7 +1169,7 @@ add_shortcode('boh_sponsor_tiers', function () {
     // Record the shipped set so the admin repeater starts pre-filled.
     boh_content('sponsor.tiers', array_map(function ($t) {
         return [ $t['level'], $t['title'], $t['price'], $t['copy'],
-                 implode("\n", $t['benefits']), $t['tone'] ];
+                 implode("\n", $t['benefits']), $t['tone'], '1' ];
     }, $tiers));
 
     return boh_sponsor_tiers_html($tiers);
@@ -2675,7 +2681,7 @@ function boh_rsvp_success_copy(): array
 /** The event's day, for {date}: written once so it cannot go stale. */
 function boh_rsvp_event_day(): string
 {
-    return defined( 'BOH_EVENT_ISO' ) ? wp_date( 'F j', strtotime( BOH_EVENT_ISO ) ) : 'November 3';
+    return boh_event_when( 'F j' ) ?: 'November 3';
 }
 
 /** The site's name with its apostrophe decoded, as everywhere else. */

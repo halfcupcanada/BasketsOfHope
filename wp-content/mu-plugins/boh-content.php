@@ -53,6 +53,29 @@ function boh_content( string $key, $default = '' ) {
 }
 
 /**
+ * The event's date and time, formatted in the event's own offset.
+ *
+ * Not wp_date(): that formats in the site's timezone, which means asking this
+ * server's timezone database where Edmonton was on 3 November 2026 - and it
+ * answers daylight time, which is wrong, Alberta having gone back to MST on
+ * the 1st. Every calendar file it generated was an hour early because of it.
+ *
+ * The offset is written into BOH_EVENT_ISO, so reading it back out of the
+ * string keeps the answer the same on any machine.
+ */
+function boh_event_when( string $format = 'l, F j, Y \a\t g:i a', string $iso = '' ): string {
+	$iso = $iso !== '' ? $iso : ( defined( 'BOH_EVENT_ISO' ) ? BOH_EVENT_ISO : '' );
+	if ( $iso === '' ) {
+		return '';
+	}
+	try {
+		return ( new DateTimeImmutable( $iso ) )->format( $format );
+	} catch ( Exception $e ) {
+		return '';
+	}
+}
+
+/**
  * Read a toggle.
  *
  * Toggles store '1' or '0'. The default matters: a section that ships visible
@@ -351,6 +374,9 @@ function boh_content_schema(): array {
 						[ 'label' => 'Description', 'type' => 'textarea', 'width' => '24%' ],
 						[ 'label' => 'Benefits',    'type' => 'textarea', 'width' => '22%' ],
 						[ 'label' => 'Tone',        'type' => 'text',     'width' => '10%' ],
+						// Last, not first: every row already saved has six cells,
+						// and a column at the front would shift all of them.
+						[ 'label' => 'Active',      'type' => 'toggle',   'width' => '9%', 'on_label' => 'Show' ],
 					],
 				],
 				[ 'key' => 'sponsor.pdf_label', 'label' => 'Package button - text', 'type' => 'text' ],
@@ -648,6 +674,12 @@ function boh_content_render_screen(): void {
 			.boh-content-admin table.boh-rep { width:100%; border-collapse:collapse; }
 			.boh-content-admin table.boh-rep th { text-align:left; font-size:12px; color:#646970; padding:4px 6px; }
 			.boh-content-admin table.boh-rep td { padding:4px 6px; vertical-align:top; }
+			/* The row's own switch: a tick on its own in a column of text boxes
+			   reads as a stray mark, so it gets a box of its own and a word. */
+			.boh-content-admin .boh-rep-toggle { display:flex; align-items:center; gap:6px; padding:7px 8px;
+				border:1px solid #dcdcde; border-radius:4px; background:#fff; font-size:12px; color:#50575e; }
+			.boh-content-admin .boh-rep-toggle input { margin:0; }
+			.boh-content-admin .boh-rep-toggle:has(input:not(:checked)) { background:#f6f7f7; color:#8c8f94; }
 			.boh-content-admin .boh-thumb { display:block; width:100%; height:84px; object-fit:cover; background:#f0f0f1; border:1px solid #dcdcde; border-radius:4px; margin-bottom:6px; }
 			.boh-content-admin .boh-rowbtns { white-space:nowrap; }
 			.boh-content-admin .boh-img-wrap { max-width:280px; }
@@ -872,6 +904,17 @@ function boh_content_repeater( array $field, array $rows ): void {
 					<td>
 						<?php if ( ( $c['type'] ?? 'text' ) === 'textarea' ) : ?>
 							<textarea name="<?php echo esc_attr( $cname ); ?>" rows="3"><?php echo esc_textarea( (string) $cell ); ?></textarea>
+						<?php elseif ( ( $c['type'] ?? '' ) === 'toggle' ) : ?>
+							<?php
+							// Blank counts as on: rows saved before this column
+							// existed have no value here and must stay visible.
+							$on = (string) $cell !== '0';
+							?>
+							<label class="boh-rep-toggle">
+								<input type="hidden" name="<?php echo esc_attr( $cname ); ?>" value="0" data-boh-toggle-off>
+								<input type="checkbox" name="<?php echo esc_attr( $cname ); ?>" value="1" <?php checked( $on ); ?>>
+								<span><?php echo esc_html( $c['on_label'] ?? 'Show' ); ?></span>
+							</label>
 						<?php elseif ( ( $c['type'] ?? '' ) === 'image' ) : ?>
 							<?php boh_content_image_control( $cname, (string) $cell, (string) ( $c['ratio'] ?? '' ), (string) ( $c['px'] ?? '' ) ); ?>
 						<?php else : ?>
@@ -908,14 +951,23 @@ function boh_content_save( array $fields ): void {
 		if ( $field['type'] === 'repeater' ) {
 			$rows = [];
 			foreach ( (array) $val as $row ) {
-				$clean = [];
+				$clean   = [];
+				$written = [];
 				foreach ( $field['cols'] as $ci => $c ) {
+					$type = $c['type'] ?? '';
 					$cell = (string) ( $row[ $ci ] ?? '' );
-					$clean[] = ( $c['type'] ?? '' ) === 'image'
-						? esc_url_raw( $cell )
-						: sanitize_textarea_field( $cell );
+					if ( $type === 'toggle' ) {
+						// Kept out of $written on purpose: a toggle always has a
+						// value, so counting it would make a blank row look
+						// filled in and no empty row could ever be deleted.
+						$clean[] = $cell === '1' ? '1' : '0';
+						continue;
+					}
+					$value     = $type === 'image' ? esc_url_raw( $cell ) : sanitize_textarea_field( $cell );
+					$clean[]   = $value;
+					$written[] = $value;
 				}
-				if ( boh_content_row_has_value( $clean ) ) {
+				if ( boh_content_row_has_value( $written ) ) {
 					$rows[] = $clean;
 				}
 			}
@@ -1086,13 +1138,21 @@ function boh_content_admin_js(): void {
 			if (btn.classList.contains('boh-add')) {
 				var clone = body.lastElementChild.cloneNode(true);
 				clone.querySelectorAll('input, textarea').forEach(function (el) {
-					if (el.type === 'hidden') { el.value = ''; } else { el.value = ''; }
+					if (el.type === 'checkbox') { el.checked = true; return; }
+					if (el.hasAttribute('data-boh-toggle-off')) { return; }
+					el.value = '';
 				});
 				clone.querySelectorAll('img').forEach(function (im) { im.src = ''; im.style.display = 'none'; });
 				body.appendChild(clone);
 			} else if (btn.classList.contains('boh-del')) {
 				if (body.children.length > 1) { tr.remove(); }
-				else { tr.querySelectorAll('input, textarea').forEach(function (el) { el.value = ''; }); }
+				else {
+					tr.querySelectorAll('input, textarea').forEach(function (el) {
+						if (el.type === 'checkbox') { el.checked = true; return; }
+						if (el.hasAttribute('data-boh-toggle-off')) { return; }
+						el.value = '';
+					});
+				}
 			} else if (btn.classList.contains('boh-up') && tr.previousElementSibling) {
 				body.insertBefore(tr, tr.previousElementSibling);
 			} else if (btn.classList.contains('boh-down') && tr.nextElementSibling) {

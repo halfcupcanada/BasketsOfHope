@@ -45,7 +45,7 @@ add_action( 'plugins_loaded', function () {
  * body, so this cannot be used to post arbitrary mail through the site.
  */
 function boh_refer_message( string $from_name, string $note ): array {
-	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : '';
+	$when  = boh_event_when();
 	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : '';
 	$rsvp  = home_url( '/rsvp/' );
 

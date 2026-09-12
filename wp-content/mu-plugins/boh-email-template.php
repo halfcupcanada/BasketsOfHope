@@ -277,7 +277,7 @@ function boh_email_setting( string $key, string $default = '' ): string {
 
 function boh_email_defaults(): array {
 	$site  = boh_email_site_name();
-	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : '';
+	$when  = boh_event_when();
 	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : '';
 	$foot  = '<p>' . esc_html( $site ) . ( $when ? ' &middot; ' . esc_html( $when ) : '' ) . '</p>';
 	if ( $where ) {
@@ -496,7 +496,7 @@ function boh_email_handle_test_send() {
  * real message does, so a preview that looks right means the real thing will.
  */
 function boh_email_sample_text( string $to = '', string $for_name = 'Rahul Chona' ): string {
-	$when  = defined( 'BOH_EVENT_ISO' ) ? wp_date( 'l, F j, Y \a\t g:i a', strtotime( BOH_EVENT_ISO ) ) : 'Tuesday, November 3, 2026 at 5:00 pm';
+	$when  = boh_event_when() ?: 'Tuesday, November 3, 2026 at 5:00 pm';
 	$where = defined( 'BOH_EVENT_LOC' ) ? BOH_EVENT_LOC : 'Rohit Group Headquarters, 10130 112 St NW, Edmonton';
 	$first = boh_email_first_name( $for_name );
 	return "Dear " . $first . ",\n\n"
