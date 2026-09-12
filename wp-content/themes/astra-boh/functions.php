@@ -1190,6 +1190,8 @@ function boh_sponsor_tiers_html(array $tiers): string
               <li><?php echo esc_html($b); ?></li>
             <?php endforeach; ?>
           </ul>
+          <button type="button" class="boh-tier__more"
+                  data-level="<?php echo esc_attr($t['level']); ?>">View offer details</button>
           <button type="button" class="boh-tier__choose" aria-pressed="false"
                   data-level="<?php echo esc_attr($t['level']); ?>">Choose this level</button>
           <div class="boh-tier__price"><?php echo esc_html($t['price']); ?></div>
@@ -1290,10 +1292,142 @@ add_action('wp_footer', function () {
       // Changing the dropdown by hand keeps the cards honest.
       sel.addEventListener('change', paint);
       paint();
+
+      // The details dialog offers the same choice, so it borrows the same
+      // code rather than repeating the option-matching.
+      window.bohChooseLevel = function (level) {
+        var match = null;
+        pairs.forEach(function (p) {
+          if (!match && p.btn.getAttribute('data-level') === level) { match = p; }
+        });
+        if (match) { match.btn.click(); }
+        return !!match;
+      };
     }());
     </script>
     <?php
 }, 60);
+
+/**
+ * "View offer details" opens the level in a dialog.
+ *
+ * Eight cards on one screen can only show so much before they stop being
+ * scannable, so the card carries the shape of the offer and the dialog
+ * carries all of it. A native <dialog> rather than a hand-built overlay: the
+ * backdrop, Escape, the focus trap and the inertness of the page behind are
+ * all free and all correct, which is more than a div usually manages.
+ *
+ * The content is read from the card itself. It is already in the page, and
+ * copying it into a data attribute would be a second copy to keep in step.
+ */
+add_action('wp_footer', function () {
+    ?>
+    <script>
+    (function () {
+      var wrap = document.querySelector('.boh-sponsor-tiers');
+      if (!wrap) { return; }
+      var dlg = null, opener = null, chose = false;
+
+      function build() {
+        if (dlg) { return dlg; }
+        dlg = document.createElement('dialog');
+        dlg.className = 'boh-tier-dialog';
+        dlg.innerHTML =
+            '<form method="dialog" class="boh-tier-dialog__close-form">'
+          +   '<button class="boh-tier-dialog__close" aria-label="Close">&times;</button>'
+          + '</form>'
+          + '<div class="boh-tier-dialog__body">'
+          +   '<p class="boh-tier-dialog__eyebrow"></p>'
+          +   '<h2 class="boh-tier-dialog__title"></h2>'
+          +   '<p class="boh-tier-dialog__price"></p>'
+          +   '<p class="boh-tier-dialog__copy"></p>'
+          +   '<div class="boh-tier-dialog__benefits">'
+          +     '<h3>What it includes</h3>'
+          +     '<ul></ul>'
+          +   '</div>'
+          + '</div>'
+          + '<div class="boh-tier-dialog__foot">'
+          +   '<button type="button" class="boh-tier-dialog__choose">Choose this level</button>'
+          + '</div>';
+        document.body.appendChild(dlg);
+
+        dlg.querySelector('.boh-tier-dialog__choose').addEventListener('click', function () {
+          var level = dlg.getAttribute('data-level') || '';
+          // Choosing sends the visitor to the form, so the card must not take
+          // the focus back - doing so scrolled the page off the field they
+          // were just sent to.
+          chose = true;
+          dlg.close();
+          // The cards own the selection; if the form is not on the page the
+          // dialog simply closes rather than pretending something happened.
+          if (typeof window.bohChooseLevel === 'function') { window.bohChooseLevel(level); }
+        });
+        // Clicking the backdrop closes it, which people expect and <dialog>
+        // does not do on its own.
+        dlg.addEventListener('click', function (e) {
+          if (e.target === dlg) { dlg.close(); }
+        });
+        dlg.addEventListener('close', function () {
+          // preventScroll: returning focus is for the keyboard, not a reason
+          // to move the page.
+          if (!chose && opener && document.contains(opener)) {
+            opener.focus({ preventScroll: true });
+          }
+          chose = false;
+        });
+        return dlg;
+      }
+
+      function fill(card, level) {
+        var d = build();
+        var text = function (sel) {
+          var el = card.querySelector(sel);
+          return el ? el.textContent.trim() : '';
+        };
+        d.setAttribute('data-level', level);
+        d.querySelector('.boh-tier-dialog__eyebrow').textContent = text('.boh-tier__eyebrow');
+        d.querySelector('.boh-tier-dialog__title').textContent   = text('.boh-tier__title');
+        d.querySelector('.boh-tier-dialog__price').textContent   = text('.boh-tier__price');
+        d.querySelector('.boh-tier-dialog__copy').textContent    = text('.boh-tier__copy');
+
+        var list = d.querySelector('.boh-tier-dialog__benefits ul');
+        list.innerHTML = '';
+        var items = card.querySelectorAll('.boh-tier__benefits li');
+        items.forEach(function (li) {
+          var el = document.createElement('li');
+          el.textContent = li.textContent.trim();
+          list.appendChild(el);
+        });
+        d.querySelector('.boh-tier-dialog__benefits').hidden = items.length === 0;
+
+        // The card's colour carries meaning - keep it on the dialog.
+        var tone = (card.className.match(/boh-tier--(\w+)/) || [ '', 'support' ])[1];
+        d.className = 'boh-tier-dialog boh-tier-dialog--' + tone;
+        return d;
+      }
+
+      wrap.addEventListener('click', function (e) {
+        var btn = e.target.closest('.boh-tier__more');
+        if (!btn) { return; }
+        // The whole card is a "choose" target; this button is not.
+        e.preventDefault();
+        e.stopPropagation();
+        var card = btn.closest('.boh-tier');
+        if (!card) { return; }
+        opener = btn;
+        var d = fill(card, btn.getAttribute('data-level') || '');
+        if (typeof d.showModal === 'function') {
+          d.showModal();
+        } else {
+          // No dialog support: the card already says everything the dialog
+          // would, so leave the visitor where they are rather than breaking.
+          card.scrollIntoView({ block: 'center' });
+        }
+      });
+    }());
+    </script>
+    <?php
+}, 61);
 
 /**
  * Resolve a stored image URL back to its attachment.

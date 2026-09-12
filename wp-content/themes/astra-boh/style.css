@@ -8731,3 +8731,188 @@ select[name="sponsorship-level"].is-prefilled {
     overflow-wrap: normal;
   }
 }
+
+/* ── "View offer details" ────────────────────────────────────────────
+   Sits above the card's stretched choose-overlay, which otherwise swallows
+   every click inside the card. Quiet next to the choose row: the card's job
+   is still to be chosen. */
+.boh-tier__more {
+  position: relative;
+  z-index: 2;
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--boh-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: color .18s ease;
+}
+.boh-tier__more::after { content: ' →'; text-decoration: none; }
+.boh-tier__more:hover { color: var(--boh-magenta); }
+.boh-tier__more:focus-visible {
+  outline: 2px solid var(--boh-magenta);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ── The offer dialog ────────────────────────────────────────────────
+   A native <dialog>: the backdrop, Escape and the focus trap come with it. */
+.boh-tier-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--boh-ink);
+  box-shadow: 0 40px 90px -30px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.boh-tier-dialog::backdrop {
+  background: rgba(18,14,22,0.72);
+  backdrop-filter: blur(4px);
+}
+/* The tone stripe the card wears, along its top edge. */
+.boh-tier-dialog::before {
+  content: '';
+  display: block;
+  height: 5px;
+  background: var(--boh-magenta);
+}
+.boh-tier-dialog--platinum::before { background: linear-gradient(90deg, var(--boh-magenta), var(--boh-yellow)); }
+.boh-tier-dialog--gold::before     { background: var(--boh-yellow); }
+.boh-tier-dialog--silver::before   { background: #8892a5; }
+.boh-tier-dialog--bronze::before   { background: #c88a5c; }
+.boh-tier-dialog--support::before  { background: var(--boh-plum); }
+.boh-tier-dialog--custom::before   { background: var(--boh-ink); }
+
+.boh-tier-dialog__close-form { margin: 0; }
+.boh-tier-dialog__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(31,26,36,0.06);
+  border: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--boh-ink);
+  cursor: pointer;
+  transition: background .18s ease;
+}
+.boh-tier-dialog__close:hover { background: rgba(208,20,130,0.14); }
+
+.boh-tier-dialog__body {
+  padding: 26px 30px 8px;
+  overflow-y: auto;
+  max-height: calc(min(80vh, 720px) - 100px);
+}
+.boh-tier-dialog__eyebrow {
+  margin: 0 0 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--boh-ink-soft);
+}
+.boh-tier-dialog__title {
+  margin: 0 0 6px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em;
+}
+.boh-tier-dialog__price {
+  margin: 0 0 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--boh-magenta);
+}
+.boh-tier-dialog__copy {
+  margin: 0 0 20px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--boh-ink-soft);
+}
+.boh-tier-dialog__benefits h3 {
+  margin: 0 0 10px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--boh-ink) !important;
+}
+.boh-tier-dialog__benefits ul {
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+.boh-tier-dialog__benefits li {
+  position: relative;
+  margin: 0 0 9px !important;
+  padding-left: 22px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.boh-tier-dialog__benefits li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--boh-magenta);
+}
+.boh-tier-dialog__foot {
+  padding: 16px 30px 24px;
+  border-top: 1px solid var(--boh-rule);
+  background: #fff;
+}
+.boh-tier-dialog__choose {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 22px;
+  background: var(--boh-magenta);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.boh-tier-dialog__choose:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -10px rgba(208,20,130,0.7);
+}
+@media (max-width: 520px) {
+  .boh-tier-dialog { width: calc(100vw - 20px); max-height: 88vh; }
+  .boh-tier-dialog__body { padding: 22px 20px 6px; max-height: calc(88vh - 96px); }
+  .boh-tier-dialog__foot { padding: 14px 20px 20px; }
+  .boh-tier-dialog__title { font-size: 21px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boh-tier-dialog__choose { transition: none; }
+}
