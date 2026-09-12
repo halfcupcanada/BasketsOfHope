@@ -81,7 +81,7 @@ add_action('init', function () {
 });
 
 // --- Site config ---------------------------------------------------------
-// The event runs 6:00-9:00 PM local time in Edmonton. Resolve the UTC offset
+// The event runs 5:00-8:00 PM local time in Edmonton. Resolve the UTC offset
 // from the timezone database instead of hardcoding one: Alberta moves to
 // permanent UTC-6 on 1 Nov 2026, so the -07:00 previously written here put the
 // countdown, the Google Calendar link and the .ics file an hour late for an
@@ -89,10 +89,10 @@ add_action('init', function () {
 // rule change too.
 if (!defined('BOH_EVENT_TZ'))    define('BOH_EVENT_TZ',    'America/Edmonton');
 if (!defined('BOH_EVENT_ISO')) {
-    define('BOH_EVENT_ISO', (new DateTimeImmutable('2026-11-03 18:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
+    define('BOH_EVENT_ISO', (new DateTimeImmutable('2026-11-03 17:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
 }
 if (!defined('BOH_EVENT_END')) {
-    define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 21:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
+    define('BOH_EVENT_END', (new DateTimeImmutable('2026-11-03 20:00:00', new DateTimeZone(BOH_EVENT_TZ)))->format('c'));
 }
 if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope - A Night of Giving");
 if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4");
@@ -224,13 +224,13 @@ add_shortcode('boh_agenda', function () {
     $lede    = boh_content('agenda.lede', '<p>A short evening, and every part of it ends with a basket in somebody\'s hands.</p>');
     $note    = boh_content('agenda.note', 'Times are approximate. Come when you can - the doors stay open all evening.');
     $items   = boh_content('agenda.items', [
-        ['6:00 PM', 'Doors open',        'Arrive, find your name badge and meet the team over a drink.', '', ''],
-        ['6:30 PM', 'Welcome',           "A short welcome, and the story behind this year's baskets.", '', ''],
-        ['7:00 PM', 'Dinner is served',  'Dinner together, with the baskets waiting at the side of the room.', '', ''],
-        ['7:45 PM', 'Our partner speaks', 'What a basket means to the families the shelter supports.', '', ''],
-        ['8:15 PM', '50/50 draw',        'The winning ticket is drawn live. Tickets are on sale all evening.', '', ''],
-        ['8:30 PM', 'Fill the baskets',  'Everyone builds a basket together, delivered the following week.', '', ''],
-        ['9:00 PM', 'Goodnight',         '', '', ''],
+        ['5:00 PM', 'Doors open',        'Arrive, find your name badge and meet the team over a drink.', '', ''],
+        ['5:30 PM', 'Welcome',           "A short welcome, and the story behind this year's baskets.", '', ''],
+        ['6:00 PM', 'Dinner is served',  'Dinner together, with the baskets waiting at the side of the room.', '', ''],
+        ['6:45 PM', 'Our partner speaks', 'What a basket means to the families the shelter supports.', '', ''],
+        ['7:15 PM', '50/50 draw',        'The winning ticket is drawn live. Tickets are on sale all evening.', '', ''],
+        ['7:30 PM', 'Fill the baskets',  'Everyone builds a basket together, delivered the following week.', '', ''],
+        ['8:00 PM', 'Goodnight',         '', '', ''],
     ]);
 
     // Off is off for visitors. Anyone who can edit the site can still see the
@@ -429,7 +429,7 @@ add_shortcode('boh_transparency', function ($atts) {
 add_shortcode('boh_event_meta', function () {
     // Every value is editable in BoH Content -> RSVP & event details.
     $cells = [
-        ['When',     boh_content('event.when',     'Tue, Nov 3, 2026'),   boh_content('event.when_sub',     '6:00 PM MT')],
+        ['When',     boh_content('event.when',     'Tue, Nov 3, 2026'),   boh_content('event.when_sub',     '5:00 PM MT')],
         ['Where',    boh_content('event.where',    'Rohit Group Headquarters'), boh_content('event.where_sub',    '10130 112 St NW, Edmonton')],
         ['Benefits', boh_content('event.benefits', 'WIN House'),          boh_content('event.benefits_sub', "Edmonton's shelter for survivors")],
         ['Bring',    boh_content('event.bring',    '12 comfort items'),   boh_content('event.bring_sub',    'Or contribute online')],
@@ -623,7 +623,7 @@ add_action('wp_footer', function () {
         <div class="boh-footer__cta">
           <span class="boh-eyebrow">Save the date</span>
           <strong>A Night of Giving</strong>
-          <p>Tuesday, Nov 3 2026 · 6:00 PM<br>Rohit Group Headquarters, Edmonton</p>
+          <p>Tuesday, Nov 3 2026 · 5:00 PM<br>Rohit Group Headquarters, Edmonton</p>
           <a class="boh-btn-cta" href="/rsvp/">RSVP →</a>
         </div>
 
@@ -1986,7 +1986,7 @@ add_shortcode('boh_faqs', function () {
         ['Who does Baskets of Hope support?',
          'In Edmonton, Baskets of Hope supports WIN House and the women, non-binary individuals, and children they serve while fleeing domestic violence.'],
         ['When and where is this year\'s event?',
-         'This year\'s event is scheduled for Tuesday, November 3, 2026 at 6:00 PM at the Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4. Please confirm the final date and time before publishing.'],
+         'This year\'s event is scheduled for Tuesday, November 3, 2026 at 5:00 PM at the Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4. Please confirm the final date and time before publishing.'],
         ['What should I bring?',
          'Guests are encouraged to bring 12 new comfort items for the baskets. Suggested items include cozy socks or slippers, journals, books, body care, hand lotion, bath products, shampoo, conditioner, toothbrushes, reusable water bottles, small blankets, gift cards, or other thoughtful self-care items.'],
         ['Do I need to bring all 12 items myself?',
@@ -2380,7 +2380,7 @@ add_filter('gettext', function ($translated, $original, $domain) {
 // "You're in!" panel with the event details.
 add_action( 'wp_footer', function () {
     if ( ! is_page( 'rsvp' ) ) return;
-    $event_when_full = 'Tuesday, November 3, 2026 · 6:00 PM';
+    $event_when_full = 'Tuesday, November 3, 2026 · 5:00 PM';
     $event_where     = 'Rohit Group Headquarters, 10130 112 St NW, Edmonton';
     ?>
     <script>

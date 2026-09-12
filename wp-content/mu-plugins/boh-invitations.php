@@ -53,9 +53,9 @@ function boh_invitations_maybe_install() {
 	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
 		update_option( BOH_INV_OPT_TEMPLATES, [
 			'invitation_subject' => "You're invited - Rohit's Baskets of Hope 2026",
-			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 6:00 PM\nWhere: Rohit Group Headquarters, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
+			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 5:00 PM\nWhere: Rohit Group Headquarters, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
 			'reminder_subject'   => "Save your seat - Baskets of Hope 2026",
-			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 6:00 PM. We haven't heard back from you yet - would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
+			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 5:00 PM. We haven't heard back from you yet - would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
 		] );
 	}
 	if ( ! get_option( BOH_INV_OPT_LIMITS ) ) {
