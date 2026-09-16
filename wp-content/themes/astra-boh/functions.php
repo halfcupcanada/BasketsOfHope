@@ -34,16 +34,11 @@ function boh_logo_url($size = 'full') {
     return home_url('/wp-content/uploads/2026/06/' . $file);
 }
 
-add_action('wp_head', function () {
-    $icon = esc_url(boh_logo_url('icon'));
-    $logo = esc_url(boh_logo_url());
-    echo '<link rel="icon" type="image/png" sizes="150x150" href="' . $icon . '">' . "\n";
-    echo '<link rel="shortcut icon" type="image/png" href="' . $icon . '">' . "\n";
-    echo '<link rel="apple-touch-icon" href="' . $logo . '">' . "\n";
-    // Android home-screen icon; without a 192px entry Chrome falls back to a
-    // screenshot of the page rather than the mark.
-    echo '<link rel="icon" type="image/png" sizes="192x192" href="' . esc_url(home_url('/wp-content/uploads/2026/06/boh-logo-275x300.png')) . '">' . "\n";
-}, 1);
+// The browser-tab and search-result icon is WordPress's own Site Icon
+// (Settings -> General), which core prints as the icon links and answers
+// /favicon.ico with. Google rejects a non-square icon and shows the WordPress
+// "W" it finds at /favicon.ico when none is set - which is what the search
+// results showed until the square icon was installed.
 
 // --- Theme supports ------------------------------------------------------
 add_action('after_setup_theme', function () {
