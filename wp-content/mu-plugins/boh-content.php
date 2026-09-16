@@ -470,6 +470,9 @@ function boh_content_schema(): array {
 			'title'  => 'Donate',
 			'help'   => 'The two cards near the top of the page, the copy above the donation form, and every word the form itself renders.',
 			'fields' => [
+				[ 'key' => 'donate.refund_subject', 'label' => 'Refund email - subject', 'type' => 'text',
+				  'help' => 'Sent to a donor when their donation is marked refunded. {name}, {amount}, {date} and {reference} are filled in.' ],
+				[ 'key' => 'donate.refund_body',    'label' => 'Refund email - message', 'type' => 'textarea' ],
 				[ 'key' => 'donate.card1_eyebrow', 'label' => 'Card 1 - eyebrow', 'type' => 'text' ],
 				[ 'key' => 'donate.card1_title',   'label' => 'Card 1 - title',   'type' => 'text' ],
 				[ 'key' => 'donate.card1_body',    'label' => 'Card 1 - body',    'type' => 'richtext' ],
