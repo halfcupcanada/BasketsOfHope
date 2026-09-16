@@ -326,88 +326,52 @@ function boh_invitations_render_import() {
 		}
 	}
 
+	// Step 1 of a bulk import: read the rows and show them for review.
+	$preview = null;
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && ( $_POST['boh_invitations_action'] ?? '' ) === 'bulk_import' ) {
 		check_admin_referer( 'boh_invitations_import' );
-
-		$rows = [];
-		// CSV file upload
+		$rows   = [];
+		$source = '';
 		if ( ! empty( $_FILES['csv']['tmp_name'] ) && is_uploaded_file( $_FILES['csv']['tmp_name'] ) ) {
-			$fh = fopen( $_FILES['csv']['tmp_name'], 'r' );
-			if ( $fh ) {
-				$header = fgetcsv( $fh );
-				$map = [];
-				foreach ( (array) $header as $i => $col ) {
-					$key = strtolower( trim( (string) $col ) );
-					if ( in_array( $key, [ 'name', 'full name', 'contact', 'contact name' ], true ) ) $map['name']    = $i;
-					if ( in_array( $key, [ 'email', 'e-mail', 'email address' ], true ) )              $map['email']   = $i;
-					if ( in_array( $key, [ 'company', 'organization', 'org' ], true ) )                $map['company'] = $i;
-					if ( in_array( $key, [ 'notes', 'note' ], true ) )                                 $map['notes']   = $i;
-				}
-				if ( ! isset( $map['email'] ) ) {
-					$notices[] = [ 'error', 'CSV must have a column named "email" (case-insensitive). Optional columns: name, company, notes.' ];
-					fclose( $fh );
-				} else {
-					while ( ( $line = fgetcsv( $fh ) ) !== false ) {
-						$rows[] = [
-							'name'    => isset( $map['name'] )    ? (string) ( $line[ $map['name'] ]    ?? '' ) : '',
-							'email'   => isset( $map['email'] )   ? (string) ( $line[ $map['email'] ]   ?? '' ) : '',
-							'company' => isset( $map['company'] ) ? (string) ( $line[ $map['company'] ] ?? '' ) : '',
-							'notes'   => isset( $map['notes'] )   ? (string) ( $line[ $map['notes'] ]   ?? '' ) : '',
-						];
-					}
-					fclose( $fh );
-				}
+			[ $rows, $err ] = boh_invitations_import_parse_csv( $_FILES['csv']['tmp_name'] );
+			$source = sanitize_file_name( (string) $_FILES['csv']['name'] );
+			if ( $err ) {
+				$notices[] = [ 'error', $err ];
 			}
+		} elseif ( trim( (string) ( $_POST['paste'] ?? '' ) ) !== '' ) {
+			$rows   = boh_invitations_import_parse_paste( (string) $_POST['paste'] );
+			$source = 'pasted rows';
+		} else {
+			$notices[] = [ 'error', 'Choose a CSV file or paste some rows first.' ];
 		}
-		// Paste area (Name<TAB>Email or Name,Email per line)
-		if ( ! empty( $_POST['paste'] ) ) {
-			$paste = str_replace( "\r", "", (string) $_POST['paste'] );
-			foreach ( explode( "\n", $paste ) as $line ) {
-				$line = trim( $line );
-				if ( ! $line ) continue;
-				$parts = preg_split( '/[\t,;]/', $line, 3 );
-				$rows[] = [
-					'name'    => trim( $parts[0] ?? '' ),
-					'email'   => trim( $parts[1] ?? '' ),
-					'company' => trim( $parts[2] ?? '' ),
-					'notes'   => '',
-				];
-			}
+		if ( $rows ) {
+			$data = boh_invitations_import_classify( $rows );
+			$data['source'] = $source;
+			$data['user']   = get_current_user_id();
+			$token = wp_generate_password( 20, false );
+			set_transient( 'boh_inv_import_' . $token, $data, BOH_INV_IMPORT_TTL );
+			$preview = [ $token, $data ];
+		} elseif ( $source !== '' && empty( $notices ) ) {
+			$notices[] = [ 'error', 'No rows were found in ' . esc_html( $source ) . '.' ];
 		}
+	}
 
-		$added = 0; $updated = 0; $skipped = 0;
-		foreach ( $rows as $r ) {
-			$email = sanitize_email( $r['email'] );
-			if ( ! $email || ! is_email( $email ) ) { $skipped++; continue; }
-			$name    = sanitize_text_field( $r['name'] );
-			$company = sanitize_text_field( $r['company'] );
-			$notes   = sanitize_textarea_field( $r['notes'] );
-			$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id FROM $t WHERE email = %s", $email ) );
-			if ( $existing ) {
-				$wpdb->update( $t,
-					[
-						'name'       => $name,
-						'company'    => $company,
-						'notes'      => $notes,
-						'updated_at' => current_time( 'mysql', true ),
-					],
-					[ 'id' => $existing->id ]
-				);
-				$updated++;
-			} else {
-				$wpdb->insert( $t, [
-					'name'       => $name,
-					'email'      => $email,
-					'company'    => $company,
-					'notes'      => $notes,
-					'created_at' => current_time( 'mysql', true ),
-					'updated_at' => current_time( 'mysql', true ),
-				] );
-				$added++;
-			}
-		}
-		if ( $added || $updated || $skipped ) {
-			$notices[] = [ 'success', "Added {$added}, updated {$updated}, skipped {$skipped} (invalid email)." ];
+	// Step 2: the reviewed rows are written.
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && ( $_POST['boh_invitations_action'] ?? '' ) === 'bulk_import_confirm' ) {
+		check_admin_referer( 'boh_invitations_import_confirm' );
+		$token = preg_replace( '/[^A-Za-z0-9]/', '', (string) ( $_POST['token'] ?? '' ) );
+		$data  = $token ? get_transient( 'boh_inv_import_' . $token ) : false;
+		if ( ! is_array( $data ) || (int) ( $data['user'] ?? 0 ) !== get_current_user_id() ) {
+			$notices[] = [ 'error', 'That review has expired - reviews are kept for an hour. Upload the file again.' ];
+		} else {
+			$chosen = array_map( 'intval', (array) ( $_POST['rows'] ?? [] ) );
+			[ $added, $updated ] = boh_invitations_import_apply( $data['rows'], $chosen );
+			delete_transient( 'boh_inv_import_' . $token );
+			$total = (int) boh_invitations_counts()['total'];
+			$notices[] = [ 'success', sprintf(
+				'Imported from %s: <strong>%d added</strong>, <strong>%d updated</strong>. The list now has <strong>%s</strong> invitees. <a href="%s">View all invitees</a>',
+				esc_html( $data['source'] ), $added, $updated, number_format_i18n( $total ), esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG ) )
+			) ];
 		}
 	}
 
@@ -417,6 +381,9 @@ function boh_invitations_render_import() {
 		<?php foreach ( $notices as [$type, $msg] ) : ?>
 			<div class="notice notice-<?php echo esc_attr( $type ); ?> is-dismissible"><p><?php echo wp_kses_post( $msg ); ?></p></div>
 		<?php endforeach; ?>
+
+		<?php if ( $preview ) : boh_invitations_render_import_preview( $preview[0], $preview[1] ); ?>
+		<?php else : ?>
 
 		<form method="post" style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px;max-width:820px;margin-top:16px">
 			<?php wp_nonce_field( 'boh_invitations_add_one' ); ?>
@@ -457,7 +424,7 @@ function boh_invitations_render_import() {
 			<?php wp_nonce_field( 'boh_invitations_import' ); ?>
 			<input type="hidden" name="boh_invitations_action" value="bulk_import">
 			<h2 style="margin-top:0">Bulk: CSV upload</h2>
-			<p>Upload a <code>.csv</code> file. Required column: <strong>email</strong>. Optional: <strong>name</strong>, <strong>company</strong>, <strong>notes</strong>. Duplicates (matched by email) update in place.</p>
+			<p>Upload a <code>.csv</code> file. Required column: <strong>email</strong>. Optional: <strong>name</strong>, <strong>company</strong>, <strong>notes</strong>. Someone already on the list (matched by email) is updated, not added twice.</p>
 			<p>Example:</p>
 			<pre style="background:#f6f7f7;padding:12px;border-radius:4px">name,email,company
 Sarah Chen,sarah@example.com,Acme Corp
@@ -468,11 +435,328 @@ Jamie Patel,jamie@example.com,Bluebird Labs</pre>
 			<p>One per line. Format: <code>Name, email@example.com, Company</code></p>
 			<p><textarea name="paste" rows="8" style="width:100%;font-family:monospace;font-size:13px" placeholder="Sarah Chen, sarah@example.com, Acme Corp&#10;Jamie Patel, jamie@example.com, Bluebird Labs"></textarea></p>
 
-			<p><button type="submit" class="button button-primary">Import</button></p>
+			<p><button type="submit" class="button button-primary">Review import</button> <span style="color:#666">You will see every row and the totals before anything is saved.</span></p>
 		</form>
+
+		<?php endif; ?>
 	</div>
 	<?php
 }
+
+// ── Bulk import: parse, preview, confirm ───────────────────────
+//
+// Nothing is written on the first submit. The file or pasted rows are read,
+// every row is matched against the list, and the result is shown for review:
+// how many are new, how many already on the list and what would change,
+// which lines have no usable email, which are repeated in the file. The
+// rows wait in a transient under a token until Confirm - or an hour passes.
+
+const BOH_INV_IMPORT_TTL = HOUR_IN_SECONDS;
+
+function boh_invitations_import_key( string $col ): string {
+	// "Full_Name", "E-Mail Address", "COMPANY " all become plain words.
+	$col = preg_replace( '/^\xEF\xBB\xBF/', '', $col ); // Excel's BOM on the first header
+	return strtolower( trim( preg_replace( '/[\s_\-]+/', ' ', $col ) ) );
+}
+
+/** Rows from an uploaded CSV. Returns [ rows, error-or-null ]. */
+function boh_invitations_import_parse_csv( string $path ): array {
+	$fh = fopen( $path, 'r' );
+	if ( ! $fh ) {
+		return [ [], 'The file could not be read.' ];
+	}
+	$header = fgetcsv( $fh );
+	if ( ! is_array( $header ) ) {
+		fclose( $fh );
+		return [ [], 'The file is empty.' ];
+	}
+	$map = [];
+	foreach ( $header as $i => $col ) {
+		$key = boh_invitations_import_key( (string) $col );
+		if ( in_array( $key, [ 'name', 'full name', 'contact', 'contact name', 'guest', 'guest name' ], true ) ) $map['name']    = $i;
+		if ( in_array( $key, [ 'first name', 'first', 'given name' ], true ) )                                   $map['first']   = $i;
+		if ( in_array( $key, [ 'last name', 'last', 'surname', 'family name' ], true ) )                          $map['last']    = $i;
+		if ( in_array( $key, [ 'email', 'e mail', 'email address', 'e mail address', 'mail' ], true ) )           $map['email']   = $i;
+		if ( in_array( $key, [ 'company', 'organization', 'organisation', 'org', 'business', 'employer' ], true ) ) $map['company'] = $i;
+		if ( in_array( $key, [ 'notes', 'note', 'comments', 'comment' ], true ) )                                 $map['notes']   = $i;
+	}
+	if ( ! isset( $map['email'] ) ) {
+		fclose( $fh );
+		return [ [], 'The file needs a column named <strong>email</strong> (any capitalisation). Found: <code>' . esc_html( implode( ', ', array_map( 'trim', $header ) ) ) . '</code>.' ];
+	}
+	$rows = [];
+	$line = 1;
+	while ( ( $cells = fgetcsv( $fh ) ) !== false ) {
+		$line++;
+		if ( $cells === [ null ] || trim( implode( '', array_map( 'strval', $cells ) ) ) === '' ) {
+			continue; // blank line
+		}
+		$get  = fn( $k ) => isset( $map[ $k ] ) ? trim( (string) ( $cells[ $map[ $k ] ] ?? '' ) ) : '';
+		$name = $get( 'name' );
+		if ( $name === '' && ( isset( $map['first'] ) || isset( $map['last'] ) ) ) {
+			$name = trim( $get( 'first' ) . ' ' . $get( 'last' ) );
+		}
+		$rows[] = [
+			'line'    => $line,
+			'name'    => $name,
+			'email'   => $get( 'email' ),
+			'company' => $get( 'company' ),
+			'notes'   => $get( 'notes' ),
+		];
+	}
+	fclose( $fh );
+	return [ $rows, null ];
+}
+
+/** Rows from the paste box: Name, email, Company - one per line. */
+function boh_invitations_import_parse_paste( string $paste ): array {
+	$rows  = [];
+	$paste = str_replace( "\r", '', $paste );
+	foreach ( explode( "\n", $paste ) as $i => $line ) {
+		$line = trim( $line );
+		if ( $line === '' ) {
+			continue;
+		}
+		$parts = array_map( 'trim', preg_split( '/[\t,;]/', $line, 3 ) );
+		// A line that is just an address still imports.
+		if ( count( $parts ) === 1 && is_email( $parts[0] ) ) {
+			$parts = [ '', $parts[0] ];
+		}
+		$rows[] = [
+			'line'    => $i + 1,
+			'name'    => $parts[0] ?? '',
+			'email'   => $parts[1] ?? '',
+			'company' => $parts[2] ?? '',
+			'notes'   => '',
+		];
+	}
+	return $rows;
+}
+
+/**
+ * Decide what each row would do, without doing it.
+ *
+ * new     - not on the list
+ * update  - on the list; one or more of name / company / notes would change
+ * same    - on the list and nothing to change
+ * invalid - no usable email
+ * repeat  - the same email appears again further down; the last row wins
+ *
+ * An empty cell never wipes what the list already holds - a file with only
+ * names and emails leaves existing companies and notes alone.
+ */
+function boh_invitations_import_classify( array $rows ): array {
+	global $wpdb;
+	$t = boh_invitations_table();
+
+	$out = [];
+	foreach ( $rows as $r ) {
+		$email = sanitize_email( $r['email'] );
+		$out[] = [
+			'line'     => (int) $r['line'],
+			'name'     => sanitize_text_field( $r['name'] ),
+			'email'    => $email && is_email( $email ) ? strtolower( $email ) : '',
+			'raw'      => $r['email'],
+			'company'  => sanitize_text_field( $r['company'] ),
+			'notes'    => sanitize_textarea_field( $r['notes'] ),
+			'status'   => '',
+			'existing' => null,
+			'changes'  => [],
+		];
+	}
+
+	// Last occurrence of an email wins; earlier ones are marked as repeats.
+	$last = [];
+	foreach ( $out as $i => $r ) {
+		if ( $r['email'] !== '' ) {
+			$last[ $r['email'] ] = $i;
+		}
+	}
+	$emails = array_keys( $last );
+	$existing = [];
+	if ( $emails ) {
+		$in = implode( ',', array_fill( 0, count( $emails ), '%s' ) );
+		foreach ( $wpdb->get_results( $wpdb->prepare( "SELECT id, email, name, company, notes FROM $t WHERE LOWER(email) IN ($in)", $emails ) ) as $row ) {
+			$existing[ strtolower( $row->email ) ] = $row;
+		}
+	}
+
+	$counts = [ 'rows' => count( $out ), 'new' => 0, 'update' => 0, 'same' => 0, 'invalid' => 0, 'repeat' => 0 ];
+	foreach ( $out as $i => &$r ) {
+		if ( $r['email'] === '' ) {
+			$r['status'] = 'invalid';
+		} elseif ( $last[ $r['email'] ] !== $i ) {
+			$r['status'] = 'repeat';
+		} elseif ( isset( $existing[ $r['email'] ] ) ) {
+			$e = $existing[ $r['email'] ];
+			$r['existing'] = [ 'id' => (int) $e->id, 'name' => (string) $e->name, 'company' => (string) $e->company, 'notes' => (string) $e->notes ];
+			foreach ( [ 'name', 'company', 'notes' ] as $f ) {
+				if ( $r[ $f ] !== '' && $r[ $f ] !== $r['existing'][ $f ] ) {
+					$r['changes'][] = $f;
+				}
+			}
+			$r['status'] = $r['changes'] ? 'update' : 'same';
+		} else {
+			$r['status'] = 'new';
+		}
+		$counts[ $r['status'] ]++;
+	}
+	unset( $r );
+
+	return [ 'rows' => $out, 'counts' => $counts ];
+}
+
+/** Write the chosen rows. Returns [ added, updated ]. */
+function boh_invitations_import_apply( array $rows, array $chosen ): array {
+	global $wpdb;
+	$t = boh_invitations_table();
+	$now = current_time( 'mysql', true );
+	$added = 0;
+	$updated = 0;
+	foreach ( $chosen as $i ) {
+		$r = $rows[ $i ] ?? null;
+		if ( ! $r || ! in_array( $r['status'], [ 'new', 'update' ], true ) ) {
+			continue;
+		}
+		if ( $r['status'] === 'update' ) {
+			$data = [ 'updated_at' => $now ];
+			foreach ( $r['changes'] as $f ) {
+				$data[ $f ] = $r[ $f ];
+			}
+			$wpdb->update( $t, $data, [ 'id' => $r['existing']['id'] ] );
+			$updated++;
+		} else {
+			$wpdb->insert( $t, [
+				'name'       => $r['name'],
+				'email'      => $r['email'],
+				'company'    => $r['company'],
+				'notes'      => $r['notes'],
+				'created_at' => $now,
+				'updated_at' => $now,
+			] );
+			$added++;
+		}
+	}
+	return [ $added, $updated ];
+}
+
+/** The review screen: totals, then every row with what it would do. */
+function boh_invitations_render_import_preview( string $token, array $data ): void {
+	$c      = $data['counts'];
+	$total  = (int) boh_invitations_counts()['total'];
+	$after  = $total + $c['new'];
+	$badge  = [
+		'new'     => [ 'New',            '#1a7f37', '#dafbe1' ],
+		'update'  => [ 'Update',         '#0b5cad', '#ddf0ff' ],
+		'same'    => [ 'Already listed', '#57606a', '#eef1f4' ],
+		'invalid' => [ 'No valid email', '#a40e26', '#ffe2e0' ],
+		'repeat'  => [ 'Repeated below', '#7a5a00', '#fff3c4' ],
+	];
+	$can = $c['new'] + $c['update'];
+	?>
+	<div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px;max-width:1100px;margin-top:16px">
+		<h2 style="margin-top:0">Review before importing</h2>
+		<p style="color:#666;margin:0 0 16px">
+			Source: <strong><?php echo esc_html( $data['source'] ); ?></strong> &middot; nothing has been saved yet.
+		</p>
+
+		<div style="display:flex;flex-wrap:wrap;gap:12px;margin:0 0 20px">
+			<?php
+			$tiles = [
+				[ 'On the list now', $total, '#1d2327' ],
+				[ 'Rows in this import', $c['rows'], '#1d2327' ],
+				[ 'New', $c['new'], '#1a7f37' ],
+				[ 'Will be updated', $c['update'], '#0b5cad' ],
+				[ 'Already listed, unchanged', $c['same'], '#57606a' ],
+				[ 'No valid email', $c['invalid'], '#a40e26' ],
+				[ 'Repeated in file', $c['repeat'], '#7a5a00' ],
+				[ 'On the list after', $after, '#d01482' ],
+			];
+			foreach ( $tiles as [ $label, $n, $color ] ) : ?>
+				<div style="flex:1 1 120px;min-width:120px;border:1px solid #e3e3e3;border-radius:6px;padding:10px 12px">
+					<div style="font-size:12px;color:#666"><?php echo esc_html( $label ); ?></div>
+					<div style="font-size:22px;font-weight:600;color:<?php echo esc_attr( $color ); ?>"><?php echo esc_html( number_format_i18n( $n ) ); ?></div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+
+		<?php if ( $c['invalid'] ) : ?>
+			<p style="color:#a40e26"><?php echo esc_html( $c['invalid'] ); ?> row<?php echo $c['invalid'] === 1 ? '' : 's'; ?> ha<?php echo $c['invalid'] === 1 ? 's' : 've'; ?> no usable email address and will be skipped - fix the file and import again if they matter.</p>
+		<?php endif; ?>
+		<?php if ( $c['repeat'] ) : ?>
+			<p style="color:#7a5a00">Where an email appears more than once in the file, the last row is used.</p>
+		<?php endif; ?>
+		<?php if ( $c['update'] ) : ?>
+			<p style="color:#0b5cad">For people already on the list, only cells with a value are applied - a blank cell never erases what the list already holds. The old value is shown struck through.</p>
+		<?php endif; ?>
+
+		<form method="post" id="boh-inv-confirm">
+			<?php wp_nonce_field( 'boh_invitations_import_confirm' ); ?>
+			<input type="hidden" name="boh_invitations_action" value="bulk_import_confirm">
+			<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">
+
+			<p style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+				<button type="submit" class="button button-primary" id="boh-inv-confirm-btn" <?php disabled( $can === 0 ); ?>>Import <span id="boh-inv-n"><?php echo esc_html( $can ); ?></span> selected</button>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-import' ) ); ?>" class="button">Cancel</a>
+				<span style="color:#666"><a href="#" id="boh-inv-all">Select all</a> &middot; <a href="#" id="boh-inv-none">Select none</a></span>
+			</p>
+
+			<div style="overflow-x:auto">
+			<table class="widefat striped" style="font-size:13px">
+				<thead><tr>
+					<th style="width:28px"></th>
+					<th style="width:48px">Line</th>
+					<th style="width:120px">Result</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Company</th>
+					<th>Notes</th>
+				</tr></thead>
+				<tbody>
+				<?php foreach ( $data['rows'] as $i => $r ) :
+					[ $label, $fg, $bg ] = $badge[ $r['status'] ];
+					$selectable = in_array( $r['status'], [ 'new', 'update' ], true );
+					$cell = function ( string $f ) use ( $r ): string {
+						$v = esc_html( $r[ $f ] );
+						if ( $r['status'] === 'update' && in_array( $f, $r['changes'], true ) ) {
+							return '<span style="color:#999;text-decoration:line-through">' . esc_html( $r['existing'][ $f ] ) . '</span> <strong>' . $v . '</strong>';
+						}
+						if ( $r['status'] === 'update' && $r[ $f ] === '' && $r['existing'][ $f ] !== '' ) {
+							return '<span style="color:#999">' . esc_html( $r['existing'][ $f ] ) . '</span> <span style="color:#bbb;font-size:11px">(kept)</span>';
+						}
+						return $v;
+					};
+					?>
+					<tr style="<?php echo $selectable ? '' : 'color:#888'; ?>">
+						<td><?php if ( $selectable ) : ?><input type="checkbox" name="rows[]" value="<?php echo (int) $i; ?>" checked class="boh-inv-row"><?php endif; ?></td>
+						<td><?php echo (int) $r['line']; ?></td>
+						<td><span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;color:<?php echo esc_attr( $fg ); ?>;background:<?php echo esc_attr( $bg ); ?>"><?php echo esc_html( $label ); ?></span></td>
+						<td><?php echo $cell( 'name' ); ?></td>
+						<td><?php echo $r['status'] === 'invalid' ? '<span style="color:#a40e26">' . esc_html( $r['raw'] !== '' ? $r['raw'] : '(empty)' ) . '</span>' : esc_html( $r['email'] ); ?></td>
+						<td><?php echo $cell( 'company' ); ?></td>
+						<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<?php echo esc_attr( $r['notes'] ); ?>"><?php echo $cell( 'notes' ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+			</div>
+
+			<p style="margin-top:16px"><button type="submit" class="button button-primary" <?php disabled( $can === 0 ); ?>>Import selected</button>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-import' ) ); ?>" class="button">Cancel</a></p>
+		</form>
+	</div>
+	<script>
+	(function () {
+		var boxes = document.querySelectorAll('.boh-inv-row'), n = document.getElementById('boh-inv-n'), btn = document.getElementById('boh-inv-confirm-btn');
+		function count() { var c = 0; boxes.forEach(function (b) { if (b.checked) c++; }); n.textContent = c; btn.disabled = c === 0; }
+		boxes.forEach(function (b) { b.addEventListener('change', count); });
+		document.getElementById('boh-inv-all').addEventListener('click', function (e) { e.preventDefault(); boxes.forEach(function (b) { b.checked = true; }); count(); });
+		document.getElementById('boh-inv-none').addEventListener('click', function (e) { e.preventDefault(); boxes.forEach(function (b) { b.checked = false; }); count(); });
+	})();
+	</script>
+	<?php
+}
+
 
 // ── Flamingo import view ───────────────────────────────────────
 function boh_invitations_render_flamingo() {
