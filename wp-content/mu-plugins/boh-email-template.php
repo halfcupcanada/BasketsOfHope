@@ -423,12 +423,24 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
 
         <div style="border-top:1px solid rgba(255,255,255,0.14);margin:18px 0 14px;font-size:0;line-height:0">&nbsp;</div>
 
-        <div style="<?php echo $font; ?>;font-size:13px;line-height:1.9;color:rgba(255,255,255,0.72)">
-          <?php $first = true; foreach ( $foot_links as $label => $url ) : ?>
-            <?php if ( ! $first ) : ?><span style="color:rgba(255,255,255,0.32)">&nbsp;&middot;&nbsp;</span><?php endif; $first = false; ?>
-            <a href="<?php echo esc_url( $url ); ?>" style="color:#ffffff;text-decoration:none"><?php echo esc_html( $label ); ?></a>
-          <?php endforeach; ?>
-        </div>
+        <?php
+        /* A table, one cell per link, rather than inline anchors with
+           separators between them. Outlook's Word engine broke the inline
+           version onto five lines, each led by a stray middot that read as a
+           bullet. Table cells do not wrap. */
+        ?>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto">
+          <tr>
+            <?php $first = true; foreach ( $foot_links as $label => $url ) : ?>
+              <?php if ( ! $first ) : ?>
+                <td style="<?php echo $font; ?>;font-size:13px;color:rgba(255,255,255,0.32);padding:0 8px">&middot;</td>
+              <?php endif; $first = false; ?>
+              <td style="<?php echo $font; ?>;font-size:13px;line-height:1.6;white-space:nowrap">
+                <a href="<?php echo esc_url( $url ); ?>" style="color:#ffffff;text-decoration:none"><?php echo esc_html( $label ); ?></a>
+              </td>
+            <?php endforeach; ?>
+          </tr>
+        </table>
 
         <div style="<?php echo $font; ?>;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45);padding-top:14px">
           &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Rohit Group. All rights reserved.
