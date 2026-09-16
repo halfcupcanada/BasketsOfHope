@@ -673,7 +673,7 @@ function boh_invitations_render_import_preview( string $token, array $data ): vo
 				[ 'On the list after', $after, '#d01482' ],
 			];
 			foreach ( $tiles as [ $label, $n, $color ] ) : ?>
-				<div style="flex:1 1 120px;min-width:120px;border:1px solid #e3e3e3;border-radius:6px;padding:10px 12px">
+				<div style="flex:1 1 110px;min-width:110px;box-sizing:border-box;border:1px solid #e3e3e3;border-radius:6px;padding:10px 12px">
 					<div style="font-size:12px;color:#666"><?php echo esc_html( $label ); ?></div>
 					<div style="font-size:22px;font-weight:600;color:<?php echo esc_attr( $color ); ?>"><?php echo esc_html( number_format_i18n( $n ) ); ?></div>
 				</div>
