@@ -76,20 +76,22 @@ add_action('init', function () {
 });
 
 // --- Site config ---------------------------------------------------------
-// The event runs 5:00-8:00 PM local time in Edmonton. Resolve the UTC offset
-// from the timezone database instead of hardcoding one: Alberta moves to
-// permanent UTC-6 on 1 Nov 2026, so the -07:00 previously written here put the
-// countdown, the Google Calendar link and the .ics file an hour late for an
-// event held on 3 Nov. Naming the zone keeps this correct through any future
-// rule change too.
+// The event runs 5:00-8:00 PM in Edmonton on 3 November 2026. Alberta stops
+// changing its clocks that month: the bill making daylight time permanent
+// received Royal Assent on 14 May 2026, so from 1 November the province stays
+// on UTC-6 ("Alberta Time") instead of falling back to MST. The time zone
+// databases on this server and this Mac (tzdata 2026b) still carry the old
+// rule and put 3 November at -07:00 - which is why an earlier -07:00 here had
+// Google Calendar and the .ics file showing 6:00 PM on phones whose zone data
+// is current. The offset is written out as -06:00, and the calendar links
+// carry the local wall time with the zone name so that every calendar shows
+// 5:00 PM whatever rules it holds.
 if (!defined('BOH_EVENT_TZ'))    define('BOH_EVENT_TZ',    'America/Edmonton');
-// Written with the offset rather than resolved from the zone name. Asking the
-// zone means trusting the server's timezone database, and this one puts
-// 3 November 2026 in daylight time - Alberta goes back to MST on the 1st - so
-// every calendar file it built was an hour early, before and after the change
-// from six o'clock. -07:00 is what that date is, whatever the server believes.
-if (!defined('BOH_EVENT_ISO')) define('BOH_EVENT_ISO', '2026-11-03T17:00:00-07:00');
-if (!defined('BOH_EVENT_END')) define('BOH_EVENT_END', '2026-11-03T20:00:00-07:00');
+if (!defined('BOH_EVENT_LOCAL_START')) define('BOH_EVENT_LOCAL_START', '2026-11-03 17:00:00');
+if (!defined('BOH_EVENT_LOCAL_END'))   define('BOH_EVENT_LOCAL_END',   '2026-11-03 20:00:00');
+if (!defined('BOH_EVENT_OFFSET')) define('BOH_EVENT_OFFSET', '-06:00');
+if (!defined('BOH_EVENT_ISO')) define('BOH_EVENT_ISO', str_replace(' ', 'T', BOH_EVENT_LOCAL_START) . BOH_EVENT_OFFSET);
+if (!defined('BOH_EVENT_END')) define('BOH_EVENT_END', str_replace(' ', 'T', BOH_EVENT_LOCAL_END) . BOH_EVENT_OFFSET);
 if (!defined('BOH_EVENT_TITLE')) define('BOH_EVENT_TITLE', "Rohit's Baskets of Hope - A Night of Giving");
 if (!defined('BOH_EVENT_LOC'))   define('BOH_EVENT_LOC',   "Rohit Group Headquarters, 10130 112 St NW, Edmonton, AB T5K 2K4");
 // RSVP form ID - auto-discover by title so the theme works regardless of
@@ -448,12 +450,11 @@ add_shortcode('boh_event_meta', function () {
 
 // --- [boh_calendar] - Google/iCal "add to calendar" ---------------------
 add_shortcode('boh_calendar', function () {
-    $start_gcal = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO));
-    $end_gcal   = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END));
     $gcal = add_query_arg([
         'action'   => 'TEMPLATE',
         'text'     => rawurlencode(BOH_EVENT_TITLE),
-        'dates'    => $start_gcal . '/' . $end_gcal,
+        'dates'    => boh_event_gcal_dates(),
+        'ctz'      => BOH_EVENT_TZ,
         'details'  => rawurlencode('Join us for an evening of community and giving in support of WIN House.'),
         'location' => rawurlencode(BOH_EVENT_LOC),
     ], 'https://calendar.google.com/calendar/render');
@@ -475,15 +476,30 @@ add_shortcode('boh_calendar', function () {
     return ob_get_clean();
 });
 
+// The calendar links carry the wall-clock time and the zone's name. A UTC
+// instant would be shown at whatever hour the reader's own zone data makes
+// of it - an hour out wherever that data is stale or fresh relative to ours.
+function boh_event_gcal_dates(): string {
+    $f = fn($local) => (new DateTimeImmutable($local, new DateTimeZone('UTC')))->format('Ymd\THis');
+    return $f(BOH_EVENT_LOCAL_START) . '/' . $f(BOH_EVENT_LOCAL_END);
+}
+
 // ICS endpoint
 add_action('init', function () {
     if (empty($_GET['boh_ics'])) return;
-    $uid = 'boh-' . md5(BOH_EVENT_ISO . BOH_EVENT_TITLE) . '@rohitgroup.com';
-    $start = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO));
-    $end   = gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END));
+    $uid   = 'boh-' . md5(BOH_EVENT_ISO . BOH_EVENT_TITLE) . '@rohitgroup.com';
+    $local = fn($v) => (new DateTimeImmutable($v, new DateTimeZone('UTC')))->format('Ymd\THis');
+    $start = $local(BOH_EVENT_LOCAL_START);
+    $end   = $local(BOH_EVENT_LOCAL_END);
     $now   = gmdate('Ymd\THis\Z');
+    $tzid  = BOH_EVENT_TZ;
+    // One fixed offset for the zone: Alberta is on -06:00 from 1 November
+    // 2026 with no further changes, so a calendar that reads the VTIMEZONE
+    // rather than the zone name still lands on 5:00 PM.
+    $off   = str_replace(':', '', BOH_EVENT_OFFSET);
     $ics  = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BoH//EN\r\nMETHOD:PUBLISH\r\n";
-    $ics .= "BEGIN:VEVENT\r\nUID:{$uid}\r\nDTSTAMP:{$now}\r\nDTSTART:{$start}\r\nDTEND:{$end}\r\n";
+    $ics .= "BEGIN:VTIMEZONE\r\nTZID:{$tzid}\r\nBEGIN:STANDARD\r\nDTSTART:20261101T010000\r\nTZOFFSETFROM:{$off}\r\nTZOFFSETTO:{$off}\r\nTZNAME:Alberta Time\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n";
+    $ics .= "BEGIN:VEVENT\r\nUID:{$uid}\r\nDTSTAMP:{$now}\r\nDTSTART;TZID={$tzid}:{$start}\r\nDTEND;TZID={$tzid}:{$end}\r\n";
     $ics .= 'SUMMARY:' . BOH_EVENT_TITLE . "\r\n";
     $ics .= 'LOCATION:' . BOH_EVENT_LOC . "\r\n";
     $ics .= "DESCRIPTION:An evening of community and giving in support of WIN House.\r\n";
@@ -2583,7 +2599,7 @@ add_action( 'wp_footer', function () {
                       // a second copy of the date drifts the moment the first
                       // one changes, and this one had already gone an hour
                       // stale relative to the "Add to calendar" button above. ?>
-                '&dates=<?php echo esc_js( gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_ISO)) . '/' . gmdate('Ymd\THis\Z', strtotime(BOH_EVENT_END)) ); ?>' +
+                '&dates=<?php echo esc_js( boh_event_gcal_dates() ); ?>&ctz=<?php echo esc_js( BOH_EVENT_TZ ); ?>' +
                 '&details=' + encodeURIComponent("An evening of community and giving in support of WIN House.") +
                 '&location=' + encodeURIComponent(<?php echo wp_json_encode( $event_where ); ?>);
             const ics = '/?boh_ics=1';

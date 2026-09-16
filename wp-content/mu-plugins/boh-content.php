@@ -55,13 +55,11 @@ function boh_content( string $key, $default = '' ) {
 /**
  * The event's date and time, formatted in the event's own offset.
  *
- * Not wp_date(): that formats in the site's timezone, which means asking this
- * server's timezone database where Edmonton was on 3 November 2026 - and it
- * answers daylight time, which is wrong, Alberta having gone back to MST on
- * the 1st. Every calendar file it generated was an hour early because of it.
- *
- * The offset is written into BOH_EVENT_ISO, so reading it back out of the
- * string keeps the answer the same on any machine.
+ * Not wp_date(): that formats in the site's timezone, and this server's
+ * timezone database (tzdata 2026b) does not yet know that Alberta stops
+ * changing its clocks in November 2026 - it would put 3 November an hour
+ * out. The offset is written into BOH_EVENT_ISO, so reading it back out of
+ * the string keeps the answer the same on any machine.
  */
 function boh_event_when( string $format = 'l, F j, Y \a\t g:i a', string $iso = '' ): string {
 	$iso = $iso !== '' ? $iso : ( defined( 'BOH_EVENT_ISO' ) ? BOH_EVENT_ISO : '' );
