@@ -399,7 +399,7 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
       // Word's default paragraph spacing - the body of an HTML sender such as
       // GiveWP arrived with wide gaps between every line. Inline the margin,
       // and drop paragraphs that are empty.
-      $body_html = preg_replace( '~<p(?![^>]*style=)~i', '<p style="margin:0 0 16px">', (string) $body_html );
+      $body_html = preg_replace( '~<p(?![^>]*style=)~i', '<p style="margin:0 0 16px"', (string) $body_html );
       $body_html = preg_replace( '~<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>~i', '', $body_html );
       ?>
       <tr><td class="boh-pad" style="padding:26px 40px 6px;<?php echo $font; ?>;font-size:16px;line-height:1.6;color:#1F1A24">
