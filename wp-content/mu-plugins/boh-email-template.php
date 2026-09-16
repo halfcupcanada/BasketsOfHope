@@ -49,6 +49,17 @@ function boh_email_wrap( array $args ): array {
 
 	// A message that already carries its own document - GiveWP's receipts, for
 	// one - is a finished email. Wrapping it would put a page inside a page.
+	// GiveWP's "no template" mode still hands over a bare skeleton -
+	// <!DOCTYPE html><html><head><title>..</title></head><body>..</body></html>
+	// with nothing in the head but a title. That is not a designed document,
+	// it is a message in a box, so the box comes off and the message is
+	// framed like everything else. A head carrying styles is left alone.
+	if ( preg_match( '~<body[^>]*>(.*)</body>~is', $message, $bm ) ) {
+		$head = substr( $message, 0, (int) stripos( $message, '<body' ) );
+		if ( stripos( $head, '<style' ) === false && stripos( $head, '<link' ) === false ) {
+			$message = trim( $bm[1] );
+		}
+	}
 	if ( preg_match( '/<(!doctype|html|body)\b/i', $message ) ) {
 		return $args;
 	}
