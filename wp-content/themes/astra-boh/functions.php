@@ -1040,7 +1040,9 @@ add_shortcode('boh_copy', function ($atts, $content = '') {
     $tag = preg_match('/^[a-z0-9]+$/i', $a['tag']) ? $a['tag'] : 'div';
     // wpautop inside a heading puts a <p> in an <h2>, which is invalid and
     // loses the heading's own styling. Headings take their markup as written.
-    $body = preg_match('/^h[1-6]$/i', $tag) ? $html : wpautop($html);
+    // Headings and inline spans take their markup as written; wpautop would
+    // put a <p> inside them, which is invalid and loses their styling.
+    $body = preg_match('/^(h[1-6]|span)$/i', $tag) ? $html : wpautop($html);
     return sprintf(
         '<%1$s class="boh-copy %2$s">%3$s</%1$s>',
         $tag,
