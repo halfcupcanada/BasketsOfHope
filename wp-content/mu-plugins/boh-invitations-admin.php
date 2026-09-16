@@ -759,6 +759,22 @@ function boh_invitations_render_settings() {
 		boh_invitations_set_sending( false );
 		$notices[] = [ 'success', 'Automatic sending is OFF. Nothing further will be emailed.' ];
 	}
+	// Resending: clear the "invited" stamp on everyone who has not replied, so
+	// the queue picks them up again. People who have already RSVP'd are left
+	// alone - they do not need asking twice.
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_inv_requeue'] ) ) {
+		check_admin_referer( 'boh_invitations_settings' );
+		if ( empty( $_POST['boh_inv_requeue_confirm'] ) ) {
+			$notices[] = [ 'error', 'Tick the confirmation box first - nothing was changed.' ];
+		} else {
+			global $wpdb;
+			$t = boh_invitations_table();
+			$n = (int) $wpdb->query( "UPDATE $t SET invitation_sent_at = NULL, reminder_sent_at = NULL, updated_at = UTC_TIMESTAMP()
+				WHERE responded_at IS NULL AND invitation_sent_at IS NOT NULL" );
+			$notices[] = [ 'success', "{$n} people are queued to be invited again. They will go out once sending is on." ];
+		}
+	}
+
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_inv_start'] ) ) {
 		check_admin_referer( 'boh_invitations_settings' );
 		if ( empty( $_POST['boh_inv_confirm'] ) ) {
@@ -777,9 +793,71 @@ function boh_invitations_render_settings() {
 	$per_day = max( 1, (int) ( $limits['per_day'] ?? 250 ) );
 	$days    = $waiting > 0 ? (int) ceil( $waiting / $per_day ) : 0;
 	$log     = array_reverse( (array) get_option( BOH_INV_OPT_SENDLOG, [] ) );
+
+	// Progress, in the numbers people actually ask about.
+	global $wpdb;
+	$t        = boh_invitations_table();
+	$sent     = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE invitation_sent_at IS NOT NULL" );
+	$total    = (int) $counts['total'];
+	$resp     = (int) $counts['responded'];
+	$today    = (int) boh_invitations_send_count_today();
+	$last     = $wpdb->get_var( "SELECT MAX(invitation_sent_at) FROM $t" );
+	$requeue  = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NULL AND invitation_sent_at IS NOT NULL" );
+	$next     = wp_next_scheduled( BOH_INV_CRON_HOOK );
+	$pct      = $total ? (int) round( 100 * $sent / $total ) : 0;
+	$blocked  = (array) get_option( 'boh_inv_blocked_log', [] );
+	$lastblk  = $blocked ? end( $blocked ) : null;
 	?>
+	<?php if ( $on && $waiting > 0 ) : ?>
+		<meta http-equiv="refresh" content="30">
+	<?php endif; ?>
 	<div class="wrap">
 		<h1>Invitations Settings</h1>
+
+		<div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:20px 24px;max-width:700px;margin-bottom:24px">
+			<h2 style="margin-top:0">Progress</h2>
+			<div style="height:14px;background:#f0f0f1;border-radius:7px;overflow:hidden;margin:6px 0 10px">
+				<div style="height:100%;width:<?php echo $pct; ?>%;background:#d01482;border-radius:7px"></div>
+			</div>
+			<p style="margin:0 0 14px;font-size:15px"><strong><?php echo number_format( $sent ); ?></strong> of
+				<strong><?php echo number_format( $total ); ?></strong> invited (<?php echo $pct; ?>%) &middot;
+				<strong><?php echo number_format( $waiting ); ?></strong> still to go &middot;
+				<strong><?php echo number_format( $resp ); ?></strong> have replied</p>
+			<table class="widefat striped" style="max-width:520px">
+				<tbody>
+					<tr><td>Sent today</td><td><?php echo number_format( $today ); ?> of <?php echo number_format( $per_day ); ?> allowed</td></tr>
+					<tr><td>Last one went out</td><td><?php echo $last ? esc_html( get_date_from_gmt( $last, 'j M Y, g:i a' ) ) . ' (site time)' : 'never'; ?></td></tr>
+					<tr><td>Queue</td><td><?php echo $on ? ( $next ? 'next batch in ' . max( 0, (int) ceil( ( $next - time() ) / 60 ) ) . ' min' : 'starting' ) : 'stopped'; ?></td></tr>
+					<tr><td>At this rate</td><td><?php echo $waiting > 0 ? ( $days <= 1 ? 'done today' : 'about ' . (int) $days . ' days' ) : 'nothing waiting'; ?></td></tr>
+					<?php if ( $lastblk ) : ?>
+					<tr><td>Last refused send</td><td><?php echo esc_html( ( $lastblk['at'] ?? '?' ) . ' UTC to ' . ( $lastblk['to'] ?? '?' ) ); ?> <span style="color:#666">(sending was off)</span></td></tr>
+					<?php endif; ?>
+				</tbody>
+			</table>
+			<?php if ( $on && $waiting > 0 ) : ?>
+				<p style="margin:12px 0 0;color:#666;font-size:12px">This page refreshes itself every 30 seconds while sending is on.</p>
+			<?php endif; ?>
+			<p style="margin:10px 0 0;color:#666;font-size:13px">Per person: the <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG ) ); ?>">All Invitees</a> list shows exactly when each invitation went out and who has replied.</p>
+		</div>
+
+		<?php if ( $requeue > 0 ) : ?>
+		<div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:20px 24px;max-width:700px;margin-bottom:24px">
+			<h2 style="margin-top:0">Send again</h2>
+			<p><strong><?php echo number_format( $requeue ); ?></strong> people were invited earlier but have not replied. Queuing them again puts them
+			   back in line behind the <?php echo number_format( $waiting ); ?> who have never been contacted, and the
+			   <?php echo number_format( $resp ); ?> who already replied are left alone.</p>
+			<form method="post">
+				<?php wp_nonce_field( 'boh_invitations_settings' ); ?>
+				<p style="margin:0 0 12px">
+					<label style="display:flex;gap:8px;align-items:flex-start;max-width:56ch">
+						<input type="checkbox" name="boh_inv_requeue_confirm" value="1" style="margin-top:3px">
+						<span>Yes, invite these <strong><?php echo number_format( $requeue ); ?></strong> people again.</span>
+					</label>
+				</p>
+				<button name="boh_inv_requeue" value="1" class="button button-secondary">Queue them again</button>
+			</form>
+		</div>
+		<?php endif; ?>
 		<?php foreach ( $notices as [$type, $msg] ) : ?>
 			<div class="notice notice-<?php echo esc_attr( $type ); ?> is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
 		<?php endforeach; ?>
