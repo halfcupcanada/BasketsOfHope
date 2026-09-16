@@ -404,31 +404,37 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
     $wordmark = $name;
     $split    = strrpos( $wordmark, ' of ' );
     ?>
+    <?php
+    /* Outlook's Word engine ignores the <style> block, ignores margins on
+       divs, and gives every <p> its own default spacing - which stacked into
+       a deep empty gap above the links. So the band is built as rows of one
+       table, every gap an explicit cell padding, every paragraph carrying its
+       margin inline, and the hairline is a cell border rather than an
+       &nbsp; in a zero-height div (which Outlook draws at full height). */
+    $footer_inline = preg_replace( '~<p(?![^>]*style=)~i', '<p style="margin:0 0 4px"', (string) $footer );
+    $footer_inline = preg_replace( '~<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>~i', '', $footer_inline );
+    ?>
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#0A0A0A;border-radius:16px;margin-top:14px">
-      <tr><td class="boh-pad" align="center" style="padding:30px 40px 26px">
-
-        <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:inline-block;<?php echo $font; ?>;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;text-decoration:none;padding-bottom:4px">
+      <tr><td class="boh-pad" align="center" style="padding:28px 40px 0">
+        <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:inline-block;<?php echo $font; ?>;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;text-decoration:none">
           <?php if ( $split !== false ) : ?>
             <?php echo esc_html( substr( $wordmark, 0, $split ) ); ?><span style="color:#D01482"><?php echo esc_html( substr( $wordmark, $split ) ); ?></span>
           <?php else : ?>
             <?php echo esc_html( $wordmark ); ?>
           <?php endif; ?>
         </a>
-
-        <?php if ( trim( (string) $footer ) !== '' ) : ?>
-        <div class="boh-foot" style="<?php echo $font; ?>;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.72);padding-top:6px">
-          <?php echo wp_kses_post( $footer ); ?>
-        </div>
-        <?php endif; ?>
-
-        <div style="border-top:1px solid rgba(255,255,255,0.14);margin:18px 0 14px;font-size:0;line-height:0">&nbsp;</div>
-
-        <?php
-        /* A table, one cell per link, rather than inline anchors with
-           separators between them. Outlook's Word engine broke the inline
-           version onto five lines, each led by a stray middot that read as a
-           bullet. Table cells do not wrap. */
-        ?>
+      </td></tr>
+      <?php if ( trim( wp_strip_all_tags( $footer_inline ) ) !== '' ) : ?>
+      <tr><td class="boh-pad boh-foot" align="center" style="padding:8px 40px 0;<?php echo $font; ?>;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.72)">
+        <?php echo wp_kses_post( $footer_inline ); ?>
+      </td></tr>
+      <?php endif; ?>
+      <tr><td class="boh-pad" style="padding:16px 40px 0">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td style="border-top:1px solid rgba(255,255,255,0.14);font-size:1px;line-height:1px;height:1px">&nbsp;</td></tr>
+        </table>
+      </td></tr>
+      <tr><td class="boh-pad" align="center" style="padding:14px 40px 0">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto">
           <tr>
             <?php $first = true; foreach ( $foot_links as $label => $url ) : ?>
@@ -441,6 +447,11 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
             <?php endforeach; ?>
           </tr>
         </table>
+      </td></tr>
+      <tr><td class="boh-pad" align="center" style="padding:12px 40px 26px;<?php echo $font; ?>;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45)">
+        &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Rohit Group. All rights reserved.
+      </td></tr>
+    </table>
 
         <div style="<?php echo $font; ?>;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45);padding-top:14px">
           &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Rohit Group. All rights reserved.
