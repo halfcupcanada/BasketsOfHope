@@ -2967,6 +2967,21 @@ add_action('template_redirect', function () {
     if (!function_exists('give_get_errors')) return;
     if (!is_page('donate')) return;
     if (!empty($_POST['give_action']) || !empty($_POST['give-form-id'])) return;
+
+    // A failed payment comes back to this page as a GET with the form's
+    // state in the query string - and its error message in the session.
+    // Clearing here meant a donor whose card was declined saw a blank form
+    // and nothing else. Keep the message for those returns; write it to the
+    // log too, so the reason is findable later. Only a genuinely fresh visit
+    // gets the bag emptied.
+    $returning = !empty($_GET['payment-mode']) || !empty($_GET['form-id']) || !empty($_GET['level-id']);
+    $errors    = give_get_errors();
+    if ($returning) {
+        if ($errors) {
+            error_log('[BoH donate] payment attempt returned with: ' . wp_json_encode($errors));
+        }
+        return;
+    }
     if (function_exists('give_clear_errors')) {
         give_clear_errors();
     }
