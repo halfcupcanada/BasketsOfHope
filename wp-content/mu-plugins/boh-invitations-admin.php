@@ -743,14 +743,40 @@ function boh_invitations_render_settings() {
 	$limits = get_option( BOH_INV_OPT_LIMITS );
 	$notices = [];
 
-	if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_inv_rate'] ) ) {
 		check_admin_referer( 'boh_invitations_settings' );
 		$limits['per_day']   = max( 1, (int) ( $_POST['per_day']   ?? 250 ) );
 		$limits['per_batch'] = max( 1, (int) ( $_POST['per_batch'] ?? 15 ) );
 		update_option( BOH_INV_OPT_LIMITS, $limits );
 		$notices[] = [ 'success', 'Settings saved.' ];
 	}
+
+	// Switching off needs no ceremony - it is a stop button. Switching on
+	// asks you to tick a box first, because the last time this went wrong it
+	// went wrong 250 times.
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_inv_stop'] ) ) {
+		check_admin_referer( 'boh_invitations_settings' );
+		boh_invitations_set_sending( false );
+		$notices[] = [ 'success', 'Automatic sending is OFF. Nothing further will be emailed.' ];
+	}
+	if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['boh_inv_start'] ) ) {
+		check_admin_referer( 'boh_invitations_settings' );
+		if ( empty( $_POST['boh_inv_confirm'] ) ) {
+			$notices[] = [ 'error', 'Tick the confirmation box first - nothing was turned on.' ];
+		} else {
+			boh_invitations_set_sending( true );
+			$notices[] = [ 'success', 'Automatic sending is ON. The queue will start within a minute.' ];
+		}
+	}
 	$today = boh_invitations_send_count_today();
+	?>
+	$on      = boh_invitations_sending_enabled();
+	$locked  = boh_invitations_sending_locked();
+	$counts  = boh_invitations_counts();
+	$waiting = (int) $counts['not_sent'];
+	$per_day = max( 1, (int) ( $limits['per_day'] ?? 250 ) );
+	$days    = $waiting > 0 ? (int) ceil( $waiting / $per_day ) : 0;
+	$log     = array_reverse( (array) get_option( BOH_INV_OPT_SENDLOG, [] ) );
 	?>
 	<div class="wrap">
 		<h1>Invitations Settings</h1>
@@ -758,8 +784,61 @@ function boh_invitations_render_settings() {
 			<div class="notice notice-<?php echo esc_attr( $type ); ?> is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
 		<?php endforeach; ?>
 
+		<div style="background:#fff;border:1px solid #ddd;border-left:6px solid <?php echo $on ? '#d63638' : '#00a32a'; ?>;border-radius:6px;padding:20px 24px;max-width:700px;margin-bottom:24px">
+			<h2 style="margin-top:0">Automatic sending is
+				<span style="color:<?php echo $on ? '#d63638' : '#00a32a'; ?>"><?php echo $on ? 'ON' : 'OFF'; ?></span>
+			</h2>
+
+			<?php if ( $on ) : ?>
+				<p><strong><?php echo number_format( $waiting ); ?></strong> people on the list have never been invited.
+				   While this is on they will be emailed automatically, up to <?php echo number_format( $per_day ); ?> a day
+				   <?php if ( $days > 1 ) : ?>&mdash; about <?php echo (int) $days; ?> days to work through them<?php endif; ?>.</p>
+			<?php else : ?>
+				<p>Nothing is being emailed. The queue is not running, and the Send buttons on the invitee list
+				   will refuse. <strong><?php echo number_format( $waiting ); ?></strong> people have never been contacted.</p>
+			<?php endif; ?>
+
+			<?php if ( $locked ) : ?>
+				<p style="background:#f6f7f7;border-left:4px solid #72aee6;padding:10px 14px;margin:16px 0">
+					This switch is currently overridden in <code>wp-config.php</code>
+					(<code>BOH_INV_SENDING</code> is defined as <code><?php echo BOH_INV_SENDING ? 'true' : 'false'; ?></code>),
+					so the buttons below will not change anything until that line is removed.
+				</p>
+			<?php endif; ?>
+
+			<form method="post" style="margin-top:18px">
+				<?php wp_nonce_field( 'boh_invitations_settings' ); ?>
+				<?php if ( $on ) : ?>
+					<button name="boh_inv_stop" value="1" class="button button-primary button-large"
+					        style="background:#d63638;border-color:#d63638">Stop sending now</button>
+					<span style="color:#666;margin-left:10px">Takes effect immediately.</span>
+				<?php else : ?>
+					<p style="margin:0 0 12px">
+						<label style="display:flex;gap:8px;align-items:flex-start;max-width:56ch">
+							<input type="checkbox" name="boh_inv_confirm" value="1" style="margin-top:3px">
+							<span>I want <strong><?php echo number_format( $waiting ); ?></strong> people
+							      to start receiving invitation emails.</span>
+						</label>
+					</p>
+					<button name="boh_inv_start" value="1" class="button button-primary button-large">Turn sending on</button>
+				<?php endif; ?>
+			</form>
+
+			<?php if ( $log ) : ?>
+				<p style="margin:18px 0 6px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:.08em">Recent changes</p>
+				<ul style="margin:0;color:#666;font-size:13px">
+					<?php foreach ( array_slice( $log, 0, 5 ) as $entry ) : ?>
+						<li>Turned <strong><?php echo esc_html( $entry['state'] ?? '?' ); ?></strong>
+							by <?php echo esc_html( $entry['who'] ?? '?' ); ?>
+							on <?php echo esc_html( $entry['at'] ?? '?' ); ?> UTC</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+		</div>
+
 		<form method="post" style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px;max-width:700px">
 			<?php wp_nonce_field( 'boh_invitations_settings' ); ?>
+			<input type="hidden" name="boh_inv_rate" value="1">
 			<h2 style="margin-top:0">Sending rate</h2>
 			<p>Brevo's free tier allows 300/day. Keep <strong>per_day</strong> under that to avoid hitting the throttle.</p>
 			<table class="form-table">

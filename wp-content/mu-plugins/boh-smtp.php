@@ -9,6 +9,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// Stand down when WP Mail SMTP is set to an API mailer. It sends over HTTP
+// and never touches PHPMailer's transport, so forcing SMTP settings here at
+// best does nothing and at worst reintroduces a dead relay credential.
+if ( defined( 'WPMS_MAILER' ) && in_array( WPMS_MAILER, [ 'sendinblue', 'mailgun', 'sendgrid', 'postmark', 'sparkpost', 'gmail', 'outlook', 'zoho', 'smtpcom', 'sendlayer', 'elasticemail' ], true ) ) {
+	return;
+}
+
 if ( ! defined( 'BOH_SMTP_HOST' ) ) {
 	return; // not configured - let WP's default mailer run (or the dev mail logger).
 }

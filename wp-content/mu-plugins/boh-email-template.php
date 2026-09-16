@@ -216,7 +216,15 @@ function boh_email_button( string $url, string $label ): string {
 		. '<a href="' . esc_url( $url ) . '" style="display:inline-block;padding:11px 26px;' . $font
 		. ';font-size:14px;font-weight:700;letter-spacing:0.02em;color:#ffffff;text-decoration:none;border-radius:999px">'
 		. esc_html( $label ) . '</a>'
-		. '</td></tr></table>';
+		. '</td></tr></table>'
+		// The same address written out, not linked. Brevo rewrites every <a> on
+		// this account through a tracking domain that has no DNS record, so
+		// the button above is dead until that is fixed on their side - while
+		// bare text it leaves alone, and mail clients make it tappable anyway.
+		// Harmless once the button works; a lifeline while it does not.
+		. '<p style="margin:-8px 0 20px;' . $font . ';font-size:12px;line-height:1.6;color:#6B6472">'
+		. 'If the button does not open, copy this address into your browser:<br>'
+		. '<span style="color:#1F1A24;word-break:break-all">' . esc_html( $url ) . '</span></p>';
 }
 
 /**

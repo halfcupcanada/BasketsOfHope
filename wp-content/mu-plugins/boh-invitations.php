@@ -18,6 +18,8 @@ const BOH_INV_CRON_HOOK   = 'boh_invitations_send_batch';
 const BOH_INV_OPT_TEMPLATES = 'boh_invitations_templates';
 const BOH_INV_OPT_LIMITS  = 'boh_invitations_limits';
 const BOH_INV_CAP         = 'manage_options';
+const BOH_INV_OPT_SENDING = 'boh_invitations_sending';
+const BOH_INV_OPT_SENDLOG = 'boh_invitations_sending_log';
 
 // ── Activation-style: install table on load if missing ─────────
 add_action( 'plugins_loaded', 'boh_invitations_maybe_install' );
@@ -177,7 +179,51 @@ function boh_invitations_render_email( $tpl_key, $invitee ) {
  * and re-schedule the queue (see boh_invitations_sending_enabled callers).
  */
 function boh_invitations_sending_enabled(): bool {
-	return defined( 'BOH_INV_SENDING' ) && BOH_INV_SENDING === true;
+	// wp-config still wins, in both directions. Defining BOH_INV_SENDING as
+	// false locks sending off no matter what the screen says - an override
+	// that survives a database restore and that no admin account can undo.
+	// Defining it true forces it on. With it absent, the switch on the
+	// Settings screen decides, and its default is off.
+	if ( defined( 'BOH_INV_SENDING' ) ) {
+		return BOH_INV_SENDING === true;
+	}
+	return get_option( BOH_INV_OPT_SENDING, '0' ) === '1';
+}
+
+/** True when wp-config has taken the decision out of the screen's hands. */
+function boh_invitations_sending_locked(): bool {
+	return defined( 'BOH_INV_SENDING' );
+}
+
+/**
+ * Turn sending on or off, and write down who did it.
+ *
+ * 250 invitations once went out that nobody meant to send. A switch with no
+ * record of who moved it and when is how that stays a mystery.
+ */
+function boh_invitations_set_sending( bool $on ): void {
+	update_option( BOH_INV_OPT_SENDING, $on ? '1' : '0' );
+
+	$log = get_option( BOH_INV_OPT_SENDLOG, [] );
+	$log = is_array( $log ) ? $log : [];
+	$user = wp_get_current_user();
+	$log[] = [
+		'at'    => current_time( 'mysql', true ),
+		'who'   => $user && $user->ID ? $user->user_login : 'system',
+		'state' => $on ? 'on' : 'off',
+	];
+	update_option( BOH_INV_OPT_SENDLOG, array_slice( $log, -50 ), false );
+
+	// Take effect now rather than on the next page load: switching off is a
+	// stop button, and a queue that fires once more after it is pressed is
+	// not a stop button.
+	if ( $on ) {
+		if ( ! wp_next_scheduled( BOH_INV_CRON_HOOK ) ) {
+			wp_schedule_event( time() + 60, 'boh_10min', BOH_INV_CRON_HOOK );
+		}
+	} else {
+		wp_unschedule_hook( BOH_INV_CRON_HOOK );
+	}
 }
 
 function boh_invitations_send_email( $invitee, $tpl_key ) {
