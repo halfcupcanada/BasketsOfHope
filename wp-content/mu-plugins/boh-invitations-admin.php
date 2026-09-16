@@ -784,8 +784,6 @@ function boh_invitations_render_settings() {
 			$notices[] = [ 'success', 'Automatic sending is ON. The queue will start within a minute.' ];
 		}
 	}
-	$today = boh_invitations_send_count_today();
-	?>
 	$on      = boh_invitations_sending_enabled();
 	$locked  = boh_invitations_sending_locked();
 	$counts  = boh_invitations_counts();
