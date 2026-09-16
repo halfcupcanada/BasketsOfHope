@@ -226,10 +226,16 @@ function boh_invitations_set_sending( bool $on ): void {
 	}
 }
 
-function boh_invitations_send_email( $invitee, $tpl_key ) {
+/** How many people a hand-picked send may reach while automatic sending is off. */
+const BOH_INV_MANUAL_LIMIT = 10;
+
+function boh_invitations_send_email( $invitee, $tpl_key, bool $manual = false ) {
 	// Every path that sends - the cron queue, the admin bulk actions, a single
 	// resend - comes through here, so this is the one gate that has to hold.
-	if ( ! boh_invitations_sending_enabled() ) {
+	// A hand-picked send of a few people is the exception: that is how the
+	// team tests an email on themselves, and it cannot reach the list by
+	// accident because the list view caps it (BOH_INV_MANUAL_LIMIT).
+	if ( ! boh_invitations_sending_enabled() && ! $manual ) {
 		boh_invitations_log_blocked( $invitee, $tpl_key );
 		return false;
 	}

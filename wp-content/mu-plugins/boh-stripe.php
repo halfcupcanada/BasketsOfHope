@@ -119,3 +119,22 @@ add_filter( 'give_get_option__give_stripe_default_account', function ( $slug ) {
 	$wanted   = give_is_test_mode() ? 'boh-test' : 'boh-live';
 	return isset( $accounts[ $wanted ] ) ? $wanted : $slug;
 }, 20 );
+
+/**
+ * When GiveWP's "Connect with Stripe" comes back, write down what it came
+ * back with. The onboarding controller shows one generic message for two
+ * different failures and logs only one of them; this makes the other
+ * findable. Values are never logged - only which fields are present.
+ */
+add_action( 'admin_init', function () {
+	if ( empty( $_GET['stripe_user_id'] ) ) {
+		return;
+	}
+	$have = [];
+	foreach ( [ 'stripe_user_id', 'stripe_access_token', 'stripe_access_token_test', 'stripe_publishable_key', 'stripe_publishable_key_test', 'connected' ] as $k ) {
+		$have[] = $k . '=' . ( empty( $_GET[ $k ] ) ? 'missing' : 'present' );
+	}
+	$existing = array_map( fn( $a ) => ( $a['account_id'] ?? '?' ) . '/' . ( $a['type'] ?? '?' ), give_stripe_get_all_accounts() );
+	error_log( '[BoH stripe-connect] return for ' . sanitize_text_field( $_GET['stripe_user_id'] ) . ' | ' . implode( ' ', $have )
+		. ' | accounts already stored: ' . ( $existing ? implode( ', ', $existing ) : 'none' ) );
+}, 1 );

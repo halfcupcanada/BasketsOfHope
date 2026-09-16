@@ -46,8 +46,15 @@ function boh_invitations_render_list() {
 			if ( $action === 'send_invitation' ) {
 				$rows = $wpdb->get_results( "SELECT * FROM $t WHERE id IN ($in)" );
 				$sent = $failed = 0;
+				// Off switch on, more than a handful selected: refuse outright
+				// and say why, rather than "0 sent, 40 failed".
+				$manual = count( $rows ) <= BOH_INV_MANUAL_LIMIT;
+				if ( ! boh_invitations_sending_enabled() && ! $manual ) {
+					$notices[] = [ 'error', 'Automatic sending is off, so a hand-picked send is limited to ' . BOH_INV_MANUAL_LIMIT . ' people at a time. Select fewer, or turn sending on under Settings.' ];
+					$rows = [];
+				}
 				foreach ( $rows as $inv ) {
-					if ( boh_invitations_send_email( $inv, 'invitation' ) ) {
+					if ( boh_invitations_send_email( $inv, 'invitation', $manual ) ) {
 						$wpdb->update( $t,
 							[ 'invitation_sent_at' => current_time( 'mysql', true ), 'updated_at' => current_time( 'mysql', true ) ],
 							[ 'id' => $inv->id ]
@@ -62,7 +69,7 @@ function boh_invitations_render_list() {
 				$rows = $wpdb->get_results( "SELECT * FROM $t WHERE id IN ($in) AND responded_at IS NULL" );
 				$sent = $failed = 0;
 				foreach ( $rows as $inv ) {
-					if ( boh_invitations_send_email( $inv, 'reminder' ) ) {
+					if ( boh_invitations_send_email( $inv, 'reminder', count( $rows ) <= BOH_INV_MANUAL_LIMIT ) ) {
 						$wpdb->update( $t,
 							[ 'reminder_sent_at' => current_time( 'mysql', true ), 'updated_at' => current_time( 'mysql', true ) ],
 							[ 'id' => $inv->id ]
