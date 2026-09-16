@@ -355,7 +355,7 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0"><?php echo esc_html( $pre ); ?></div>
 <?php endif; ?>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FDF2F8">
-  <tr><td align="center" style="padding:28px 12px">
+  <tr><td align="center" style="padding:16px 8px">
 
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:16px">
 
@@ -374,7 +374,15 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
         <?php endif; ?>
       </td></tr>
 
-      <tr><td class="boh-pad" style="padding:28px 40px 8px;<?php echo $font; ?>;font-size:16px;line-height:1.65;color:#1F1A24">
+      <?php
+      // Outlook ignores the stylesheet, so a <p> with no inline margin gets
+      // Word's default paragraph spacing - the body of an HTML sender such as
+      // GiveWP arrived with wide gaps between every line. Inline the margin,
+      // and drop paragraphs that are empty.
+      $body_html = preg_replace( '~<p(?![^>]*style=)~i', '<p style="margin:0 0 16px">', (string) $body_html );
+      $body_html = preg_replace( '~<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>~i', '', $body_html );
+      ?>
+      <tr><td class="boh-pad" style="padding:26px 40px 6px;<?php echo $font; ?>;font-size:16px;line-height:1.6;color:#1F1A24">
         <div class="boh-body"><?php echo $body_html; ?></div>
       </td></tr>
 
@@ -552,3 +560,19 @@ function boh_email_sample_text( string $to = '', string $for_name = 'Rahul Chona
 		. "With gratitude,\n"
 		. boh_email_site_name();
 }
+
+/**
+ * A name typed in capitals stays in capitals everywhere GiveWP prints it -
+ * "Dear RAHUL" at the top of a thank-you. Tidy it for the email only; the
+ * record keeps what the donor typed. Names that are already mixed-case are
+ * left alone, so "McDonald" and "de la Cruz" survive.
+ */
+function boh_email_tidy_name( $name ) {
+	$name = trim( (string) $name );
+	if ( $name === '' || $name !== mb_strtoupper( $name ) ) {
+		return $name;
+	}
+	return mb_convert_case( mb_strtolower( $name ), MB_CASE_TITLE, 'UTF-8' );
+}
+add_filter( 'give_email_tag_first_name', 'boh_email_tidy_name', 10, 1 );
+add_filter( 'give_email_tag_fullname',   'boh_email_tidy_name', 10, 1 );
