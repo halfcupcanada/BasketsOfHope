@@ -310,14 +310,14 @@ function boh_invitations_render_import() {
 				$send_now = ! empty( $_POST['send_now'] );
 				if ( $send_now && $new_id ) {
 					$inv = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE id = %d", $new_id ) );
-					if ( boh_invitations_send_email( $inv, 'invitation' ) ) {
+					if ( boh_invitations_send_email( $inv, 'invitation', true ) ) {
 						$wpdb->update( $t,
 							[ 'invitation_sent_at' => current_time( 'mysql', true ), 'updated_at' => current_time( 'mysql', true ) ],
 							[ 'id' => $new_id ]
 						);
 						$notices[] = [ 'success', "Added <code>" . esc_html( $email ) . "</code> and sent invitation." ];
 					} else {
-						$notices[] = [ 'warning', "Added <code>" . esc_html( $email ) . "</code> but invitation email failed to send. Try Bulk Actions from the list." ];
+						$notices[] = [ 'warning', "Added <code>" . esc_html( $email ) . "</code> but the invitation email could not be sent - the mail relay refused it. Check WP Mail SMTP, then use Send invitation from the list." ];
 					}
 				} else {
 					$notices[] = [ 'success', "Added <code>" . esc_html( $email ) . "</code> - will send on next cron tick, or send manually from All Invitees." ];
