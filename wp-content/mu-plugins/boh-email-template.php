@@ -20,6 +20,7 @@ defined( 'ABSPATH' ) || exit;
  * of clients that still refuse HTML.
  */
 $GLOBALS['boh_email_alt_body'] = '';
+$GLOBALS['boh_email_framed']   = false;
 
 add_filter( 'wp_mail', 'boh_email_wrap', 100 );
 
@@ -75,6 +76,7 @@ function boh_email_wrap( array $args ): array {
 	$GLOBALS['boh_email_alt_body'] = $is_html
 		? trim( wp_strip_all_tags( $message ) )
 		: $message;
+	$GLOBALS['boh_email_framed'] = true;
 
 	$args['message'] = boh_email_document(
 		$is_html ? $message : boh_email_textify( $message ),
@@ -95,13 +97,31 @@ function boh_email_wrap( array $args ): array {
 }
 
 /**
- * Carry the original wording as the plain-text alternative.
+ * A framed message goes out as HTML, whatever the sender asked for.
+ *
+ * The Content-Type header the frame sets is not the last word: wp_mail()
+ * asks the 'wp_mail_content_type' filter afterwards, and a sender of plain
+ * text - GiveWP, with its template set to none - answers text/plain there.
+ * The mailer then hands Brevo a full HTML document as *text*, and Brevo
+ * builds an HTML version of it by turning every newline into a <br /> -
+ * a dozen blank lines above the footer links, a gap after every cell.
+ * Setting the type on PHPMailer itself, after every filter has spoken,
+ * cannot be overridden. The original wording rides along as the
+ * plain-text alternative.
  */
+add_filter( 'wp_mail_content_type', function ( $type ) {
+	return ! empty( $GLOBALS['boh_email_framed'] ) ? 'text/html' : $type;
+}, PHP_INT_MAX );
+
 add_action( 'phpmailer_init', function ( $mailer ) {
-	if ( ! empty( $GLOBALS['boh_email_alt_body'] ) && $mailer->ContentType === 'text/html' ) {
-		$mailer->AltBody = $GLOBALS['boh_email_alt_body'];
+	if ( ! empty( $GLOBALS['boh_email_framed'] ) ) {
+		$mailer->isHTML( true );
+		if ( ! empty( $GLOBALS['boh_email_alt_body'] ) ) {
+			$mailer->AltBody = $GLOBALS['boh_email_alt_body'];
+		}
 	}
 	$GLOBALS['boh_email_alt_body'] = '';
+	$GLOBALS['boh_email_framed']   = false;
 }, 100 );
 
 /**
@@ -458,13 +478,6 @@ function boh_email_document( string $body_html, string $subject = '' ): string {
       </td></tr>
       <tr><td class="boh-pad" align="center" style="padding:12px 40px 26px;<?php echo $font; ?>;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45)">
         &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Rohit Group. All rights reserved.
-      </td></tr>
-    </table>
-
-        <div style="<?php echo $font; ?>;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45);padding-top:14px">
-          &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Rohit Group. All rights reserved.
-        </div>
-
       </td></tr>
     </table>
 
