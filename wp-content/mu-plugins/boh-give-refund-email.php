@@ -26,26 +26,31 @@ function boh_refund_email_defaults(): array {
 
 /** Send the notice for one donation. Returns true when the relay accepted it. */
 function boh_send_refund_email( int $donation_id ): bool {
-	$email = give_get_donation_donor_email( $donation_id );
-	if ( ! $email || ! is_email( $email ) ) {
+	// Only GiveWP functions that exist in this version - the first draft leaned
+	// on a helper that does not, and fell over the moment it was called.
+	$email = (string) give_get_payment_user_email( $donation_id );
+	if ( ! is_email( $email ) ) {
 		return false;
 	}
 	$d       = boh_refund_email_defaults();
 	$subject = (string) boh_content( 'donate.refund_subject', $d['subject'] );
 	$body    = (string) boh_content( 'donate.refund_body', $d['body'] );
 
-	$first = trim( (string) give_get_donation_meta( $donation_id, '_give_donor_billing_first_name', true ) );
-	if ( $first === '' ) {
-		$first = trim( (string) give_get_payment_meta( $donation_id, '_give_payment_donor_first_name', true ) );
+	$first = '';
+	$donor_id = (int) give_get_payment_donor_id( $donation_id );
+	if ( $donor_id && class_exists( 'Give_Donor' ) ) {
+		$donor = new Give_Donor( $donor_id );
+		$first = trim( (string) $donor->get_first_name() );
 	}
 	if ( $first === '' ) {
-		$parts = preg_split( '/\s+/', trim( (string) give_get_donor_name_by( $donation_id, 'donation' ) ) );
-		$first = $parts[0] ?? 'friend';
+		$first = trim( (string) give_get_meta( $donation_id, '_give_donor_billing_first_name', true ) );
 	}
+	$first = $first !== '' ? ucfirst( strtolower( $first ) ) : 'friend';
+
 	$vars = [
-		'{name}'      => ucfirst( strtolower( $first ) ) ?: 'friend',
-		'{amount}'    => wp_strip_all_tags( give_currency_filter( give_format_amount( give_get_payment_amount( $donation_id ) ), [ 'currency_code' => give_get_payment_currency_code( $donation_id ) ] ) ),
-		'{date}'      => wp_date( 'F j, Y', strtotime( get_post_field( 'post_date_gmt', $donation_id ) ) ),
+		'{name}'      => $first,
+		'{amount}'    => wp_strip_all_tags( (string) give_donation_amount( $donation_id, true ) ),
+		'{date}'      => wp_date( 'F j, Y', strtotime( (string) get_post_field( 'post_date', $donation_id ) ) ),
 		'{reference}' => (string) give_get_payment_number( $donation_id ),
 	];
 	return (bool) wp_mail( $email, strtr( $subject, $vars ), strtr( $body, $vars ), [ 'Content-Type: text/plain; charset=UTF-8' ] );
