@@ -399,16 +399,21 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 		return;
 	}
 
-	if ( $inv->responded_at ) return;
-
-	$wpdb->update( $t,
-		[
-			'responded_at' => $now,
-			'party_size'   => $party,
-			'updated_at'   => $now,
-		],
-		[ 'id' => $inv->id ]
-	);
+	// A second submission is a correction - "party of 1" followed a minute
+	// later by "party of 3" - so the latest party size always wins. The
+	// original response time is kept; that is when they said yes.
+	// A list that only had a first name (or nothing) takes the full name
+	// the person typed themselves.
+	$name = trim( $field( 'first-name' ) . ' ' . $field( 'last-name' ) );
+	$data = [
+		'responded_at' => $inv->responded_at ?: $now,
+		'party_size'   => $party !== '' ? $party : $inv->party_size,
+		'updated_at'   => $now,
+	];
+	if ( $name !== '' && ( trim( (string) $inv->name ) === '' || ( strpos( trim( (string) $inv->name ), ' ' ) === false && strlen( $name ) > strlen( trim( (string) $inv->name ) ) ) ) ) {
+		$data['name'] = $name;
+	}
+	$wpdb->update( $t, $data, [ 'id' => $inv->id ] );
 }, 20, 2 );
 
 /**
