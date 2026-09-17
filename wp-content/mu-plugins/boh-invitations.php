@@ -135,6 +135,8 @@ function boh_invitations_counts() {
 		'not_sent'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE invitation_sent_at IS NULL" ),
 		'awaiting'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE invitation_sent_at IS NOT NULL AND responded_at IS NULL" ),
 		'responded'   => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NOT NULL" ),
+		'attending'   => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NOT NULL AND (party_size IS NULL OR party_size <> 'Not attending')" ),
+		'declined'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NOT NULL AND party_size = 'Not attending'" ),
 		'reminded'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE reminder_sent_at IS NOT NULL" ),
 	];
 }
@@ -380,6 +382,12 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 	$inv   = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE email = %s", $email ) );
 	$party = $field( 'party-size' );
 	$now   = current_time( 'mysql', true );
+	// "no" from the form's attending question. Replies from before the
+	// question existed carry no value and were all a yes.
+	$declined = $field( 'attending' ) === 'no';
+	if ( $declined ) {
+		$party = 'Not attending';
+	}
 
 	// Somebody who was never on the invite list can still RSVP from the site.
 	// Previously that response was dropped here and survived only inside
@@ -392,6 +400,7 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 			'email'        => $email,
 			'responded_at' => $now,
 			'party_size'   => $party,
+			'guest_count'  => $declined ? 0 : null,
 			'source'       => 'website',
 			'created_at'   => $now,
 			'updated_at'   => $now,
@@ -408,6 +417,9 @@ add_action( 'wpcf7_submit', function ( $contact_form, $result ) {
 	$data = [
 		'responded_at' => $inv->responded_at ?: $now,
 		'party_size'   => $party !== '' ? $party : $inv->party_size,
+		// A no counts nobody; a yes lets the headcount follow the party size
+		// again, even after an earlier no.
+		'guest_count'  => $declined ? 0 : null,
 		'updated_at'   => $now,
 	];
 	if ( $name !== '' && ( trim( (string) $inv->name ) === '' || ( strpos( trim( (string) $inv->name ), ' ' ) === false && strlen( $name ) > strlen( trim( (string) $inv->name ) ) ) ) ) {
@@ -507,13 +519,18 @@ function boh_invitations_guest_total(): array {
 	global $wpdb;
 	$t    = boh_invitations_table();
 	$rows = $wpdb->get_results( "SELECT party_size, source, guest_count, responded_at FROM $t WHERE responded_at IS NOT NULL", ARRAY_A );
-	$guests = 0;
-	$walkup = 0;
+	$guests   = 0;
+	$walkup   = 0;
+	$declined = 0;
 	foreach ( (array) $rows as $r ) {
+		if ( ( $r['party_size'] ?? '' ) === 'Not attending' ) {
+			$declined++;
+			continue;
+		}
 		$guests += boh_invitations_guests_for( $r );
 		if ( ( $r['source'] ?? '' ) === 'website' ) {
 			$walkup++;
 		}
 	}
-	return [ 'responses' => count( (array) $rows ), 'guests' => $guests, 'walkup' => $walkup ];
+	return [ 'responses' => count( (array) $rows ) - $declined, 'guests' => $guests, 'walkup' => $walkup, 'declined' => $declined ];
 }

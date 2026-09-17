@@ -548,6 +548,14 @@ function boh_content_schema(): array {
 				[ 'key' => 'rsvp.form.first_label',  'label' => 'Form - first name label', 'type' => 'text' ],
 				[ 'key' => 'rsvp.form.last_label',   'label' => 'Form - last name label',  'type' => 'text' ],
 				[ 'key' => 'rsvp.form.email_label',  'label' => 'Form - email label',      'type' => 'text' ],
+				[ 'key' => 'rsvp.form.attending_label', 'label' => 'Form - attending question', 'type' => 'text' ],
+				[ 'key' => 'rsvp.form.attending_yes',   'label' => 'Form - the "yes" choice',    'type' => 'text' ],
+				[
+					'key'   => 'rsvp.form.attending_no',
+					'label' => 'Form - the "no" choice',
+					'type'  => 'text',
+					'help'  => 'Someone choosing this is recorded as Declined on the guest list, counts no guests, and gets the regrets email below instead of the confirmation.',
+				],
 				[ 'key' => 'rsvp.form.guests_label', 'label' => 'Form - guest question',   'type' => 'text' ],
 				[
 					'key'   => 'rsvp.form.guest_options',
@@ -559,7 +567,7 @@ function boh_content_schema(): array {
 					'key'   => 'rsvp.form.consent',
 					'label' => 'Form - consent checkbox',
 					'type'  => 'textarea',
-					'help'  => 'Ticking this is required to submit. It is the permission the RSVP relies on to email that guest afterwards, so keep it accurate.',
+					'help'  => 'Required to say yes - it is the permission the RSVP relies on to email that guest afterwards, so keep it accurate. Someone sending regrets can leave it unticked.',
 				],
 				[ 'key' => 'rsvp.form.submit', 'label' => 'Form - button text', 'type' => 'text' ],
 
@@ -581,6 +589,15 @@ function boh_content_schema(): array {
 				[ 'key' => 'rsvp.success.forward',     'label' => 'Thank you screen - forward button', 'type' => 'text' ],
 
 				[
+					'key'   => 'rsvp.decline.eyebrow',
+					'label' => 'Regrets screen - small label',
+					'type'  => 'text',
+					'help'  => 'Shown instead of the thank-you screen when someone chooses the "no" answer. {first}, {email} and {date} work here too.',
+				],
+				[ 'key' => 'rsvp.decline.title', 'label' => 'Regrets screen - heading', 'type' => 'text' ],
+				[ 'key' => 'rsvp.decline.lede',  'label' => 'Regrets screen - opening line', 'type' => 'textarea' ],
+
+				[
 					'key'      => 'rsvp.confirm.enabled',
 					'label'    => 'Send a confirmation email',
 					'type'     => 'toggle',
@@ -594,6 +611,16 @@ function boh_content_schema(): array {
 					'type'  => 'textarea',
 					'help'  => 'Plain text; blank lines start a new paragraph. [first-name], [last-name], [your-email] and [party-size] are filled in from their reply. Leave the RSVP link out - they have just used it.',
 				],
+
+				[
+					'key'      => 'rsvp.decline.enabled',
+					'label'    => 'Send a regrets email',
+					'type'     => 'toggle',
+					'on_label' => 'Email the person a short note when they say they cannot come',
+					'help'     => 'Goes out instead of the confirmation above when the "no" answer is chosen.',
+				],
+				[ 'key' => 'rsvp.decline.subject', 'label' => 'Regrets email - subject', 'type' => 'text' ],
+				[ 'key' => 'rsvp.decline.body',    'label' => 'Regrets email - message', 'type' => 'textarea' ],
 			],
 		],
 	];

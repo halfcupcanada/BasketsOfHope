@@ -2073,6 +2073,23 @@ h2.has-text-align-center + p,
 }
 .boh-rsvp label .req { color: var(--boh-ember); margin-left: 2px; }
 
+/* The yes / no question: two radio choices on one line, the question above
+   them styled like every other label. The guests row folds away for a no
+   (the [hidden] attribute, which the label rule above would otherwise beat). */
+.boh-rsvp .boh-form-row--attending .boh-form-row__q {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--boh-ink);
+  letter-spacing: 0.02em;
+}
+.boh-rsvp .boh-form-row--attending .wpcf7-radio { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-bottom: 18px; }
+.boh-rsvp .boh-form-row--attending .wpcf7-list-item { margin: 0; }
+.boh-rsvp .boh-form-row--attending label { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; cursor: pointer; }
+.boh-rsvp .boh-form-row--attending input[type="radio"] { accent-color: var(--boh-magenta); width: 18px; height: 18px; margin: 0; }
+.boh-rsvp .boh-form-row--guests[hidden] { display: none !important; }
+
 /* - Sticky give bar - */
 .boh-sticky {
   position: fixed;

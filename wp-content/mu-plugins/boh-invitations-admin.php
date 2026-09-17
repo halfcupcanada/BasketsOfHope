@@ -97,7 +97,8 @@ function boh_invitations_render_list() {
 	$params = [];
 	if ( $filter === 'not_sent' )  $where .= ' AND invitation_sent_at IS NULL';
 	if ( $filter === 'awaiting' )  $where .= ' AND invitation_sent_at IS NOT NULL AND responded_at IS NULL';
-	if ( $filter === 'responded' ) $where .= ' AND responded_at IS NOT NULL';
+	if ( $filter === 'responded' ) $where .= " AND responded_at IS NOT NULL AND (party_size IS NULL OR party_size <> 'Not attending')";
+	if ( $filter === 'declined' )  $where .= " AND responded_at IS NOT NULL AND party_size = 'Not attending'";
 	if ( $filter === 'reminded' )  $where .= ' AND reminder_sent_at IS NOT NULL';
 	if ( $search ) {
 		$like = '%' . $wpdb->esc_like( $search ) . '%';
@@ -138,8 +139,11 @@ function boh_invitations_render_list() {
 		if ( $boh_totals ) : ?>
 			<div class="notice notice-info" style="margin:14px 0;padding:10px 14px">
 				<p style="margin:0;font-size:14px">
-					<strong><?php echo (int) $boh_totals['responses']; ?></strong> RSVP<?php echo $boh_totals['responses'] === 1 ? '' : 's'; ?> ·
+					<strong><?php echo (int) $boh_totals['responses']; ?></strong> attending ·
 					<strong><?php echo (int) $boh_totals['guests']; ?></strong> guests expected
+					<?php if ( ! empty( $boh_totals['declined'] ) ) : ?>
+						· <strong><?php echo (int) $boh_totals['declined']; ?></strong> declined
+					<?php endif; ?>
 					<?php if ( $boh_totals['walkup'] ) : ?>
 						· <strong><?php echo (int) $boh_totals['walkup']; ?></strong> from the website (not on the invite list)
 					<?php endif; ?>
@@ -158,7 +162,8 @@ function boh_invitations_render_list() {
 					'all'       => "All ({$counts['total']})",
 					'not_sent'  => "Not invited yet ({$counts['not_sent']})",
 					'awaiting'  => "Awaiting reply ({$counts['awaiting']})",
-					'responded' => "Responded ({$counts['responded']})",
+					'responded' => "Attending ({$counts['attending']})",
+					'declined'  => "Declined ({$counts['declined']})",
 					'reminded'  => "Reminded ({$counts['reminded']})",
 				];
 				foreach ( $tabs as $key => $label ) : ?>
@@ -216,7 +221,9 @@ function boh_invitations_render_list() {
 						<td><?php echo $r->invitation_sent_at ? esc_html( mysql2date( 'M j', $r->invitation_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
 						<td><?php echo $r->reminder_sent_at ? esc_html( mysql2date( 'M j', $r->reminder_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
 						<td>
-							<?php if ( $r->responded_at ) : ?>
+							<?php if ( $r->responded_at && $r->party_size === 'Not attending' ) : ?>
+								<strong style="color:#a40e26">✗ <?php echo esc_html( mysql2date( 'M j', $r->responded_at ) ); ?></strong>
+							<?php elseif ( $r->responded_at ) : ?>
 								<strong style="color:#0a7d0a">✓ <?php echo esc_html( mysql2date( 'M j', $r->responded_at ) ); ?></strong>
 							<?php else : ?>
 								<span style="color:#999">-</span>

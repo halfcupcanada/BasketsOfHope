@@ -71,6 +71,9 @@ function boh_rsvp_form_defaults(): array {
 		'first_label'   => 'First name',
 		'last_label'    => 'Last name',
 		'email_label'   => 'Email',
+		'attending_label' => 'Will you be joining us?',
+		'attending_yes'   => "Yes, I'll be there",
+		'attending_no'    => "Sorry, I can't make it",
 		'guests_label'  => 'How many guests including yourself?',
 		'guest_options' => "1 - Just me\n2\n3\n4\n5",
 		'consent'       => 'I agree to receive email communication from Rohit Group regarding Baskets of Hope and similar events.',
@@ -138,10 +141,18 @@ function boh_rsvp_form_template(): string {
 	$first   = boh_rsvp_label( $c['first_label'] );
 	$last    = boh_rsvp_label( $c['last_label'] );
 	$email   = boh_rsvp_label( $c['email_label'] );
+	$attend  = boh_rsvp_label( $c['attending_label'] );
+	// The visitor sees the label; the site receives "yes" or "no" whatever
+	// the label is edited to, so the guest list and the emails can rely on it.
+	$yes     = boh_rsvp_tag_value( $c['attending_yes'] );
+	$no      = boh_rsvp_tag_value( $c['attending_no'] );
 	$guests  = boh_rsvp_label( $c['guests_label'] );
 	$consent = boh_rsvp_tag_value( $c['consent'] );
 	$submit  = boh_rsvp_tag_value( $c['submit'] );
 
+	// The consent box is not marked required in the tag: someone sending
+	// regrets is not asking to hear from us. boh_rsvp_consent_rule() below
+	// requires it for a yes.
 	return <<<FORM
 <p class="boh-form-row boh-form-row--split"><label> {$first} <span class="req">*</span>
     [text* first-name placeholder "First name"] </label>
@@ -151,17 +162,93 @@ function boh_rsvp_form_template(): string {
 <p class="boh-form-row"><label> {$email} <span class="req">*</span>
     [email* your-email placeholder "you@example.com"] </label></p>
 
-<p class="boh-form-row"><label> {$guests}
+<p class="boh-form-row boh-form-row--attending"><span class="boh-form-row__q">{$attend}</span>
+    [radio attending default:1 "{$yes}|yes" "{$no}|no"]</p>
+
+<p class="boh-form-row boh-form-row--guests"><label> {$guests}
     [select party-size 
 FORM
 	. implode( ' ', $options ) . <<<FORM
 ] </label></p>
 
-<p class="boh-form-row boh-form-row--terms">[checkbox* consent use_label_element "{$consent}"]</p>
+<p class="boh-form-row boh-form-row--terms">[checkbox consent use_label_element "{$consent}"]</p>
 
 <p class="boh-form-submit">[submit "{$submit}"]</p>
 FORM;
 }
+
+/** True when the reply being processed is a "no". Works during validation and after. */
+function boh_rsvp_is_decline(): bool {
+	$sub = class_exists( 'WPCF7_Submission' ) ? WPCF7_Submission::get_instance() : null;
+	$v   = $sub ? $sub->get_posted_data( 'attending' ) : ( $_POST['attending'] ?? '' );
+	if ( is_array( $v ) ) {
+		$v = reset( $v );
+	}
+	$v = trim( (string) $v );
+	if ( $v === 'no' ) {
+		return true;
+	}
+	// Before pipes are applied the raw value is the label itself.
+	$no = boh_rsvp_tag_value( boh_rsvp_form_copy()['attending_no'] );
+	return $no !== '' && $v === $no;
+}
+
+/** Consent is required to say yes, and only to say yes. */
+add_filter( 'wpcf7_validate_checkbox', 'boh_rsvp_consent_rule', 20, 2 );
+function boh_rsvp_consent_rule( $result, $tag ) {
+	if ( $tag->name !== 'consent' || boh_rsvp_is_decline() ) {
+		return $result;
+	}
+	$v = $_POST['consent'] ?? [];
+	if ( empty( array_filter( (array) $v ) ) ) {
+		$result->invalidate( $tag, 'Please tick this box to RSVP yes.' );
+	}
+	return $result;
+}
+
+/**
+ * The note a guest gets when they say no. Same editable shape as the
+ * confirmation; swapped in for mail_2 on the way out.
+ */
+function boh_rsvp_decline_defaults(): array {
+	$name = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+	return [
+		'enabled' => '1',
+		'subject' => 'Thanks for letting us know - ' . $name,
+		'body'    => "Hi [first-name],\n\n"
+			. "Thank you for letting us know you can't join us this year - we'll miss you.\n\n"
+			. "If your plans change, you are always welcome: just RSVP again at " . home_url( '/rsvp/' ) . "\n\n"
+			. "You can still put comfort into a basket from wherever you are: " . home_url( '/donate/' ) . "\n\n"
+			. "With gratitude,\n"
+			. $name,
+	];
+}
+
+function boh_rsvp_decline_copy(): array {
+	$stored = get_option( BOH_CONTENT_OPTION, [] );
+	$stored = is_array( $stored ) ? $stored : [];
+	$out    = [];
+	foreach ( boh_rsvp_decline_defaults() as $name => $default ) {
+		$key = 'rsvp.decline.' . $name;
+		boh_content_note_default( $key, $default );
+		$value = $stored[ $key ] ?? '';
+		$out[ $name ] = ( is_string( $value ) && trim( $value ) !== '' ) ? $value : $default;
+	}
+	return $out;
+}
+
+add_action( 'wpcf7_before_send_mail', function ( $cf ) {
+	if ( ! function_exists( 'boh_rsvp_form_id' ) || $cf->id() !== boh_rsvp_form_id() || ! boh_rsvp_is_decline() ) {
+		return;
+	}
+	$copy   = boh_rsvp_decline_copy();
+	$mail_2 = (array) $cf->prop( 'mail_2' );
+	$mail_2['active']  = trim( (string) $copy['enabled'] ) === '1';
+	$mail_2['subject'] = (string) $copy['subject'];
+	$mail_2['body']    = (string) $copy['body'];
+	// In memory only - the stored form keeps the "you're in" confirmation.
+	$cf->set_properties( [ 'mail_2' => $mail_2 ] );
+}, 10, 1 );
 
 /**
  * Contact Form 7's second mail: the one that goes to the guest.

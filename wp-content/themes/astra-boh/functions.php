@@ -2591,6 +2591,7 @@ add_action( 'wp_footer', function () {
             const first = (firstEl && firstEl.value || '').trim().split(/\s+/)[0] || 'friend';
             const party = (partyEl && partyEl.value || '').trim();
             const email = (emailEl && emailEl.value || '').trim();
+            const declined = bohRsvpDeclined(form);
 
             const gcal = 'https://calendar.google.com/calendar/render' +
                 '?action=TEMPLATE' +
@@ -2620,7 +2621,15 @@ add_action( 'wp_footer', function () {
                     .split('{email}').join(safeEmail ? '<strong>' + safeEmail + '</strong>' : 'your inbox');
             }
 
-            const html = ''
+            // Saying no gets a quieter screen: no calendar, no confetti.
+            const html = declined ? ''
+              + '<div class="boh-rsvp-success boh-rsvp-success--no">'
+              +   '<div class="boh-rsvp-success__eyebrow">' + say(S.no_eyebrow) + '</div>'
+              +   '<h3 class="boh-rsvp-success__title">' + say(S.no_title) + '</h3>'
+              +   '<p class="boh-rsvp-success__lede">' + say(S.no_lede) + '</p>'
+              +   '<p class="boh-rsvp-success__share">' + say(S.share) + ' <button type="button" class="boh-rsvp-success__forward" data-boh-forward>' + say(S.forward) + '</button></p>'
+              + '</div>'
+              : ''
               + '<div class="boh-rsvp-success">'
               +   '<div class="boh-rsvp-success__eyebrow">' + say(S.eyebrow) + '</div>'
               +   '<h3 class="boh-rsvp-success__title">' + say(S.title) + '</h3>'
@@ -2660,7 +2669,7 @@ add_action( 'wp_footer', function () {
 
             setTimeout(function () {
                 rsvp.insertAdjacentHTML('afterbegin', html);
-                boh_confetti(2600);
+                if (!declined) boh_confetti(2600);
                 // Smooth-scroll to success
                 const t = rsvp.querySelector('.boh-rsvp-success');
                 if (t) {
@@ -2669,6 +2678,25 @@ add_action( 'wp_footer', function () {
                 }
             }, 320);
         }
+
+        // The "no" answer submits as the label, so it is matched by position
+        // in the attending question - the second choice - not by its wording.
+        function bohRsvpDeclined(form) {
+            if (!form) return false;
+            const radios = form.querySelectorAll('input[name="attending"]');
+            return radios.length > 1 && radios[1].checked;
+        }
+        // Nobody sending regrets needs a headcount: the guests row folds away.
+        function bohRsvpWatchAttending() {
+            document.querySelectorAll('form input[name="attending"]').forEach(function (r) {
+                r.addEventListener('change', function () {
+                    const form = r.closest('form');
+                    const row = form && form.querySelector('.boh-form-row--guests');
+                    if (row) row.hidden = bohRsvpDeclined(form);
+                });
+            });
+        }
+        bohRsvpWatchAttending();
 
         document.addEventListener('wpcf7mailsent', function (e) {
             // Only celebrate for the RSVP form (form id 19)
@@ -2822,6 +2850,10 @@ function boh_rsvp_success_copy(): array
         'bring_note'  => boh_content( 'rsvp.success.bring_note', 'Or partner with a friend' ),
         'share'       => boh_content( 'rsvp.success.share', "Know someone who'd love this?" ),
         'forward'     => boh_content( 'rsvp.success.forward', 'Forward the invitation' ),
+        // The screen for a "no".
+        'no_eyebrow'  => boh_content( 'rsvp.decline.eyebrow', 'Thank you' ),
+        'no_title'    => boh_content( 'rsvp.decline.title', "We'll miss you, {first}." ),
+        'no_lede'     => boh_content( 'rsvp.decline.lede', "Thanks for letting us know. If your plans change, come back and RSVP again - there will always be a seat for you. A short note is on its way to {email}." ),
     ];
 }
 
