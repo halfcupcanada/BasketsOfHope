@@ -3452,14 +3452,17 @@ figure.boh-about-image ~ p {
   margin: 24px 0 0 !important;
   text-align: center;
 }
+/* The native arrow is switched off, so the chevron is drawn here: two
+   small triangles on the right, centred vertically. The shorthand carries
+   !important because the global `select { background: ... !important }`
+   above otherwise wipes the images and leaves the field with no arrow. */
 #sponsorship-form select.wpcf7-select {
-  background-image: linear-gradient(45deg, transparent 50%, var(--boh-plum) 50%),
-                    linear-gradient(135deg, var(--boh-plum) 50%, transparent 50%);
-  background-position: calc(100% - 20px) 22px, calc(100% - 14px) 22px;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
   appearance: none;
   -webkit-appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--boh-plum) 50%) no-repeat right 20px center / 6px 6px,
+    linear-gradient(135deg, var(--boh-plum) 50%, transparent 50%) no-repeat right 14px center / 6px 6px,
+    var(--boh-paper) !important;
   padding-right: 40px !important;
 }
 /* Response messages (validation errors + success) */
