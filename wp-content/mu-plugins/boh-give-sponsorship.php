@@ -52,6 +52,11 @@ add_action( 'wp_footer', function () {
 	    if (!hid) { return; }
 	    var opt = sel.options[sel.selectedIndex];
 	    hid.value = (opt && opt.getAttribute('data-boh-designation')) || '';
+	    // GiveWP's own handler re-selects "the custom option" - the first
+	    // one - a moment later; put the choice back where the sponsor left it.
+	    if (hid.value) {
+	      window.setTimeout(function () { opt.selected = true; }, 0);
+	    }
 	  });
 	  // After any hand-typed figure GiveWP flips the dropdown back to
 	  // "Custom Amount". A sponsor who has just typed their level's price
