@@ -1331,8 +1331,13 @@ body.admin-bar .wp-block-cover.boh-hero {
   max-width: 1160px;
   margin: 0 auto !important;
   padding: 24px !important;
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  /* A flex row rather than a four-track grid: the figures are edited in
+     admin and there are three of them now, so a fixed four-column grid left
+     the last quarter empty and the whole row sitting left of centre. Cells
+     share the width up to a cap and the row centres whatever the count. */
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 32px 24px !important;
   background: transparent !important;
   border: 0 !important;
@@ -1340,13 +1345,9 @@ body.admin-bar .wp-block-cover.boh-hero {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
-@media (max-width: 900px) {
-  .boh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-}
-@media (max-width: 480px) {
-  .boh-stats { grid-template-columns: 1fr !important; }
-}
 .boh-stats__cell {
+  flex: 1 1 200px;
+  max-width: 290px;
   text-align: center;
   padding: 12px 8px;
   border-right: 1px solid rgba(255,255,255,0.12);
@@ -7351,15 +7352,10 @@ body.home .entry-content > .boh-band--white { background-color: #ffffff !importa
   max-width: 1160px;
   margin: 0 auto;
   padding: 24px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 32px 24px;
-}
-@media (max-width: 900px) {
-  .boh-stats--photo .boh-stats__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 480px) {
-  .boh-stats--photo .boh-stats__row { grid-template-columns: 1fr; }
 }
 
 /* ── A photograph behind a band ──────────────────────────────────────
