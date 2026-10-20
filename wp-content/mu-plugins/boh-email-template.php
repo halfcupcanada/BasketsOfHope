@@ -75,7 +75,7 @@ function boh_email_wrap( array $args ): array {
 
 	$GLOBALS['boh_email_alt_body'] = $is_html
 		? trim( wp_strip_all_tags( $message ) )
-		: $message;
+		: boh_email_plain( $message );
 	$GLOBALS['boh_email_framed'] = true;
 
 	$args['message'] = boh_email_document(
@@ -277,6 +277,19 @@ function boh_email_textify( string $text ): string {
 	foreach ( $parts as $para ) {
 		$para = trim( $para );
 
+		// A line beginning "## " is a section heading - "Event Details",
+		// "What to Expect" - set bold, with the room above it a heading
+		// needs. Only that marker counts, so nothing already written changes.
+		// Lines written directly under the heading carry on as a paragraph.
+		if ( preg_match( '~^##[ \t]+([^\n]*\S)[ \t]*(?:\n+(.*))?$~s', $para, $h ) ) {
+			$out .= '<p style="margin:26px 0 8px;font-size:17px;font-weight:700;color:#1F1A24">'
+				. esc_html( trim( $h[1] ) ) . "</p>\n";
+			$para = trim( $h[2] ?? '' );
+			if ( $para === '' ) {
+				continue;
+			}
+		}
+
 		// A paragraph ending in the RSVP link becomes the button. Anything in
 		// front of it stays, unless it is only there to introduce the link -
 		// "RSVP here:" above a button that says RSVP is saying it twice.
@@ -284,15 +297,73 @@ function boh_email_textify( string $text ): string {
 		// and a pattern that stopped at "/rsvp/" quietly stopped making the
 		// button the moment those parameters were added.
 		if ( preg_match( '~^(.*?)(https?://[^\s<]*/rsvp/?(?:\?[^\s<]*)?)$~is', $para, $m ) ) {
-			$lead = rtrim( trim( $m[1] ), ":- " );
+			$lead  = rtrim( trim( $m[1] ), ":- " );
+			$label = 'RSVP';
 			if ( $lead !== '' && ! preg_match( '~^(rsvp|rsvp here|reserve (your |my )?(seat|place|spot)s?|you can rsvp( here)?)$~i', $lead ) ) {
 				$out .= '<p style="margin:0 0 12px">' . nl2br( esc_html( $lead ) ) . "</p>\n";
+			} elseif ( preg_match( '~^rsvp( here)?$~i', $lead ) ) {
+				// "RSVP here:" above the link names the button: RSVP HERE.
+				$label = strtoupper( $lead );
 			}
-			$out .= boh_email_button( $m[2], 'RSVP' );
+			$out .= boh_email_button( $m[2], $label );
 			continue;
 		}
 
-		$safe = esc_html( $para );
+		// Lines beginning "- " are a list. Anything above them in the same
+		// paragraph introduces it: "A few ideas:" and then the ideas.
+		if ( preg_match( '~^(?:-|\*|•)[ \t]+~m', $para ) ) {
+			$lead  = [];
+			$items = [];
+			foreach ( explode( "\n", $para ) as $line ) {
+				if ( preg_match( '~^(?:-|\*|•)[ \t]+(.*)$~', $line, $lm ) ) {
+					$items[] = trim( $lm[1] );
+				} elseif ( ! $items ) {
+					$lead[] = $line;
+				} else {
+					$items[ count( $items ) - 1 ] .= ' ' . trim( $line );
+				}
+			}
+			if ( $lead ) {
+				$out .= '<p style="margin:0 0 8px">' . nl2br( boh_email_inline( implode( "\n", $lead ), $home, $name ) ) . "</p>\n";
+			}
+			$out .= '<ul style="margin:0 0 16px;padding:0 0 0 22px">';
+			foreach ( $items as $item ) {
+				$out .= '<li style="margin:0 0 6px">' . boh_email_inline( $item, $home, $name ) . '</li>';
+			}
+			$out .= "</ul>\n";
+			continue;
+		}
+
+		$out .= '<p style="margin:0 0 16px">' . nl2br( boh_email_inline( $para, $home, $name ) ) . "</p>\n";
+	}
+
+	return $out;
+}
+
+/**
+ * One run of text, escaped, with its links made tappable: a named link
+ * reads as its words, a bare address is linked as written, and the site's
+ * own address reads as its name.
+ */
+function boh_email_inline( string $text, string $home, string $name ): string {
+	$safe = esc_html( $text );
+
+		// "[Rohit's Baskets of Hope](https://…)" reads as its words, linked.
+		// Each one is parked behind a marker while the bare addresses are
+		// linked, so the address inside the link is not linked twice.
+		$named = [];
+		$safe  = preg_replace_callback(
+			'~\[([^\]\n]+)\]\((https?://[^\s)]+)\)~i',
+			function ( $m ) use ( &$named ) {
+				$url  = html_entity_decode( $m[2], ENT_QUOTES );
+				$key  = "\x00" . count( $named ) . "\x00";
+				$named[ $key ] = '<a href="' . esc_url( $url ) . '" style="color:#D01482;text-decoration:underline">'
+					. trim( $m[1] ) . '</a>';
+				return $key;
+			},
+			$safe
+		);
+
 		$safe = preg_replace_callback(
 			'~(https?://[^\s<]+[^\s<.,:;"\')\]])~i',
 			function ( $m ) use ( $home, $name ) {
@@ -303,10 +374,18 @@ function boh_email_textify( string $text ): string {
 			},
 			$safe
 		);
-		$out .= '<p style="margin:0 0 16px">' . nl2br( $safe ) . "</p>\n";
-	}
+		$safe = strtr( $safe, $named );
+	return $safe;
+}
 
-	return $out;
+/**
+ * The plain-text alternative: the author's words without the two markers
+ * the HTML version reads - a "## " heading is just its words, and a named
+ * link is its words with the address beside them.
+ */
+function boh_email_plain( string $text ): string {
+	$text = preg_replace( '~^##[ \t]+~m', '', $text );
+	return preg_replace( '~\[([^\]\n]+)\]\((https?://[^\s)]+)\)~i', '$1 ($2)', $text );
 }
 
 /** One place to ask what the template says, defaults included. */

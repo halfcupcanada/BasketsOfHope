@@ -80,6 +80,23 @@ function boh_invitations_render_list() {
 					}
 				}
 				$notices[] = [ 'success', "Sent {$sent} reminder(s)" . ( $failed ? ", {$failed} failed" : '' ) . '.' ];
+			} elseif ( $action === 'send_details' ) {
+				// Only to people who said yes: this email assumes they are coming.
+				$rows = $wpdb->get_results( "SELECT * FROM $t WHERE id IN ($in) AND responded_at IS NOT NULL AND (party_size IS NULL OR party_size <> 'Not attending')" );
+				$sent = $failed = 0;
+				foreach ( $rows as $inv ) {
+					if ( boh_invitations_send_email( $inv, 'details', count( $rows ) <= BOH_INV_MANUAL_LIMIT ) ) {
+						$wpdb->update( $t,
+							[ 'details_sent_at' => current_time( 'mysql', true ), 'updated_at' => current_time( 'mysql', true ) ],
+							[ 'id' => $inv->id ]
+						);
+						$sent++;
+					} else {
+						$failed++;
+					}
+				}
+				$skipped = count( $ids ) - count( $rows );
+				$notices[] = [ 'success', "Sent {$sent} event details email(s)" . ( $failed ? ", {$failed} failed" : '' ) . ( $skipped ? ", {$skipped} skipped - no RSVP yet" : '' ) . '.' ];
 			} elseif ( $action === 'delete' ) {
 				$wpdb->query( "DELETE FROM $t WHERE id IN ($in)" );
 				$notices[] = [ 'success', 'Deleted ' . count( $ids ) . ' invitee(s).' ];
@@ -100,6 +117,7 @@ function boh_invitations_render_list() {
 	if ( $filter === 'responded' ) $where .= " AND responded_at IS NOT NULL AND (party_size IS NULL OR party_size <> 'Not attending')";
 	if ( $filter === 'declined' )  $where .= " AND responded_at IS NOT NULL AND party_size = 'Not attending'";
 	if ( $filter === 'reminded' )  $where .= ' AND reminder_sent_at IS NOT NULL';
+	if ( $filter === 'details_sent' ) $where .= ' AND details_sent_at IS NOT NULL';
 	if ( $search ) {
 		$like = '%' . $wpdb->esc_like( $search ) . '%';
 		$where .= ' AND (name LIKE %s OR email LIKE %s OR company LIKE %s)';
@@ -165,6 +183,7 @@ function boh_invitations_render_list() {
 					'responded' => "Attending ({$counts['attending']})",
 					'declined'  => "Declined ({$counts['declined']})",
 					'reminded'  => "Reminded ({$counts['reminded']})",
+					'details_sent' => "Details sent ({$counts['details_sent']})",
 				];
 				foreach ( $tabs as $key => $label ) : ?>
 					<li><a class="<?php echo $filter === $key ? 'current' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '&status=' . $key ) ); ?>"><?php echo esc_html( $label ); ?></a> <?php echo array_key_last( $tabs ) === $key ? '' : ' |'; ?></li>
@@ -187,6 +206,7 @@ function boh_invitations_render_list() {
 					<option value="">Bulk actions</option>
 					<option value="send_invitation">Send invitation email</option>
 					<option value="send_reminder">Send reminder email</option>
+					<option value="send_details">Send event details email (RSVP'd guests only)</option>
 					<option value="mark_responded">Mark as responded</option>
 					<option value="delete">Delete</option>
 				</select>
@@ -202,6 +222,7 @@ function boh_invitations_render_list() {
 						<th>Company</th>
 						<th style="width:110px">Invited</th>
 						<th style="width:110px">Reminded</th>
+						<th style="width:110px">Details sent</th>
 						<th style="width:110px">Responded</th>
 						<th style="width:150px">Party</th>
 						<th style="width:96px">Guests</th>
@@ -210,7 +231,7 @@ function boh_invitations_render_list() {
 				</thead>
 				<tbody>
 					<?php if ( empty( $rows ) ) : ?>
-						<tr><td colspan="10" style="text-align:center;padding:32px;color:#666">No invitees match this filter.</td></tr>
+						<tr><td colspan="11" style="text-align:center;padding:32px;color:#666">No invitees match this filter.</td></tr>
 					<?php endif; ?>
 					<?php foreach ( $rows as $r ) : ?>
 					<tr>
@@ -220,6 +241,7 @@ function boh_invitations_render_list() {
 						<td><?php echo esc_html( $r->company ); ?></td>
 						<td><?php echo $r->invitation_sent_at ? esc_html( mysql2date( 'M j', $r->invitation_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
 						<td><?php echo $r->reminder_sent_at ? esc_html( mysql2date( 'M j', $r->reminder_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
+						<td><?php echo $r->details_sent_at ? esc_html( mysql2date( 'M j', $r->details_sent_at ) ) : '<span style="color:#999">-</span>'; ?></td>
 						<td>
 							<?php if ( $r->responded_at && $r->party_size === 'Not attending' ) : ?>
 								<strong style="color:#a40e26">✗ <?php echo esc_html( mysql2date( 'M j', $r->responded_at ) ); ?></strong>
@@ -930,7 +952,7 @@ function boh_invitations_render_templates() {
 
 	if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		check_admin_referer( 'boh_invitations_tpl' );
-		foreach ( [ 'invitation_subject', 'invitation_body', 'reminder_subject', 'reminder_body' ] as $k ) {
+		foreach ( [ 'invitation_subject', 'invitation_body', 'reminder_subject', 'reminder_body', 'details_subject', 'details_body' ] as $k ) {
 			$templates[ $k ] = wp_unslash( $_POST[ $k ] ?? '' );
 		}
 		update_option( BOH_INV_OPT_TEMPLATES, $templates );
@@ -953,6 +975,7 @@ function boh_invitations_render_templates() {
 	}
 	$invitation_preview = boh_invitations_render_email( 'invitation', $sample );
 	$reminder_preview   = boh_invitations_render_email( 'reminder',   $sample );
+	$details_preview    = boh_invitations_render_email( 'details',    $sample );
 
 	// Sender info (what will show in the recipient's inbox)
 	$from_addr = defined( 'BOH_MAIL_FROM' )      ? BOH_MAIL_FROM      : '(fallback wp_mail)';
@@ -970,6 +993,7 @@ function boh_invitations_render_templates() {
 		<?php endforeach; ?>
 
 		<p>Available placeholders: <code>{{name}}</code> · <code>{{first_name}}</code> · <code>{{email}}</code> · <code>{{company}}</code> · <code>{{rsvp_url}}</code></p>
+		<p>Formatting: a paragraph ending in <code>{{rsvp_url}}</code> becomes the pink button, and "RSVP here:" above it names the button · start a line with <code>## </code> for a bold section heading · <code>[words](https://…)</code> makes a link that reads as its words.</p>
 
 		<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1400px">
 			<form method="post" style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px">
@@ -982,6 +1006,11 @@ function boh_invitations_render_templates() {
 				<h2>Reminder</h2>
 				<p><label>Subject<br><input type="text" name="reminder_subject" value="<?php echo esc_attr( $templates['reminder_subject'] ?? '' ); ?>" style="width:100%"></label></p>
 				<p><label>Body<br><textarea name="reminder_body" rows="12" style="width:100%;font-family:monospace"><?php echo esc_textarea( $templates['reminder_body'] ?? '' ); ?></textarea></label></p>
+
+				<h2>Event details</h2>
+				<p style="color:#666;margin-top:-6px">For guests who have RSVP'd. Sent by hand: tick them on the Invitees list and choose "Send event details email".</p>
+				<p><label>Subject<br><input type="text" name="details_subject" value="<?php echo esc_attr( $templates['details_subject'] ?? '' ); ?>" style="width:100%"></label></p>
+				<p><label>Body<br><textarea name="details_body" rows="24" style="width:100%;font-family:monospace"><?php echo esc_textarea( $templates['details_body'] ?? '' ); ?></textarea></label></p>
 
 				<p><button class="button button-primary">Save templates</button></p>
 			</form>
@@ -1007,6 +1036,7 @@ function boh_invitations_render_templates() {
 					<?php foreach ( [
 						[ 'invitation', 'Invitation email', $invitation_preview ],
 						[ 'reminder',   'Reminder email',   $reminder_preview ],
+						[ 'details',    'Event details email', $details_preview ],
 					] as [ $key, $label, $preview ] ) : ?>
 					<div style="border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;margin-bottom:20px">
 						<div style="background:#f6f7f7;padding:10px 14px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#666">
@@ -1016,15 +1046,19 @@ function boh_invitations_render_templates() {
 							<div>To: <?php echo esc_html( ( $sample->name ? $sample->name . ' <' : '<' ) . $sample->email . '>' ); ?></div>
 							<div style="margin-top:6px">Subject: <strong style="color:#1d2327"><?php echo esc_html( $preview['subject'] ); ?></strong></div>
 						</div>
-						<div style="padding:16px 18px;white-space:pre-wrap;line-height:1.55;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#222;background:#fff;max-height:520px;overflow:auto"><?php
-							// Render {{rsvp_url}} as a real clickable link in the preview
-							$rendered = esc_html( $preview['body'] );
-							$rendered = preg_replace(
-								'#(https?://[^\s<]+)#',
-								'<a href="$1" target="_blank" rel="noopener" style="color:#d01482">$1</a>',
-								$rendered
-							);
-							echo $rendered;
+						<div style="padding:16px 18px;line-height:1.55;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#222;background:#fff;max-height:520px;overflow:auto<?php echo function_exists( 'boh_email_textify' ) ? '' : ';white-space:pre-wrap'; ?>"><?php
+							// The same plain-text-to-HTML pass the inbox gets: headings,
+							// lists, named links and the RSVP button, as they will arrive.
+							if ( function_exists( 'boh_email_textify' ) ) {
+								echo boh_email_textify( $preview['body'] );
+							} else {
+								$rendered = esc_html( $preview['body'] );
+								echo preg_replace(
+									'#(https?://[^\s<]+)#',
+									'<a href="$1" target="_blank" rel="noopener" style="color:#d01482">$1</a>',
+									$rendered
+								);
+							}
 						?></div>
 					</div>
 					<?php endforeach; ?>

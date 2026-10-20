@@ -27,7 +27,7 @@ function boh_invitations_maybe_install() {
 	global $wpdb;
 	$table = $wpdb->prefix . BOH_INV_TABLE;
 	$installed_version = get_option( 'boh_invitations_schema_version' );
-	if ( $installed_version === '1.2' ) return;
+	if ( $installed_version === '1.3' ) return;
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset = $wpdb->get_charset_collate();
@@ -39,6 +39,7 @@ function boh_invitations_maybe_install() {
 		notes TEXT NULL,
 		invitation_sent_at DATETIME NULL,
 		reminder_sent_at DATETIME NULL,
+		details_sent_at DATETIME NULL,
 		responded_at DATETIME NULL,
 		party_size VARCHAR(64) NULL,
 		guest_count INT NULL,
@@ -49,17 +50,13 @@ function boh_invitations_maybe_install() {
 		KEY status (invitation_sent_at, responded_at)
 	) $charset";
 	dbDelta( $sql );
-	update_option( 'boh_invitations_schema_version', '1.2' );
+	update_option( 'boh_invitations_schema_version', '1.3' );
 
-	// Seed default templates
-	if ( ! get_option( BOH_INV_OPT_TEMPLATES ) ) {
-		update_option( BOH_INV_OPT_TEMPLATES, [
-			'invitation_subject' => "You're invited - Rohit's Baskets of Hope 2026",
-			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 5:00 PM\nWhere: Rohit Group Headquarters, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
-			'reminder_subject'   => "Save your seat - Baskets of Hope 2026",
-			'reminder_body'      => "Hi {{first_name}},\n\nA quick reminder: Rohit's Baskets of Hope 2026 is on Tuesday, November 3 at 5:00 PM. We haven't heard back from you yet - would you like to join us?\n\nRSVP here:\n{{rsvp_url}}\n\nIf now isn't the right time, no worries. Reply to this email and we'll follow up next year.\n\nWith gratitude,\nRohit's Baskets of Hope team",
-		] );
-	}
+	// Seed the default templates, and give an existing set any template
+	// added since it was saved - the stored wording is never overwritten.
+	$stored = get_option( BOH_INV_OPT_TEMPLATES );
+	$stored = is_array( $stored ) ? $stored : [];
+	update_option( BOH_INV_OPT_TEMPLATES, $stored + boh_invitations_default_templates() );
 	if ( ! get_option( BOH_INV_OPT_LIMITS ) ) {
 		update_option( BOH_INV_OPT_LIMITS, [
 			'per_day'   => 250, // Leaves headroom under Brevo's 300/day free cap
@@ -127,6 +124,22 @@ function boh_invitations_table() {
 	return $wpdb->prefix . BOH_INV_TABLE;
 }
 
+/**
+ * The templates as shipped. Three emails: the invitation, the reminder for
+ * anyone who has not answered, and the event details for everyone who said
+ * yes - sent by hand from the list, a week or so before the evening.
+ */
+function boh_invitations_default_templates(): array {
+	return [
+			'invitation_subject' => "You're invited - Rohit's Baskets of Hope 2026",
+			'invitation_body'    => "Hi {{first_name}},\n\nYou're invited to Rohit's Baskets of Hope 2026 - an evening of community, comfort, and giving in support of WIN House.\n\nWhen:  Tuesday, November 3, 2026 · 5:00 PM\nWhere: Rohit Group Headquarters, 10130 112 St NW, Edmonton\n\nEach guest brings 12 comfort items that we transform into gift baskets for women and families rebuilding after violence. If you can't bring items, you're welcome to partner with a friend or sponsor a basket financially.\n\nPlease RSVP so we can save you a seat:\n{{rsvp_url}}\n\nWith gratitude,\nRohit's Baskets of Hope team\nBoH@rohitgroup.com",
+			'reminder_subject'   => "RSVP for Baskets of Hope by October 23rd",
+			'reminder_body'      => "Hi {{first_name}},\n\nWe hope you'll join us for [Rohit's Baskets of Hope](https://www.rohitsbasketsofhope.com) on Tuesday, November 3rd!\n\nWe're looking forward to another wonderful evening of connection and giving back in support of WIN House Edmonton.\n\nPlease RSVP by Friday, October 23rd so we can plan for your attendance.\n\nRSVP here:\n{{rsvp_url}}\n\n## Event Details\n\nTuesday, November 3, 2026\n5:00 PM\nRohit Group Headquarters\n10130 112 Street NW, Edmonton\n\nUnderground parking and paid street parking are available, and our volunteers will be ready to greet you and help with your donated items when you arrive.\n\n## A Little Shopping Reminder!\n\nGuests are encouraged to bring 12 new comfort or self-care items to help fill our Baskets of Hope for women and families supported by WIN House. Think cozy socks, journals, lotions, bath products, soft blankets, gift cards, or other thoughtful little luxuries that offer comfort and care.\n\n## What to Expect\n\nJoin us for an evening of giving, featuring a silent auction, interactive activity stations, food and refreshments, and inspiring remarks about the impact of WIN House in our community. It's a special opportunity to come together and make a meaningful difference.\n\nWe hope to see you there!\n\nPlease RSVP by Friday, October 23.\n\nRSVP:\n{{rsvp_url}}\n\nWarmly,\nRohit's Baskets of Hope team",
+		'details_subject'    => "We can't wait to see you at Rohit's Baskets of Hope!",
+		'details_body'       => "Hi {{first_name}},\n\nThank you for RSVP'ing to Rohit's Baskets of Hope! We're so grateful you'll be joining us for an evening of community, connection and giving back in support of WIN House.\n\nWith the event just around the corner, we wanted to share a few helpful reminders so you're ready for the evening.\n\n## Event Details\n\nTuesday, November 3, 2026\nDoors open at 5:00 PM\nRohit Group Headquarters\n10130 112 Street NW, Edmonton\n\n## Parking & Arrival\n\nUnderground parking is available at the back of the building, and paid street parking is available out front. When you arrive, our friendly volunteers will be there to welcome you at both locations, help with your donated items, and direct you to the event.\n\n## It's time to get shopping!\n\nOne of the most meaningful parts of Baskets of Hope is the thoughtful gifts our guests contribute. Each guest is encouraged to bring 12 new comfort or self-care items that will help fill our Baskets of Hope for women and families supported by WIN House.\n\nLooking for inspiration? Here are a few ideas:\n- Cozy socks or slippers\n- Journals, books or notebooks\n- Lotions, bath products and other self-care treats\n- Soft blankets\n- Reusable water bottles or mugs\n- Gift cards\n\nYou can also team up with a friend or colleague to shop for your items together! WIN House keeps an Amazon wishlist [linked here](https://www.amazon.ca/hz/wishlist/ls/1382D1O8J088H?ref_=wl_fv_le).\n\n## What to Expect\n\nBeyond the giving, Baskets of Hope is an opportunity to come together and celebrate the difference our community can make.\n\nNote we won't be packing baskets that evening — the Rohit team takes care of that the next day — so you have plenty of time to take in the silent auction, interactive activity stations, delicious food and refreshments, and time to connect. There will also be inspiring remarks and stories about the impact of WIN House and Baskets of Hope.\n\nMost importantly, you'll be part of something meaningful. Every item donated and every dollar raised helps us share a little hope with someone who needs it.\n\nWe can't wait to see you on November 3!\n\nThank you for being part of this special tradition and helping us make a difference, one basket at a time.\n\nWarmly,\nThe Rohit's Baskets of Hope Team\n[www.rohitsbasketsofhope.com](https://www.rohitsbasketsofhope.com)",
+	];
+}
+
 function boh_invitations_counts() {
 	global $wpdb;
 	$t = boh_invitations_table();
@@ -138,6 +151,7 @@ function boh_invitations_counts() {
 		'attending'   => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NOT NULL AND (party_size IS NULL OR party_size <> 'Not attending')" ),
 		'declined'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE responded_at IS NOT NULL AND party_size = 'Not attending'" ),
 		'reminded'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE reminder_sent_at IS NOT NULL" ),
+		'details_sent' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t WHERE details_sent_at IS NOT NULL" ),
 	];
 }
 
