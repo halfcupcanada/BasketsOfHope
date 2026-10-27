@@ -1155,6 +1155,7 @@ function boh_invitations_render_settings() {
 		$campaigns = [
 			[
 				'title' => 'Invitations',
+				'key'   => 'invitation',
 				'to'    => 'People not yet invited',
 				'stats' => [ [ number_format( $sent ), 'invited' ], [ number_format( $waiting ), 'not yet' ], [ number_format( $resp ), 'replied' ] ],
 				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '&status=not_sent' ),
@@ -1162,6 +1163,7 @@ function boh_invitations_render_settings() {
 			],
 			[
 				'title' => 'Reminders',
+				'key'   => 'reminder',
 				'to'    => "Invited guests who haven't replied",
 				'stats' => [ [ number_format( $awaiting ), 'awaiting reply' ], [ number_format( $reminded ), 'reminded' ] ],
 				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '&status=awaiting' ),
@@ -1169,6 +1171,7 @@ function boh_invitations_render_settings() {
 			],
 			[
 				'title' => 'Event details',
+				'key'   => 'details',
 				'to'    => "Guests who RSVP'd yes",
 				'stats' => [ [ number_format( $att ), 'attending' ], [ number_format( $det_sent ), 'sent' ], [ number_format( $det_rem ), 'not yet' ] ],
 				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-details' ),
@@ -1177,7 +1180,12 @@ function boh_invitations_render_settings() {
 		];
 		?>
 		<h2 style="margin:0 0 6px">Bulk email campaigns</h2>
-		<p style="margin:0 0 14px;color:#646970;max-width:820px">Each email the site sends in bulk, who it goes to, and how far along it is. Sending is currently <strong style="color:<?php echo $on ? '#00a32a' : '#b32d2e'; ?>"><?php echo $on ? 'ON' : 'OFF'; ?></strong> for the whole site.</p>
+		<p style="margin:0 0 10px;color:#646970;max-width:820px">Each email the site sends in bulk, who it goes to, and how far along it is. Use <strong>Schedule / Send</strong> on a card to send it now or at a set time, with a live progress bar. All three can run at once.</p>
+		<?php $boh_stopped = (bool) get_option( 'boh_inv_emergency_stop' ); ?>
+		<p style="margin:0 0 16px">
+			<button type="button" id="boh-sched-stopall" class="button" data-on="<?php echo $boh_stopped ? '1' : '0'; ?>" style="<?php echo $boh_stopped ? 'background:#00a32a;border-color:#00a32a;color:#fff' : 'background:#d63638;border-color:#d63638;color:#fff'; ?>"><?php echo $boh_stopped ? 'Resume scheduled sends' : 'Pause ALL sending now'; ?></button>
+			<span style="margin-left:8px;color:<?php echo $boh_stopped ? '#b32d2e' : '#646970'; ?>;font-size:13px"><?php echo $boh_stopped ? 'Emergency stop is ON - every running and scheduled campaign is paused.' : 'Emergency stop for all scheduled/running campaigns.'; ?></span>
+		</p>
 		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1100px;margin-bottom:28px">
 			<?php foreach ( $campaigns as $c ) : ?>
 			<div style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:18px 20px;display:flex;flex-direction:column">
@@ -1188,7 +1196,11 @@ function boh_invitations_render_settings() {
 						<div><div style="font-size:22px;font-weight:700;color:#1d2327"><?php echo esc_html( $n ); ?></div><div style="font-size:11px;color:#646970"><?php echo esc_html( $lbl ); ?></div></div>
 					<?php endforeach; ?>
 				</div>
-				<div style="margin-top:auto"><a href="<?php echo esc_url( $c['href'] ); ?>" class="button button-secondary"><?php echo esc_html( $c['cta'] ); ?></a></div>
+				<div style="margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<button type="button" class="button button-primary boh-sched-open" data-k="<?php echo esc_attr( $c['key'] ); ?>" data-label="<?php echo esc_attr( $c['title'] ); ?>" data-to="<?php echo esc_attr( strtolower( $c['to'] ) ); ?>">Schedule / Send</button>
+					<a href="<?php echo esc_url( $c['href'] ); ?>" class="button button-secondary"><?php echo esc_html( $c['cta'] ); ?></a>
+					<span class="boh-sched-badge" data-k="<?php echo esc_attr( $c['key'] ); ?>" style="color:#d01482;font-size:12px;font-weight:600"></span>
+				</div>
 			</div>
 			<?php endforeach; ?>
 		</div>
