@@ -1144,6 +1144,55 @@ function boh_invitations_render_settings() {
 	<div class="wrap">
 		<h1>Invitations Settings</h1>
 
+		<?php
+		// Dedicated overview of every bulk email the site sends: who it goes to and
+		// how far along it is. The detailed invitation controls stay below.
+		$att      = (int) ( $counts['attending'] ?? 0 );
+		$det_sent = (int) ( $counts['details_sent'] ?? 0 );
+		$det_rem  = max( 0, $att - $det_sent );
+		$awaiting = (int) ( $counts['awaiting'] ?? 0 );
+		$reminded = (int) ( $counts['reminded'] ?? 0 );
+		$campaigns = [
+			[
+				'title' => 'Invitations',
+				'to'    => 'People not yet invited',
+				'stats' => [ [ number_format( $sent ), 'invited' ], [ number_format( $waiting ), 'not yet' ], [ number_format( $resp ), 'replied' ] ],
+				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '&status=not_sent' ),
+				'cta'   => 'Open invitee list',
+			],
+			[
+				'title' => 'Reminders',
+				'to'    => "Invited guests who haven't replied",
+				'stats' => [ [ number_format( $awaiting ), 'awaiting reply' ], [ number_format( $reminded ), 'reminded' ] ],
+				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '&status=awaiting' ),
+				'cta'   => 'Open & send reminders',
+			],
+			[
+				'title' => 'Event details',
+				'to'    => "Guests who RSVP'd yes",
+				'stats' => [ [ number_format( $att ), 'attending' ], [ number_format( $det_sent ), 'sent' ], [ number_format( $det_rem ), 'not yet' ] ],
+				'href'  => admin_url( 'admin.php?page=' . BOH_INV_MENU_SLUG . '-details' ),
+				'cta'   => 'Review & send',
+			],
+		];
+		?>
+		<h2 style="margin:0 0 6px">Bulk email campaigns</h2>
+		<p style="margin:0 0 14px;color:#646970;max-width:820px">Each email the site sends in bulk, who it goes to, and how far along it is. Sending is currently <strong style="color:<?php echo $on ? '#00a32a' : '#b32d2e'; ?>"><?php echo $on ? 'ON' : 'OFF'; ?></strong> for the whole site.</p>
+		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1100px;margin-bottom:28px">
+			<?php foreach ( $campaigns as $c ) : ?>
+			<div style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:18px 20px;display:flex;flex-direction:column">
+				<h3 style="margin:0 0 2px;font-size:16px"><?php echo esc_html( $c['title'] ); ?></h3>
+				<div style="color:#646970;font-size:12px;margin-bottom:12px"><?php echo esc_html( $c['to'] ); ?></div>
+				<div style="display:flex;gap:18px;margin-bottom:14px">
+					<?php foreach ( $c['stats'] as [$n, $lbl] ) : ?>
+						<div><div style="font-size:22px;font-weight:700;color:#1d2327"><?php echo esc_html( $n ); ?></div><div style="font-size:11px;color:#646970"><?php echo esc_html( $lbl ); ?></div></div>
+					<?php endforeach; ?>
+				</div>
+				<div style="margin-top:auto"><a href="<?php echo esc_url( $c['href'] ); ?>" class="button button-secondary"><?php echo esc_html( $c['cta'] ); ?></a></div>
+			</div>
+			<?php endforeach; ?>
+		</div>
+
 		<div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:20px 24px;max-width:700px;margin-bottom:24px">
 			<h2 style="margin-top:0">Progress</h2>
 			<div style="height:14px;background:#f0f0f1;border-radius:7px;overflow:hidden;margin:6px 0 10px">
